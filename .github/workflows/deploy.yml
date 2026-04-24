@@ -1,16 +1,31 @@
-name: PHP validation
+# ============================================================
+# 文件路径：.github/workflows/deploy.yml
+# 说明：每次推送到 main 分支，自动部署到 Vultr 服务器
+# ============================================================
+
+name: Deploy GLAMEYE to Vultr
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  validate:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Validate PHP files
-        run: |
-          php -l api/*.php || exit 1
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host:     ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key:      ${{ secrets.SERVER_SSH_KEY }}
+          port:     22
+          script: |
+            cd /var/www/glameyeshop
+            git fetch origin
+            git reset --hard origin/main
+            echo "✅ GLAMEYE deployed at $(date)"
