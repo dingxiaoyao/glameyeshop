@@ -1,0 +1,16 @@
+name: PHP validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate PHP files
+        run: |
+          php -l api/*.php || exit 1

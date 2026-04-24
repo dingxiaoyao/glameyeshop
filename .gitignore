@@ -1,0 +1,7 @@
+# Ignore macOS metadata and local environment files
+.DS_Store
+.env
+vendor/
+node_modules/
+*.log
+*.cache

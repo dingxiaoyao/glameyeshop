@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GLAMEYE 结账</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="brand">GLAMEYE</a>
+      <nav>
+        <a href="index.html">首页</a>
+        <a href="admin/index.html">管理入口</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container checkout-page">
+    <section class="checkout-panel">
+      <h1>立即结账</h1>
+      <p>选择镜片与支付方式，完成订单。</p>
+
+      <form id="checkout-form" class="checkout-form" action="api/create-order.php" method="post">
+        <label>
+          商品名称
+          <input type="text" name="product_name" value="经典方形眼镜" readonly />
+        </label>
+        <label>
+          数量
+          <input type="number" name="quantity" value="1" min="1" />
+        </label>
+        <label>
+          价格
+          <input type="text" name="amount" value="699.00" readonly />
+        </label>
+        <label>
+          联系电话
+          <input type="tel" name="phone" placeholder="请输入电话号码" required />
+        </label>
+        <label>
+          邮箱地址
+          <input type="email" name="email" placeholder="example@domain.com" required />
+        </label>
+        <label>
+          支付方式
+          <select name="payment_method" id="payment-method">
+            <option value="stripe">Stripe</option>
+            <option value="paypal">PayPal</option>
+          </select>
+        </label>
+
+        <div class="payment-note" id="payment-note">
+          请选择一种支付方式，然后提交订单。
+        </div>
+
+        <button type="submit" class="button button-primary">提交订单</button>
+      </form>
+    </section>
+
+    <aside class="checkout-summary">
+      <h2>订单摘要</h2>
+      <p>商品：经典方形眼镜</p>
+      <p>数量：1</p>
+      <p>总计：¥699</p>
+      <div class="summary-note">我们会在订单提交后通过邮箱与您确认付款信息。</div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 GLAMEYE. 版权所有。</p>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

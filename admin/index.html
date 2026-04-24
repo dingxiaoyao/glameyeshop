@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GLAMEYE 管理面板</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="../index.html" class="brand">GLAMEYE Admin</a>
+      <nav>
+        <a href="../index.html">返回首页</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container admin-page">
+    <section class="admin-panel">
+      <h1>管理面板</h1>
+      <p>这是 GLAMEYE 的管理员入口页面。请使用后端接口查看订单详情。</p>
+      <div class="admin-actions">
+        <a href="../api/get-orders.php" class="button button-secondary" target="_blank">查看订单接口</a>
+        <a href="../checkout.html" class="button button-primary">返回结账</a>
+      </div>
+      <div class="admin-note">
+        <p>如需在本地测试，请将 `api/config.php` 中的数据库设置更新为您的 MySQL 凭据。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 GLAMEYE. 版权所有。</p>
+    </div>
+  </footer>
+</body>
+</html>
