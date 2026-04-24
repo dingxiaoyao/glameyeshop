@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS glameye CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE glameye;
+CREATE DATABASE IF NOT EXISTS glameyeshop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE glameyeshop;
 
 CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
