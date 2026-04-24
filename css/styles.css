@@ -1,146 +1,661 @@
-/* Global styles */
+/* ============================================================
+   GLAMEYE - 全球样式
+   ============================================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 全局设置 */
 :root {
   color-scheme: light;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: #111827;
   background: #f9fafb;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary: #f3f4f6;
+  --border: #e5e7eb;
+  --text: #111827;
+  --text-muted: #4b5563;
+  --text-light: #6b7280;
 }
+
 body {
   margin: 0;
   min-height: 100vh;
   background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  line-height: 1.6;
 }
-img { max-width: 100%; display: block; }
+
+/* 图片处理 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 容器 */
 .container {
   width: min(1120px, calc(100% - 2rem));
   margin: 0 auto;
+  padding: 0 1rem;
 }
+
+/* ============================================================
+   页头/导航
+   ============================================================ */
 .site-header {
-  background: rgba(255,255,255,.96);
-  border-bottom: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
+
 .site-header .container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 2rem;
   padding: 1rem 0;
 }
+
 .brand {
   font-weight: 700;
-  font-size: 1.25rem;
-  color: #111827;
+  font-size: 1.5rem;
+  color: var(--text);
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: opacity 0.2s ease;
 }
+
+.brand:hover {
+  opacity: 0.8;
+}
+
+.brand svg {
+  width: 32px;
+  height: 32px;
+  color: var(--primary);
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
 nav a {
-  margin-left: 1rem;
-  color: #4b5563;
+  color: var(--text-muted);
   text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+  padding: 0.5rem 0;
+  border-bottom: 2px solid transparent;
 }
+
+nav a:hover {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ============================================================
+   按钮
+   ============================================================ */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.85rem 1.4rem;
   border-radius: 999px;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   font-weight: 600;
   text-decoration: none;
-  transition: transform .2s ease, box-shadow .2s ease;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
-.button:hover { transform: translateY(-1px); }
-.button-primary { background: #2563eb; color: white; }
-.button-secondary { background: #f3f4f6; color: #111827; border-color: #d1d5db; }
-.button-outline { background: transparent; color: #2563eb; border-color: #2563eb; }
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.button-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.button-primary:hover {
+  background: var(--primary-dark);
+}
+
+.button-secondary {
+  background: var(--secondary);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.button-secondary:hover {
+  border-color: var(--primary);
+  background: white;
+}
+
+.button-outline {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.button-outline:hover {
+  background: rgba(37, 99, 235, 0.05);
+}
+
+/* ============================================================
+   Hero 区域
+   ============================================================ */
 .hero {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
-  gap: 2rem;
+  gap: 3rem;
   align-items: center;
-  padding: 4rem 0;
+  padding: 5rem 0;
+  animation: fadeInUp 0.8s ease;
 }
+
+.hero-content {
+  animation: slideInLeft 0.8s ease;
+}
+
 .eyebrow {
   text-transform: uppercase;
-  letter-spacing: .2em;
-  color: #2563eb;
-  font-size: .85rem;
+  letter-spacing: 0.2em;
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 700;
   margin-bottom: 1rem;
 }
+
 .hero h1 {
-  font-size: clamp(2.5rem, 4vw, 4rem);
-  margin: 0 0 1rem;
-  line-height: 1.05;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  margin: 0 0 1.5rem;
+  line-height: 1.1;
+  color: var(--text);
+  font-weight: 800;
 }
-.hero p { max-width: 35rem; line-height: 1.8; color: #4b5563; }
+
+.hero p {
+  max-width: 35rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   margin-top: 2rem;
 }
-.section { padding: 3rem 0; }
-.section-header h2 { font-size: 2rem; margin-bottom: .75rem; }
-.cards-grid,
-.product-grid {
-  display: grid;
-  gap: 1.5rem;
-}
-.cards-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-.card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 1rem;
-  padding: 1.75rem;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
-}
-.product-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-.product-card {
-  background: white;
-  border: 1px solid #e5e7eb;
+
+.hero-image {
+  animation: slideInRight 0.8s ease;
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
-.product-card h3 { margin: 1rem; font-size: 1.1rem; }
-.product-card p { margin: 0 1rem 1rem; color: #6b7280; }
-.price { display: block; margin: 0 1rem 1.5rem; font-size: 1.25rem; font-weight: 700; color: #111827; }
+
+.hero-image img {
+  width: 100%;
+  height: auto;
+}
+
+/* ============================================================
+   区域和卡片
+   ============================================================ */
+.section {
+  padding: 4rem 0;
+  animation: fadeIn 0.8s ease;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.section-header h2 {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.section-header p {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2rem;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.card:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+  border-color: var(--primary);
+}
+
+.card-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.card h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+
+.card p {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   产品网格和卡片
+   ============================================================ */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+}
+
+.product-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.product-image {
+  position: relative;
+  overflow: hidden;
+  background: #f3f4f6;
+  aspect-ratio: 1;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
+.product-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.product-info {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.product-card > div:nth-child(2) p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.stars {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.reviews {
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
+.price {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+}
+
+.product-info .button {
+  width: 100%;
+  margin-top: auto;
+}
+
+/* ============================================================
+   信任区域
+   ============================================================ */
+.trust-section {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: 4rem 0;
+  border-radius: 1rem;
+  margin: 4rem 0;
+  text-align: center;
+}
+
+.trust-section h2 {
+  font-size: 2.2rem;
+  margin-bottom: 3rem;
+  font-weight: 800;
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2rem;
+}
+
+.trust-item {
+  padding: 1.5rem;
+}
+
+.trust-number {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.trust-label {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* ============================================================
+   页脚
+   ============================================================ */
 .site-footer {
-  padding: 2rem 0;
   background: #111827;
   color: #f9fafb;
+  padding: 3rem 0 1rem;
+  margin-top: 6rem;
 }
-.site-footer p { margin: 0; text-align: center; }
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.footer-section h4 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.footer-section ul {
+  list-style: none;
+}
+
+.footer-section a {
+  display: block;
+  color: #d1d5db;
+  text-decoration: none;
+  font-size: 0.95rem;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
+}
+
+.footer-section a:hover {
+  color: white;
+}
+
+.footer-divider {
+  border: none;
+  border-top: 1px solid #374151;
+  margin: 2rem 0 1rem;
+}
+
+.footer-copyright {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+/* ============================================================
+   动画
+   ============================================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ============================================================
+   Checkout 和 Admin 页面
+   ============================================================ */
 .checkout-page,
-.admin-page { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; padding: 3rem 0; }
+.admin-page {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 2rem;
+  padding: 3rem 0;
+}
+
 .checkout-panel,
-.admin-panel { background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); }
+.admin-panel {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
 .checkout-form label,
 .checkout-form input,
 .checkout-form select {
   display: block;
   width: 100%;
 }
-.checkout-form label { margin-bottom: 1rem; font-weight: 600; color: #111827; }
+
+.checkout-form label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
 .checkout-form input,
 .checkout-form select {
-  margin-top: .5rem;
-  padding: .85rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: .75rem;
+  margin-bottom: 1.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
   font-size: 1rem;
+  transition: border-color 0.2s ease;
 }
+
+.checkout-form input:focus,
+.checkout-form select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 .checkout-summary {
-  background: #f8fafc;
+  background: var(--secondary);
   border-radius: 1rem;
   padding: 2rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
 }
+
 .summary-note,
 .admin-note,
-.payment-note { margin-top: 1rem; color: #4b5563; }
-@media (max-width: 900px) {
-  .hero, .checkout-page, .admin-page { grid-template-columns: 1fr; }
+.payment-note {
+  margin-top: 1rem;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   响应式设计
+   ============================================================ */
+@media (max-width: 768px) {
+  .hero,
+  .checkout-page,
+  .admin-page {
+    grid-template-columns: 1fr;
+  }
+
+  .site-header .container {
+    gap: 1rem;
+  }
+
+  nav {
+    gap: 1rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .section-header h2 {
+    font-size: 1.8rem;
+  }
+
+  .trust-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .trust-item {
+    padding: 1rem;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  nav {
+    display: none;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .button {
+    width: 100%;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trust-grid {
+    grid-template-columns: 1fr;
+  }
 }

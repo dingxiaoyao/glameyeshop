@@ -1,32 +1,183 @@
-# ============================================================
-# 文件路径：.github/workflows/deploy.yml
-# 说明：每次推送到 main 分支，自动部署到 Vultr 服务器
-# ============================================================
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="GLAMEYE - 高品质玻璃眼镜在线商店，提供精致设计与舒适佩戴的完美结合。" />
+  <title>GLAMEYE | 玻璃眼镜在线商店</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="brand">GLAMEYE</a>
+      <nav>
+        <a href="#products">产品</a>
+        <a href="#advantages">优势</a>
+        <a href="checkout.html" class="button button-secondary">立即购买</a>
+        <a href="admin/index.html">管理</a>
+      </nav>
+    </div>
+  </header>
 
-name: Deploy GLAMEYE to Vultr
+  <main>
+    <section class="hero container">
+      <div class="hero-content">
+        <p class="eyebrow">GLASS EYEWEAR</p>
+        <h1>发现精致设计与舒适佩戴的完美结合</h1>
+        <p>GLAMEYE 以高品质玻璃镜片与轻盈镜架打造时尚眼镜，为您带来日常与商务场景的专业风采。</p>
+        <div class="hero-actions">
+          <a href="checkout.html" class="button button-primary">开始购买</a>
+          <a href="#products" class="button button-outline">查看产品</a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <img src="images/products/sample-glasses.jpg" alt="GLAMEYE 眼镜" loading="lazy" />
+      </div>
+    </section>
 
-on:
-  push:
-    branches:
-      - main
+    <section id="advantages" class="section container">
+      <div class="section-header">
+        <h2>为什么选择 GLAMEYE</h2>
+        <p>我们的承诺是品质、舒适和风格的完美结合</p>
+      </div>
+      <div class="cards-grid">
+        <article class="card">
+          <div class="card-icon">👓</div>
+          <h3>高级玻璃镜片</h3>
+          <p>提供清晰度、耐刮花和抗反光的卓越表现，适合长期佩戴。</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">💨</div>
+          <h3>轻巧舒适</h3>
+          <p>选用亲肤材料与流线型设计，让佩戴更轻盈舒适。</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">✨</div>
+          <h3>精致工艺</h3>
+          <p>每一副眼镜都经过严格检验，确保外观与质感兼备。</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">🚚</div>
+          <h3>快速配送</h3>
+          <p>全国 2-3 天送达，享受便捷购物体验。</p>
+        </article>
+      </div>
+    </section>
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    <section id="products" class="section container">
+      <div class="section-header">
+        <h2>推荐产品</h2>
+        <p>精选玻璃镜片眼镜，适合日常、办公与商务场景</p>
+      </div>
+      <div class="product-grid">
+        <article class="product-card">
+          <div class="product-image">
+            <img src="images/products/product-1.jpg" alt="经典方形眼镜" loading="lazy" />
+            <span class="product-badge">热销</span>
+          </div>
+          <div class="product-info">
+            <h3>经典方形眼镜</h3>
+            <p>优雅外形，适合多种脸型。</p>
+            <div class="product-rating">
+              <span class="stars">★★★★★</span>
+              <span class="reviews">(128)</span>
+            </div>
+            <span class="price">¥699</span>
+            <button class="button button-primary" onclick="addToCart('经典方形眼镜', 699)">加入购物车</button>
+          </div>
+        </article>
+        <article class="product-card">
+          <div class="product-image">
+            <img src="images/products/product-2.jpg" alt="轻盈商务眼镜" loading="lazy" />
+            <span class="product-badge">新品</span>
+          </div>
+          <div class="product-info">
+            <h3>轻盈商务眼镜</h3>
+            <p>极简设计，商务与日常兼备。</p>
+            <div class="product-rating">
+              <span class="stars">★★★★☆</span>
+              <span class="reviews">(89)</span>
+            </div>
+            <span class="price">¥788</span>
+            <button class="button button-primary" onclick="addToCart('轻盈商务眼镜', 788)">加入购物车</button>
+          </div>
+        </article>
+        <article class="product-card">
+          <div class="product-image">
+            <img src="images/products/product-3.jpg" alt="复古圆形眼镜" loading="lazy" />
+            <span class="product-badge">限量</span>
+          </div>
+          <div class="product-info">
+            <h3>复古圆形眼镜</h3>
+            <p>复古造型，显现独特品味。</p>
+            <div class="product-rating">
+              <span class="stars">★★★★★</span>
+              <span class="reviews">(156)</span>
+            </div>
+            <span class="price">¥798</span>
+            <button class="button button-primary" onclick="addToCart('复古圆形眼镜', 798)">加入购物车</button>
+          </div>
+        </article>
+      </div>
+    </section>
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host:     ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key:      ${{ secrets.SERVER_SSH_KEY }}
-          port:     22
-          script: |
-            cd /var/www/glameyeshop
-            git fetch origin
-            git reset --hard origin/main
-            echo "✅ GLAMEYE deployed at $(date)"
-        
+    <section class="trust-section container">
+      <h2>值得信赖</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="trust-number">10K+</div>
+          <div class="trust-label">满意客户</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-number">99.8%</div>
+          <div class="trust-label">好评率</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-number">7天</div>
+          <div class="trust-label">无条件退货</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-number">24h</div>
+          <div class="trust-label">客服支持</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>关于 GLAMEYE</h4>
+          <ul>
+            <li><a href="#">公司介绍</a></li>
+            <li><a href="#">品牌故事</a></li>
+            <li><a href="#">媒体报道</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>客户服务</h4>
+          <ul>
+            <li><a href="#">联系我们</a></li>
+            <li><a href="#">常见问题</a></li>
+            <li><a href="#">退货政策</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>法律条款</h4>
+          <ul>
+            <li><a href="#">隐私政策</a></li>
+            <li><a href="#">用户协议</a></li>
+            <li><a href="#">cookie 政策</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr class="footer-divider" />
+      <p class="footer-copyright">© 2026 GLAMEYE. 版权所有。</p>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
