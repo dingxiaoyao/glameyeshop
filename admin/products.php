@@ -54,24 +54,62 @@
             <input type="number" name="compare_at_price" step="0.01" min="0" />
           </label>
         </div>
-        <label><span class="label-text"><?= htmlspecialchars(t('image_url')) ?></span>
-          <div style="display:flex; gap:.5rem;">
-            <input type="text" name="image_url" id="p-image-url" placeholder="/uploads/2026/04/xxx.jpg or paste URL" style="flex:1;" />
-            <label class="button button-outline button-sm" style="cursor:pointer; white-space:nowrap;">
-              📤 Upload
-              <input type="file" id="p-image-upload" accept="image/*" hidden />
-            </label>
-          </div>
-          <small id="p-image-status" class="muted" style="display:block; margin-top:.35rem;"></small>
-        </label>
-        <label><span class="label-text">Gallery Images (optional, JSON array of URLs)</span>
-          <textarea name="gallery_urls" id="p-gallery" rows="3" placeholder='["/uploads/2026/04/abc.jpg","/uploads/2026/04/def.jpg"]'></textarea>
-          <label class="button button-ghost button-sm" style="cursor:pointer; margin-top:.35rem; display:inline-flex;">
-            📤 Upload to gallery (multiple)
-            <input type="file" id="p-gallery-upload" accept="image/*" multiple hidden />
+        <label><span class="label-text"><?= $lang === 'zh' ? '商品图片（拖拽排序，第一张作为主图）' : 'Product Images (drag to reorder · first = main)' ?></span></label>
+        <div class="img-uploader" id="p-img-uploader">
+          <div class="img-tiles" id="p-img-tiles"></div>
+          <label class="img-add-btn" id="p-img-add">
+            <span style="font-size:1.5rem;">＋</span>
+            <span>📤 <?= $lang === 'zh' ? '点击上传或拖拽多张图' : 'Click to upload (multiple)' ?></span>
+            <input type="file" accept="image/*" multiple hidden id="p-img-input" />
           </label>
-          <small id="p-gallery-status" class="muted" style="display:block; margin-top:.35rem;"></small>
-        </label>
+          <small id="p-img-status" class="muted" style="display:block; margin-top:.5rem;"></small>
+        </div>
+        <input type="hidden" name="image_url" id="p-image-url" />
+        <input type="hidden" name="gallery_urls" id="p-gallery" />
+
+<style>
+  .img-uploader { background: var(--bg); padding: 1rem; border: 1px dashed var(--border); border-radius: 6px; }
+  .img-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .5rem; margin-bottom: .75rem; }
+  .img-tiles:empty { display: none; }
+  .img-tile {
+    position: relative; aspect-ratio: 1; border-radius: 4px; overflow: hidden;
+    background: var(--bg-card); border: 2px solid transparent; cursor: grab;
+    transition: border-color .2s;
+  }
+  .img-tile:hover { border-color: var(--gold); }
+  .img-tile.dragging { opacity: .4; }
+  .img-tile.drag-over { border-color: var(--gold); border-style: dashed; }
+  .img-tile.is-main { border-color: var(--gold); }
+  .img-tile img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  .img-tile .badge {
+    position: absolute; top: 4px; left: 4px;
+    background: var(--gold); color: var(--bg); font-size: 9px; font-weight: 700;
+    padding: 2px 6px; border-radius: 2px; letter-spacing: 1px;
+  }
+  .img-tile .order-num {
+    position: absolute; bottom: 4px; left: 4px;
+    background: rgba(0,0,0,0.7); color: var(--cream); font-size: 11px; font-weight: 600;
+    padding: 1px 5px; border-radius: 2px;
+  }
+  .img-tile .del-x {
+    position: absolute; top: 4px; right: 4px;
+    width: 20px; height: 20px;
+    background: rgba(0,0,0,0.7); color: var(--cream);
+    border: none; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; line-height: 1;
+  }
+  .img-tile .del-x:hover { background: var(--error); }
+  .img-add-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .25rem; padding: 1rem;
+    background: var(--bg-card); border: 1px dashed var(--border);
+    border-radius: 4px; cursor: pointer; color: var(--text-muted);
+    font-size: .82rem; text-align: center;
+    transition: all .2s;
+  }
+  .img-add-btn:hover { border-color: var(--gold); color: var(--gold); }
+</style>
         <div class="form-row">
           <label><span class="label-text"><?= htmlspecialchars(t('stock')) ?></span>
             <input type="number" name="stock" min="0" value="100" />
@@ -141,11 +179,103 @@
     }
   }
 
+  // === Tile-based image uploader ===
+  // imageList[0] is always the main image; the rest are gallery
+  let imageList = [];
+  const tilesEl     = document.getElementById('p-img-tiles');
+  const imgInput    = document.getElementById('p-img-input');
+  const imgStatus   = document.getElementById('p-img-status');
+  const imgUrlField = document.getElementById('p-image-url');
+  const galleryField= document.getElementById('p-gallery');
+
+  function syncFields() {
+    imgUrlField.value  = imageList[0] || '';
+    galleryField.value = imageList.length > 1 ? JSON.stringify(imageList.slice(1)) : '';
+  }
+  function renderTiles() {
+    tilesEl.innerHTML = imageList.map((url, i) => `
+      <div class="img-tile ${i===0?'is-main':''}" draggable="true" data-idx="${i}">
+        <img src="${escape(url.startsWith('http') ? url : '..'+url)}" alt="" />
+        ${i===0 ? '<span class="badge">MAIN</span>' : `<span class="order-num">${i+1}</span>`}
+        <button type="button" class="del-x" data-idx="${i}" title="Remove">×</button>
+      </div>
+    `).join('');
+    syncFields();
+  }
+  // delete tile
+  tilesEl.addEventListener('click', (e) => {
+    const x = e.target.closest('.del-x');
+    if (!x) return;
+    e.preventDefault();
+    imageList.splice(parseInt(x.dataset.idx, 10), 1);
+    renderTiles();
+  });
+  // drag-drop reorder (HTML5)
+  let dragSrcIdx = null;
+  tilesEl.addEventListener('dragstart', (e) => {
+    const tile = e.target.closest('.img-tile');
+    if (!tile) return;
+    dragSrcIdx = parseInt(tile.dataset.idx, 10);
+    tile.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  tilesEl.addEventListener('dragend', (e) => {
+    const tile = e.target.closest('.img-tile');
+    if (tile) tile.classList.remove('dragging');
+    tilesEl.querySelectorAll('.img-tile').forEach(t => t.classList.remove('drag-over'));
+  });
+  tilesEl.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const tile = e.target.closest('.img-tile');
+    if (!tile) return;
+    tilesEl.querySelectorAll('.img-tile').forEach(t => t.classList.remove('drag-over'));
+    tile.classList.add('drag-over');
+  });
+  tilesEl.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const tile = e.target.closest('.img-tile');
+    if (!tile || dragSrcIdx === null) return;
+    const dstIdx = parseInt(tile.dataset.idx, 10);
+    if (dstIdx === dragSrcIdx) return;
+    const moved = imageList.splice(dragSrcIdx, 1)[0];
+    imageList.splice(dstIdx, 0, moved);
+    dragSrcIdx = null;
+    renderTiles();
+  });
+  // upload (multiple)
+  imgInput.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    let done = 0;
+    for (const f of files) {
+      imgStatus.textContent = `Uploading ${++done}/${files.length}…`;
+      imgStatus.style.color = '';
+      const fd = new FormData(); fd.append('file', f);
+      try {
+        const r = await fetch('../api/admin-upload.php', { method:'POST', credentials:'include', body: fd });
+        const j = await r.json();
+        if (j.success) {
+          imageList.push(j.url);
+          renderTiles();
+        } else {
+          imgStatus.textContent = '✗ ' + (j.error || 'failed');
+          imgStatus.style.color = 'var(--error)';
+        }
+      } catch (err) {
+        imgStatus.textContent = '✗ ' + (err.message || 'Network error');
+        imgStatus.style.color = 'var(--error)';
+      }
+    }
+    imgStatus.textContent = `✓ ${imageList.length} image(s) total. Drag to reorder · first = main`;
+    imgStatus.style.color = 'var(--gold)';
+    e.target.value = '';
+  });
+
   function openModal(p = null) {
     fb.textContent = ''; fb.className = 'form-feedback';
-    document.getElementById('p-image-status').textContent = '';
-    document.getElementById('p-gallery-status').textContent = '';
+    imgStatus.textContent = '';
     form.reset();
+    imageList = [];
     if (p) {
       document.getElementById('modal-title').textContent = T.edit + ' · ' + p.name;
       document.getElementById('p-id').value = p.id;
@@ -156,69 +286,26 @@
       form.description.value = p.description || '';
       form.price.value = p.price;
       form.compare_at_price.value = p.compare_at_price || '';
-      form.image_url.value = p.image_url || '';
-      form.gallery_urls.value = p.gallery_urls
-        ? (typeof p.gallery_urls === 'string' ? p.gallery_urls : JSON.stringify(p.gallery_urls))
-        : '';
       form.stock.value = p.stock;
       form.sort_order.value = p.sort_order;
       form.is_active.checked = p.is_active == 1;
+      // populate tiles
+      if (p.image_url) imageList.push(p.image_url);
+      let extras = [];
+      if (p.gallery_urls) {
+        try {
+          const arr = (typeof p.gallery_urls === 'string') ? JSON.parse(p.gallery_urls) : p.gallery_urls;
+          if (Array.isArray(arr)) extras = arr.filter(Boolean);
+        } catch {}
+      }
+      imageList = imageList.concat(extras);
     } else {
       document.getElementById('modal-title').textContent = T.add_product;
       document.getElementById('p-id').value = '';
     }
+    renderTiles();
     modal.style.display = 'flex';
   }
-
-  // 上传单图 → 填到 image_url
-  document.getElementById('p-image-upload').addEventListener('change', async (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    const status = document.getElementById('p-image-status');
-    status.textContent = 'Uploading…';
-    const fd = new FormData(); fd.append('file', f);
-    try {
-      const r = await fetch('../api/admin-upload.php', { method:'POST', credentials:'include', body: fd });
-      const j = await r.json();
-      if (j.success) {
-        document.getElementById('p-image-url').value = j.url;
-        status.textContent = '✓ ' + j.url + ' (' + (j.size/1024).toFixed(0) + 'KB)';
-        status.style.color = 'var(--success)';
-      } else {
-        status.textContent = '✗ ' + (j.error || 'failed');
-        status.style.color = 'var(--error)';
-      }
-    } catch (err) {
-      status.textContent = '✗ Network error';
-      status.style.color = 'var(--error)';
-    }
-    e.target.value = '';
-  });
-
-  // 上传多图 → 追加到 gallery_urls
-  document.getElementById('p-gallery-upload').addEventListener('change', async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    const status = document.getElementById('p-gallery-status');
-    const ta = document.getElementById('p-gallery');
-    let existing = [];
-    try { existing = JSON.parse(ta.value || '[]'); if (!Array.isArray(existing)) existing = []; } catch { existing = []; }
-
-    let done = 0;
-    for (const f of files) {
-      status.textContent = `Uploading ${++done}/${files.length}…`;
-      const fd = new FormData(); fd.append('file', f);
-      try {
-        const r = await fetch('../api/admin-upload.php', { method:'POST', credentials:'include', body: fd });
-        const j = await r.json();
-        if (j.success) existing.push(j.url);
-      } catch (err) {}
-    }
-    ta.value = JSON.stringify(existing);
-    status.textContent = `✓ Added ${done} image(s) to gallery (${existing.length} total)`;
-    status.style.color = 'var(--success)';
-    e.target.value = '';
-  });
 
   function closeModal() { modal.style.display = 'none'; }
 

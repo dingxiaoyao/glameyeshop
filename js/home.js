@@ -99,10 +99,43 @@
   async function loadSettings() {
     try {
       const settings = await fetch('api/settings.php').then(r => r.json());
-      // Hero image
-      if (settings.hero_image_url) {
-        const heroBg = document.getElementById('hero-bg');
-        if (heroBg) heroBg.style.backgroundImage = `url('${settings.hero_image_url}')`;
+      // Hero slideshow
+      let heroImages = [];
+      if (settings.hero_image_urls) {
+        try {
+          const arr = JSON.parse(settings.hero_image_urls);
+          if (Array.isArray(arr) && arr.length) heroImages = arr;
+        } catch {}
+      }
+      if (!heroImages.length && settings.hero_image_url) {
+        heroImages = [settings.hero_image_url];
+      }
+      const slidesEl = document.getElementById('hero-slides');
+      const dotsEl = document.getElementById('hero-dots');
+      if (slidesEl && heroImages.length) {
+        slidesEl.innerHTML = heroImages.map((url, i) =>
+          `<div class="hero-slide ${i===0?'active':''}" style="background-image: url('${escape(url)}');"></div>`
+        ).join('');
+        if (dotsEl && heroImages.length > 1) {
+          dotsEl.innerHTML = heroImages.map((_, i) =>
+            `<button class="hero-dot ${i===0?'active':''}" data-idx="${i}" aria-label="Slide ${i+1}"></button>`
+          ).join('');
+          // 自动轮播
+          let cur = 0;
+          const slides = slidesEl.querySelectorAll('.hero-slide');
+          const dots = dotsEl.querySelectorAll('.hero-dot');
+          const interval = parseInt(settings.hero_slide_interval, 10) || 5000;
+          function go(i) {
+            slides[cur].classList.remove('active'); dots[cur].classList.remove('active');
+            cur = (i + slides.length) % slides.length;
+            slides[cur].classList.add('active'); dots[cur].classList.add('active');
+          }
+          let timer = setInterval(() => go(cur + 1), interval);
+          dots.forEach(d => d.addEventListener('click', () => {
+            clearInterval(timer); go(parseInt(d.dataset.idx, 10));
+            timer = setInterval(() => go(cur + 1), interval);
+          }));
+        }
       }
       // Social icons
       const social = document.getElementById('social-icons');

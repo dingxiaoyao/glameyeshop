@@ -25,6 +25,19 @@
     <div class="form-card">
       <h1>Join GlamEye</h1>
       <p class="subtitle">Get 10% off your first order ✨</p>
+      <p id="oauth-error" class="form-feedback error" style="display:none;"></p>
+      <div id="social-login" class="form-group" style="display:none; margin-bottom:1.5rem;">
+        <a href="api/oauth/google.php" id="btn-google"
+           class="button button-outline button-block" style="display:none; gap:.5rem;">
+          <span style="display:inline-block; width:18px; height:18px; background:#fff; color:#444; font-weight:700; border-radius:50%; line-height:18px; font-size:11px;">G</span>
+          Sign up with Google
+        </a>
+        <a href="api/oauth/tiktok.php" id="btn-tiktok"
+           class="button button-outline button-block" style="display:none; gap:.5rem;">
+          <span style="font-size:1rem;">🎵</span> Sign up with TikTok
+        </a>
+      </div>
+      <div id="social-divider" class="divider" style="display:none;">OR</div>
       <form id="signup-form" class="form-group">
         <div class="form-row">
           <label>
@@ -59,6 +72,26 @@
   </main>
   <script src="js/app.js"></script>
   <script>
+    const params = new URLSearchParams(location.search);
+    if (params.get('error')) {
+      const eEl = document.getElementById('oauth-error');
+      eEl.textContent = '⚠ ' + params.get('error');
+      eEl.style.display = 'block';
+    }
+    fetch('api/settings.php').then(r => r.json()).then(s => {
+      let any = false;
+      if (s.oauth_google_enabled === '1') {
+        document.getElementById('btn-google').style.display = 'inline-flex'; any = true;
+      }
+      if (s.oauth_tiktok_enabled === '1') {
+        document.getElementById('btn-tiktok').style.display = 'inline-flex'; any = true;
+      }
+      if (any) {
+        document.getElementById('social-login').style.display = 'block';
+        document.getElementById('social-divider').style.display = 'flex';
+      }
+    }).catch(() => {});
+
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fb = document.getElementById('signup-feedback');

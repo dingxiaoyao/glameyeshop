@@ -47,21 +47,137 @@
 </div>
 
 <div class="admin-card">
-  <h3>Hero Image</h3>
+  <h3>🎞️ Homepage Hero Slideshow</h3>
+  <p class="muted small" style="margin-bottom:1rem;">
+    <?= $lang === 'zh' ? '上传多张图（拖拽排序，第一张优先展示），首页将自动轮播。' : 'Upload multiple images (drag to reorder · first one shows first). They auto-rotate on the homepage.' ?>
+  </p>
+  <div class="img-uploader">
+    <div class="img-tiles" id="hero-tiles"></div>
+    <label class="img-add-btn">
+      <span style="font-size:1.5rem;">＋</span>
+      <span>📤 <?= $lang === 'zh' ? '点击上传多张图' : 'Click to upload (multiple)' ?></span>
+      <input type="file" accept="image/*" multiple hidden id="hero-upload" />
+    </label>
+    <small id="hero-status" class="muted" style="display:block; margin-top:.5rem;">Tip: 1920×1080+ landscape beauty photos work best.</small>
+  </div>
+  <div class="form-row" style="margin-top:1rem;">
+    <label><span class="label-text">Slide interval (ms)</span>
+      <input type="number" data-key="hero_slide_interval" min="1500" step="500" value="5000" style="max-width:160px;" />
+    </label>
+  </div>
+  <!-- hidden field: stored as JSON array of URLs -->
+  <input type="hidden" data-key="hero_image_urls" id="hero-images-json" />
+  <!-- legacy single field kept in sync (first image) for backward compat -->
+  <input type="hidden" data-key="hero_image_url" id="hero-url-input" />
+</div>
+
+<div class="admin-card">
+  <h3>💳 Payment Gateway · Stripe</h3>
+  <p class="muted small" style="margin-bottom:1rem;">
+    <?= $lang === 'zh' ? '在 dashboard.stripe.com 获取你的密钥。Webhook URL：' : 'Get your keys from dashboard.stripe.com. Webhook URL: ' ?>
+    <code>https://glameyeshop.com/api/stripe-webhook.php</code>
+  </p>
   <div class="form-group">
-    <label>
-      <span class="label-text">Homepage Hero Background URL</span>
-      <div style="display:flex; gap:.5rem;">
-        <input type="text" data-key="hero_image_url" id="hero-url-input" placeholder="/uploads/.../hero.jpg or full URL" style="flex:1;" />
-        <label class="button button-outline button-sm" style="cursor:pointer; white-space:nowrap;">
-          📤 Upload
-          <input type="file" id="hero-upload" accept="image/*" hidden />
-        </label>
-      </div>
-      <small id="hero-status" class="muted" style="display:block; margin-top:.35rem;">Tip: 1920×1080+ portrait beauty photo works best.</small>
+    <div class="form-row">
+      <label><span class="label-text">Mode</span>
+        <select data-key="stripe_mode">
+          <option value="test">Test (sandbox)</option>
+          <option value="live">Live (real money)</option>
+        </select>
+      </label>
+      <label><span class="label-text">Publishable Key (pk_…)</span>
+        <input type="text" data-key="stripe_publishable_key" placeholder="pk_test_… or pk_live_…" />
+      </label>
+    </div>
+    <label><span class="label-text">Secret Key (sk_…) <small style="color:var(--warn);">— never shared with frontend</small></span>
+      <input type="password" data-key="stripe_secret_key" autocomplete="new-password" placeholder="sk_test_… or sk_live_…" />
+    </label>
+    <label><span class="label-text">Webhook Signing Secret (whsec_…)</span>
+      <input type="password" data-key="stripe_webhook_secret" autocomplete="new-password" placeholder="whsec_…" />
     </label>
   </div>
 </div>
+
+<div class="admin-card">
+  <h3>💰 Payment Gateway · PayPal</h3>
+  <p class="muted small" style="margin-bottom:1rem;">
+    <?= $lang === 'zh' ? '在 developer.paypal.com 创建 App 后填入。' : 'Create an app at developer.paypal.com and paste keys here.' ?>
+  </p>
+  <div class="form-group">
+    <div class="form-row">
+      <label><span class="label-text">Mode</span>
+        <select data-key="paypal_mode">
+          <option value="sandbox">Sandbox (test)</option>
+          <option value="live">Live (real money)</option>
+        </select>
+      </label>
+      <label><span class="label-text">Client ID</span>
+        <input type="text" data-key="paypal_client_id" placeholder="A…" />
+      </label>
+    </div>
+    <label><span class="label-text">Secret <small style="color:var(--warn);">— never shared with frontend</small></span>
+      <input type="password" data-key="paypal_secret" autocomplete="new-password" />
+    </label>
+  </div>
+</div>
+
+<div class="admin-card">
+  <h3>🔑 OAuth · Google Sign-In</h3>
+  <p class="muted small" style="margin-bottom:1rem;">
+    <?= $lang === 'zh' ? '在 console.cloud.google.com 创建 OAuth 2.0 Client。回调 URL：' : 'Create OAuth 2.0 Client at console.cloud.google.com. Redirect URL: ' ?>
+    <code>https://glameyeshop.com/api/oauth/google.php</code>
+  </p>
+  <div class="form-group">
+    <label><span class="label-text">Client ID</span>
+      <input type="text" data-key="google_client_id" placeholder="…apps.googleusercontent.com" />
+    </label>
+    <label><span class="label-text">Client Secret</span>
+      <input type="password" data-key="google_client_secret" autocomplete="new-password" />
+    </label>
+  </div>
+</div>
+
+<div class="admin-card">
+  <h3>🎵 OAuth · TikTok Login</h3>
+  <p class="muted small" style="margin-bottom:1rem;">
+    <?= $lang === 'zh' ? '在 developers.tiktok.com 创建 App。回调 URL：' : 'Create app at developers.tiktok.com. Redirect URL: ' ?>
+    <code>https://glameyeshop.com/api/oauth/tiktok.php</code>
+  </p>
+  <div class="form-group">
+    <label><span class="label-text">Client Key</span>
+      <input type="text" data-key="tiktok_client_key" />
+    </label>
+    <label><span class="label-text">Client Secret</span>
+      <input type="password" data-key="tiktok_client_secret" autocomplete="new-password" />
+    </label>
+  </div>
+</div>
+
+<style>
+  .img-uploader { background: var(--bg); padding: 1rem; border: 1px dashed var(--border); border-radius: 6px; }
+  .img-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .5rem; margin-bottom: .75rem; }
+  .img-tiles:empty { display: none; }
+  .img-tile { position: relative; aspect-ratio: 16/9; border-radius: 4px; overflow: hidden;
+    background: var(--bg-card); border: 2px solid transparent; cursor: grab; transition: border-color .2s; }
+  .img-tile:hover { border-color: var(--gold); }
+  .img-tile.dragging { opacity: .4; }
+  .img-tile.drag-over { border-color: var(--gold); border-style: dashed; }
+  .img-tile.is-main { border-color: var(--gold); }
+  .img-tile img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  .img-tile .badge { position: absolute; top:4px; left:4px; background: var(--gold); color: var(--bg);
+    font-size: 9px; font-weight:700; padding: 2px 6px; border-radius: 2px; letter-spacing: 1px; }
+  .img-tile .order-num { position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.7);
+    color: var(--cream); font-size: 11px; font-weight: 600; padding: 1px 5px; border-radius: 2px; }
+  .img-tile .del-x { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+    background: rgba(0,0,0,0.7); color: var(--cream); border: none; border-radius: 50%;
+    cursor: pointer; display:flex; align-items:center; justify-content:center; font-size: 14px; line-height: 1; }
+  .img-tile .del-x:hover { background: var(--error); }
+  .img-add-btn { display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:.25rem; padding: 1rem; background: var(--bg-card); border: 1px dashed var(--border);
+    border-radius: 4px; cursor: pointer; color: var(--text-muted); font-size:.82rem; text-align:center;
+    transition: all .2s; }
+  .img-add-btn:hover { border-color: var(--gold); color: var(--gold); }
+</style>
 
 <div style="display:flex; justify-content:flex-end; gap:.75rem;">
   <button id="save-all-btn" class="button button-primary">💾 Save All Settings</button>
@@ -71,7 +187,77 @@
 <script>
 (async () => {
   const fb = document.getElementById('settings-feedback');
-  // Load
+  function escape(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // ---------- Hero slideshow ----------
+  let heroImages = [];
+  const heroTilesEl   = document.getElementById('hero-tiles');
+  const heroJsonField = document.getElementById('hero-images-json');
+  const heroUrlField  = document.getElementById('hero-url-input');
+  function syncHero() {
+    heroJsonField.value = JSON.stringify(heroImages);
+    heroUrlField.value  = heroImages[0] || '';
+  }
+  function renderHeroTiles() {
+    heroTilesEl.innerHTML = heroImages.map((url, i) => `
+      <div class="img-tile ${i===0?'is-main':''}" draggable="true" data-idx="${i}">
+        <img src="${escape(url.startsWith('http') ? url : '..'+url)}" alt="" />
+        ${i===0 ? '<span class="badge">FIRST</span>' : `<span class="order-num">${i+1}</span>`}
+        <button type="button" class="del-x" data-idx="${i}" title="Remove">×</button>
+      </div>`).join('');
+    syncHero();
+  }
+  heroTilesEl.addEventListener('click', (e) => {
+    const x = e.target.closest('.del-x'); if (!x) return;
+    e.preventDefault();
+    heroImages.splice(parseInt(x.dataset.idx, 10), 1);
+    renderHeroTiles();
+  });
+  let heroDragSrc = null;
+  heroTilesEl.addEventListener('dragstart', (e) => {
+    const t = e.target.closest('.img-tile'); if (!t) return;
+    heroDragSrc = parseInt(t.dataset.idx, 10);
+    t.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move';
+  });
+  heroTilesEl.addEventListener('dragend', (e) => {
+    const t = e.target.closest('.img-tile'); if (t) t.classList.remove('dragging');
+    heroTilesEl.querySelectorAll('.img-tile').forEach(x => x.classList.remove('drag-over'));
+  });
+  heroTilesEl.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const t = e.target.closest('.img-tile'); if (!t) return;
+    heroTilesEl.querySelectorAll('.img-tile').forEach(x => x.classList.remove('drag-over'));
+    t.classList.add('drag-over');
+  });
+  heroTilesEl.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const t = e.target.closest('.img-tile'); if (!t || heroDragSrc === null) return;
+    const dst = parseInt(t.dataset.idx, 10);
+    if (dst === heroDragSrc) return;
+    const m = heroImages.splice(heroDragSrc, 1)[0];
+    heroImages.splice(dst, 0, m);
+    heroDragSrc = null; renderHeroTiles();
+  });
+  document.getElementById('hero-upload').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []); if (!files.length) return;
+    const status = document.getElementById('hero-status');
+    let done = 0;
+    for (const f of files) {
+      status.textContent = `Uploading ${++done}/${files.length}…`; status.style.color = '';
+      const fd = new FormData(); fd.append('file', f);
+      try {
+        const r = await fetch('../api/admin-upload.php', { method:'POST', credentials:'include', body: fd });
+        const j = await r.json();
+        if (j.success) { heroImages.push(j.url); renderHeroTiles(); }
+        else { status.textContent = '✗ ' + (j.error || 'failed'); status.style.color = 'var(--error)'; }
+      } catch (err) { status.textContent = '✗ ' + err.message; status.style.color = 'var(--error)'; }
+    }
+    status.textContent = `✓ ${heroImages.length} hero image(s). Drag to reorder · Click "Save All" to apply.`;
+    status.style.color = 'var(--gold)';
+    e.target.value = '';
+  });
+
+  // ---------- Load ----------
   try {
     const r = await fetch('../api/admin-settings.php', { credentials: 'include' });
     const j = await r.json();
@@ -81,34 +267,30 @@
       const v = map[el.dataset.key] || '';
       if (el.dataset.bool) {
         el.checked = (v === '1');
+      } else if (el.id === 'hero-images-json') {
+        try { const arr = JSON.parse(v || '[]'); if (Array.isArray(arr)) heroImages = arr.filter(Boolean); } catch {}
+        // fallback to legacy single hero_image_url if no array
+        if (!heroImages.length && map['hero_image_url']) heroImages = [map['hero_image_url']];
+        renderHeroTiles();
+      } else if (el.id === 'hero-url-input') {
+        // skip — managed by syncHero()
       } else {
         el.value = v;
       }
     });
+    // defaults
+    if (!document.querySelector('[data-key="hero_slide_interval"]').value) {
+      document.querySelector('[data-key="hero_slide_interval"]').value = '5000';
+    }
   } catch (e) { fb.textContent = 'Load failed'; fb.className = 'form-feedback error'; }
-
-  // Hero upload
-  document.getElementById('hero-upload').addEventListener('change', async (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    const status = document.getElementById('hero-status');
-    status.textContent = 'Uploading…';
-    const fd = new FormData(); fd.append('file', f);
-    try {
-      const r = await fetch('../api/admin-upload.php', { method:'POST', credentials:'include', body: fd });
-      const j = await r.json();
-      if (j.success) {
-        document.getElementById('hero-url-input').value = j.url;
-        status.textContent = '✓ Uploaded: ' + j.url + ' — Click "Save All" to apply.';
-        status.style.color = 'var(--success)';
-      } else { status.textContent = '✗ ' + (j.error || 'failed'); status.style.color = 'var(--error)'; }
-    } catch (err) { status.textContent = '✗ Network error'; status.style.color = 'var(--error)'; }
-    e.target.value = '';
-  });
 
   document.getElementById('save-all-btn').addEventListener('click', async () => {
     fb.textContent = 'Saving…'; fb.className = 'form-feedback';
+    syncHero();
     let ok = 0, fail = 0;
     for (const el of document.querySelectorAll('[data-key]')) {
+      // Don't overwrite existing secret fields (passwords) with empty values
+      if (el.type === 'password' && el.value === '') continue;
       const value = el.dataset.bool ? (el.checked ? '1' : '0') : el.value;
       try {
         const r = await fetch('../api/admin-settings.php', {

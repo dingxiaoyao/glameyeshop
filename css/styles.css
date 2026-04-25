@@ -199,28 +199,33 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 }
 .button:hover::before { transform: translateX(100%); }
 
-.button-primary {
-  background: var(--gold); color: var(--bg);
+/* :visited 显式覆盖：避免链接 visited 后文字变同底色不可见 */
+.button-primary, a.button-primary:visited {
+  background: var(--gold); color: var(--bg) !important;
   border-color: var(--gold);
 }
-.button-primary:hover {
+.button-primary:hover, a.button-primary:hover {
   background: var(--gold-light); border-color: var(--gold-light);
-  color: var(--bg);
+  color: var(--bg) !important;
   box-shadow: 0 12px 28px -8px rgba(212, 169, 85, 0.5);
   transform: translateY(-1px);
 }
-.button-secondary {
-  background: transparent; color: var(--cream); border-color: var(--cream);
+.button-secondary, a.button-secondary:visited {
+  background: transparent; color: var(--cream) !important; border-color: var(--cream);
 }
-.button-secondary:hover { background: var(--cream); color: var(--bg); }
-.button-outline {
-  background: transparent; color: var(--gold); border-color: var(--gold);
+.button-secondary:hover, a.button-secondary:hover { background: var(--cream); color: var(--bg) !important; }
+.button-outline, a.button-outline:visited {
+  background: transparent; color: var(--gold) !important; border-color: var(--gold);
 }
-.button-outline:hover { background: var(--gold); color: var(--bg); }
-.button-ghost {
-  background: transparent; color: var(--cream); border-color: var(--border);
+.button-outline:hover, a.button-outline:hover { background: var(--gold); color: var(--bg) !important; }
+.button-ghost, a.button-ghost:visited {
+  background: transparent; color: var(--cream) !important; border-color: var(--border);
 }
-.button-ghost:hover { border-color: var(--gold); color: var(--gold); }
+.button-ghost:hover, a.button-ghost:hover { border-color: var(--gold); color: var(--gold) !important; }
+
+/* button 内部文字始终在 ::before 之上 */
+.button > * { position: relative; z-index: 1; }
+.button { isolation: isolate; }
 .button:disabled, .button[disabled] { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
 .button-block { width: 100%; }
 .button-sm { padding: .6rem 1.25rem; font-size: .72rem; letter-spacing: 2px; }
@@ -235,17 +240,34 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   overflow: hidden;
   border-bottom: 1px solid var(--border-soft);
 }
-.hero-bg {
+.hero-bg, .hero-slides {
   position: absolute; inset: 0;
   background-size: cover; background-position: center;
   opacity: .55;
 }
-.hero-bg::after {
+.hero-bg::after, .hero-slides::after {
   content: ''; position: absolute; inset: 0;
   background:
     radial-gradient(ellipse at 30% 50%, transparent 0%, var(--bg) 80%),
     linear-gradient(90deg, var(--bg) 0%, transparent 50%, var(--bg) 100%);
 }
+/* 多图轮播 */
+.hero-slide {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 1.2s ease-in-out;
+}
+.hero-slide.active { opacity: 1; }
+.hero-dots {
+  position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+  display: flex; gap: .5rem; z-index: 2;
+}
+.hero-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.5);
+  cursor: pointer; transition: all .25s;
+}
+.hero-dot.active { background: var(--gold); border-color: var(--gold); width: 24px; border-radius: 4px; }
 .hero .container { position: relative; z-index: 1; padding: 5rem 1.25rem; }
 .hero-content { max-width: 620px; }
 .hero h1 {

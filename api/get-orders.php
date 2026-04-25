@@ -7,10 +7,12 @@ try {
     $limit = max(1, min(200, intval($_GET['limit'] ?? 100)));
     $statusFilter = $_GET['status'] ?? '';
 
-    $sql = 'SELECT id, customer_name, email, phone, address_line, address_line2,
+    $sql = 'SELECT id, user_id, customer_name, email, phone, address_line, address_line2,
                    city, state, postal_code, country,
                    product_name, quantity, subtotal, shipping, tax, amount, currency,
-                   payment_method, status, notes, created_at, updated_at
+                   payment_method, status, notes,
+                   carrier, tracking_number, tracking_url, shipped_at, delivered_at, estimated_delivery,
+                   is_test, created_at, updated_at
             FROM orders';
     $params = [];
     if ($statusFilter && in_array($statusFilter, ALLOWED_ORDER_STATUSES, true)) {

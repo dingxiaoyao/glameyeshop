@@ -42,6 +42,13 @@ if (isset($input['items']) && is_array($input['items'])) {
 $paymentMethod = $input['payment_method'] ?? 'stripe';
 $notes         = trim((string)($input['notes'] ?? ''));
 
+// Test-account handling: if logged-in user is flagged as test, mark this order as test
+// and route through a no-op confirmation instead of real Stripe/PayPal.
+$isTest = 0;
+if ($user && !empty($user['is_test_account'])) {
+    $isTest = 1;
+}
+
 // ====== Validation ======
 if (!$customerName || mb_strlen($customerName) > 200) sendJson(['error' => 'Invalid customer name'], 422);
 if (!$email)                                          sendJson(['error' => 'Invalid email'], 422);
@@ -97,12 +104,12 @@ try {
            (user_id, customer_name, email, phone, address_line, address_line2,
             city, state, postal_code, country,
             product_name, quantity, subtotal, shipping, tax, amount, currency,
-            payment_method, status, notes, created_at)
+            payment_method, status, notes, is_test, created_at)
          VALUES
            (:user_id, :customer_name, :email, :phone, :address_line, :address_line2,
             :city, :state, :postal_code, :country,
             :product_name, :quantity, :subtotal, :shipping, :tax, :amount, :currency,
-            :payment_method, :status, :notes, NOW())'
+            :payment_method, :status, :notes, :is_test, NOW())'
     );
     $first = $resolvedItems[0];
     $stmt->execute([
@@ -124,8 +131,9 @@ try {
         ':amount'         => $total,
         ':currency'       => 'USD',
         ':payment_method' => $paymentMethod,
-        ':status'         => 'pending',
-        ':notes'          => $notes,
+        ':status'         => $isTest ? 'paid' : 'pending',  // test orders auto-marked paid
+        ':notes'          => $isTest ? trim($notes . " [TEST ORDER — no real charge]") : $notes,
+        ':is_test'        => $isTest,
     ]);
     $orderId = (int)$db->lastInsertId();
 
@@ -161,9 +169,13 @@ try {
         'tax'      => $tax,
         'amount'   => $total,
         'currency' => 'USD',
-        'next'     => $paymentMethod === 'stripe'
-            ? "/api/stripe-checkout.php?order_id=$orderId"
-            : "/api/paypal-checkout.php?order_id=$orderId",
+        'is_test'  => $isTest,
+        // Test orders skip payment entirely and go straight to confirmation
+        'next'     => $isTest
+            ? "/order-confirmation.html?order_id=$orderId&test=1"
+            : ($paymentMethod === 'stripe'
+                ? "/api/stripe-checkout.php?order_id=$orderId"
+                : "/api/paypal-checkout.php?order_id=$orderId"),
     ]);
 } catch (PDOException $e) {
     if ($db->inTransaction()) $db->rollBack();

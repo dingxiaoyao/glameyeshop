@@ -105,7 +105,9 @@ function currentUser(): ?array {
     if ($cached !== null && $cached['id'] === $_SESSION['user_id']) return $cached;
     try {
         $db = getDb();
-        $stmt = $db->prepare('SELECT id, email, first_name, last_name, phone, is_subscribed, email_verified, created_at FROM users WHERE id = :id LIMIT 1');
+        $stmt = $db->prepare('SELECT id, email, first_name, last_name, phone, is_subscribed, email_verified,
+                                       is_test_account, oauth_provider, avatar_url, created_at
+                              FROM users WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $_SESSION['user_id']]);
         $cached = $stmt->fetch() ?: null;
     } catch (Throwable $e) {

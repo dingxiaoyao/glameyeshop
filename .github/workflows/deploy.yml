@@ -92,6 +92,31 @@ jobs:
               "ALTER TABLE products ADD COLUMN gallery_urls TEXT DEFAULT NULL AFTER image_url" \
               "ALTER TABLE products ADD COLUMN is_bestseller TINYINT(1) NOT NULL DEFAULT 0" \
               "ALTER TABLE products ADD COLUMN is_new TINYINT(1) NOT NULL DEFAULT 0" \
+              "ALTER TABLE users MODIFY COLUMN password_hash VARCHAR(255) NULL" \
+              "ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500) DEFAULT NULL" \
+              "ALTER TABLE users ADD COLUMN is_test_account TINYINT(1) NOT NULL DEFAULT 0" \
+              "ALTER TABLE users ADD COLUMN oauth_provider VARCHAR(32) DEFAULT NULL" \
+              "ALTER TABLE users ADD COLUMN oauth_id VARCHAR(255) DEFAULT NULL" \
+              "ALTER TABLE users ADD UNIQUE KEY uniq_oauth (oauth_provider, oauth_id)" \
+              "ALTER TABLE orders ADD COLUMN carrier VARCHAR(64) DEFAULT NULL" \
+              "ALTER TABLE orders ADD COLUMN tracking_number VARCHAR(128) DEFAULT NULL" \
+              "ALTER TABLE orders ADD COLUMN tracking_url VARCHAR(500) DEFAULT NULL" \
+              "ALTER TABLE orders ADD COLUMN shipped_at DATETIME DEFAULT NULL" \
+              "ALTER TABLE orders ADD COLUMN delivered_at DATETIME DEFAULT NULL" \
+              "ALTER TABLE orders ADD COLUMN estimated_delivery DATE DEFAULT NULL" \
+              "ALTER TABLE orders ADD COLUMN is_test TINYINT(1) NOT NULL DEFAULT 0" \
+              "ALTER TABLE orders ADD INDEX idx_tracking (tracking_number)" \
+              "CREATE TABLE IF NOT EXISTS order_tracking_events (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  order_id INT NOT NULL,
+                  status VARCHAR(50) NOT NULL,
+                  location VARCHAR(255) DEFAULT NULL,
+                  description TEXT,
+                  occurred_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  INDEX idx_order_id (order_id),
+                  INDEX idx_occurred (occurred_at)
+              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4" \
             ; do
               mysql --protocol=socket -u root glameyeshop -e "$sql" 2>/dev/null || true
             done

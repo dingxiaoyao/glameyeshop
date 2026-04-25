@@ -36,15 +36,20 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) DEFAULT NULL,         -- NULL for OAuth-only users
     first_name VARCHAR(100) NOT NULL DEFAULT '',
     last_name VARCHAR(100) NOT NULL DEFAULT '',
     phone VARCHAR(64) DEFAULT NULL,
+    avatar_url VARCHAR(500) DEFAULT NULL,
     is_subscribed TINYINT(1) NOT NULL DEFAULT 0,
     email_verified TINYINT(1) NOT NULL DEFAULT 0,
+    is_test_account TINYINT(1) NOT NULL DEFAULT 0,    -- admin-flagged test buyer (no real $ charge)
+    oauth_provider VARCHAR(20) DEFAULT NULL,          -- google / tiktok / null
+    oauth_id VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_email (email)
+    INDEX idx_email (email),
+    INDEX idx_oauth (oauth_provider, oauth_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS user_addresses (
@@ -98,12 +103,36 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_session_id VARCHAR(255) DEFAULT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'pending',
     notes TEXT,
+    -- 物流追踪
+    carrier VARCHAR(50) DEFAULT NULL,                  -- USPS / UPS / FedEx / DHL / Other
+    tracking_number VARCHAR(100) DEFAULT NULL,
+    tracking_url VARCHAR(500) DEFAULT NULL,            -- override (optional)
+    shipped_at TIMESTAMP NULL DEFAULT NULL,
+    delivered_at TIMESTAMP NULL DEFAULT NULL,
+    estimated_delivery DATE DEFAULT NULL,
+    -- 测试订单标记
+    is_test TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_user_id (user_id),
     INDEX idx_email (email),
     INDEX idx_status (status),
-    INDEX idx_created_at (created_at)
+    INDEX idx_created_at (created_at),
+    INDEX idx_tracking (tracking_number),
+    INDEX idx_is_test (is_test)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 物流状态历史（每次更新都追加，给买家看时间线）
+CREATE TABLE IF NOT EXISTS order_tracking_events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    status VARCHAR(50) NOT NULL,                       -- created / paid / processing / shipped / in_transit / out_for_delivery / delivered / exception
+    description VARCHAR(500) DEFAULT '',
+    location VARCHAR(200) DEFAULT '',
+    occurred_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_order_id (order_id),
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS order_items (
@@ -208,7 +237,18 @@ INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 ('amazon_store_url',   ''),
 ('amazon_status',      'coming_soon'),
 ('hero_image_url',     '/images/lash-photos/style-14-frost-split.jpg'),
-('seo_blocked',        '1');  -- 默认拦截搜索引擎，上线就绪后改 0
+-- 多图轮播（JSON array）。如果非空，覆盖 hero_image_url。前端 5s 切换
+('hero_image_urls',    '["/images/lash-photos/style-14-frost-split.jpg","/images/lash-photos/style-17-ice-split.jpg","/images/lash-photos/style-18-velvet-split.jpg"]'),
+('hero_slide_interval','5000'),
+('seo_blocked',        '1'),
+-- 支付配置（PRIVATE - 不通过 api/settings.php 暴露）
+('stripe_publishable_key', ''),
+('stripe_secret_key',      ''),
+('stripe_webhook_secret',  ''),
+('stripe_mode',            'test'),  -- test / live
+('paypal_client_id',       ''),
+('paypal_secret',          ''),
+('paypal_mode',            'sandbox');  -- sandbox / live
 
 -- ============================================================
 -- 种子产品：18 个 SKU 覆盖 mink/faux/magnetic/tools
