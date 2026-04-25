@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Inter:wght@300;400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand">
+        <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="36" />
+      </a>
+      <nav class="site-nav"><a href="/">Back to Shop</a></nav>
+    </div>
+  </header>
+  <main class="container" style="padding: 4rem 1rem;">
+    <div class="form-card">
+      <h1>Join GlamEye</h1>
+      <p class="subtitle">Get 10% off your first order ✨</p>
+      <form id="signup-form" class="form-group">
+        <div class="form-row">
+          <label>
+            <span class="label-text">First Name</span>
+            <input type="text" name="first_name" required maxlength="100" autocomplete="given-name" />
+          </label>
+          <label>
+            <span class="label-text">Last Name</span>
+            <input type="text" name="last_name" maxlength="100" autocomplete="family-name" />
+          </label>
+        </div>
+        <label>
+          <span class="label-text">Email</span>
+          <input type="email" name="email" required autocomplete="email" />
+        </label>
+        <label>
+          <span class="label-text">Password (min 8 characters)</span>
+          <input type="password" name="password" required minlength="8" autocomplete="new-password" />
+        </label>
+        <div class="checkbox-row">
+          <input type="checkbox" name="is_subscribed" id="sub" value="1" checked />
+          <label for="sub">Send me beauty tips, new launches & exclusive 10% off code</label>
+        </div>
+        <button type="submit" class="button button-primary button-block">Create Account</button>
+        <p id="signup-feedback" class="form-feedback"></p>
+      </form>
+      <div class="divider">OR</div>
+      <p class="text-center muted small">
+        Already have an account? <a href="login.html">Sign in</a>
+      </p>
+    </div>
+  </main>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fb = document.getElementById('signup-feedback');
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      data.is_subscribed = data.is_subscribed ? 1 : 0;
+      fb.textContent = 'Creating account...';
+      fb.className = 'form-feedback';
+      try {
+        const r = await fetch('api/auth.php?action=signup', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const j = await r.json();
+        if (j.success) {
+          fb.textContent = '✨ Welcome! Redirecting…';
+          fb.className = 'form-feedback success';
+          setTimeout(() => window.location.href = '/account.html', 600);
+        } else {
+          fb.textContent = j.error || 'Sign up failed';
+          fb.className = 'form-feedback error';
+        }
+      } catch (err) {
+        fb.textContent = 'Network error';
+        fb.className = 'form-feedback error';
+      }
+    });
+  </script>
+</body>
+</html>

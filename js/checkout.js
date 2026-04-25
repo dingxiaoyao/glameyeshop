@@ -1,11 +1,10 @@
 // ============================================================
-// GlamEye - 结账页脚本（购物车渲染 + AJAX 提交）
+// GlamEye - Checkout Page
 // ============================================================
 (function () {
   'use strict';
-
-  function $(sel) { return document.querySelector(sel); }
-  function fmt(n) { return '¥' + Number(n).toFixed(2); }
+  const $ = (s) => document.querySelector(s);
+  const fmt = (n) => '$' + Number(n).toFixed(2);
 
   function renderCart() {
     const cart = window.GlamEye?.Cart;
@@ -14,18 +13,21 @@
     const summary = $('#summary-items');
 
     if (cart.items.length === 0) {
-      list.innerHTML = '<p class="cart-empty">购物车为空。<a href="index.html#products">去挑选商品 →</a></p>';
-      summary.innerHTML = '<p class="muted small">无商品</p>';
-      $('#subtotal').textContent = '¥0.00';
-      $('#total').textContent = '¥0.00';
+      list.innerHTML = '<p class="cart-empty">Your cart is empty. <a href="/#shop">Browse our collection →</a></p>';
+      summary.innerHTML = '<p class="muted small">No items</p>';
+      $('#subtotal').textContent = '$0.00';
+      $('#shipping').textContent = '$0.00';
+      $('#tax').textContent = '$0.00';
+      $('#total').textContent = '$0.00';
       return;
     }
 
     list.innerHTML = cart.items.map((it) => `
-      <div class="cart-row" data-name="${escapeHtml(it.name)}">
+      <div class="cart-row" data-sku="${esc(it.sku)}">
+        <img src="${esc(it.image)}" alt="${esc(it.name)}" />
         <div class="cart-row-name">
-          <strong>${escapeHtml(it.name)}</strong>
-          <span class="muted small">${fmt(it.price)} / 件</span>
+          <strong>${esc(it.name)}</strong>
+          <span class="muted small">${fmt(it.price)} each</span>
         </div>
         <div class="cart-row-qty">
           <button type="button" class="qty-btn" data-action="dec">−</button>
@@ -33,47 +35,48 @@
           <button type="button" class="qty-btn" data-action="inc">+</button>
         </div>
         <div class="cart-row-total">${fmt(it.price * it.quantity)}</div>
-        <button type="button" class="cart-row-remove" aria-label="移除">×</button>
-      </div>
-    `).join('');
+        <button type="button" class="cart-row-remove" aria-label="Remove">×</button>
+      </div>`).join('');
 
     summary.innerHTML = cart.items.map((it) => `
       <div class="summary-row">
-        <span>${escapeHtml(it.name)} × ${it.quantity}</span>
+        <span>${esc(it.name)} × ${it.quantity}</span>
         <span>${fmt(it.price * it.quantity)}</span>
-      </div>
-    `).join('');
+      </div>`).join('');
 
-    const total = cart.total();
-    $('#subtotal').textContent = fmt(total);
+    const subtotal = cart.subtotal();
+    const shipping = subtotal >= 50 ? 0 : 5.99;
+    const tax = 0;
+    const total = subtotal + shipping + tax;
+    $('#subtotal').textContent = fmt(subtotal);
+    $('#shipping').textContent = subtotal >= 50 ? 'FREE' : fmt(shipping);
+    $('#tax').textContent = fmt(tax);
     $('#total').textContent = fmt(total);
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
+  function esc(s) { return window.GlamEye.Fmt.escape(s); }
 
-  function bindCartEvents() {
+  function bindCart() {
     $('#cart-list').addEventListener('click', (e) => {
       const cart = window.GlamEye?.Cart;
       const row = e.target.closest('.cart-row');
       if (!row || !cart) return;
-      const name = row.dataset.name;
+      const sku = row.dataset.sku;
       if (e.target.matches('.qty-btn[data-action="inc"]')) {
-        const it = cart.items.find((i) => i.name === name);
-        if (it) cart.setQuantity(name, it.quantity + 1);
+        const it = cart.items.find((i) => i.sku === sku);
+        if (it) cart.setQuantity(sku, it.quantity + 1);
       } else if (e.target.matches('.qty-btn[data-action="dec"]')) {
-        const it = cart.items.find((i) => i.name === name);
-        if (it) cart.setQuantity(name, it.quantity - 1);
+        const it = cart.items.find((i) => i.sku === sku);
+        if (it) cart.setQuantity(sku, it.quantity - 1);
       } else if (e.target.matches('.cart-row-remove')) {
-        cart.remove(name);
+        cart.remove(sku);
       }
     });
     $('#cart-list').addEventListener('change', (e) => {
       if (e.target.matches('.qty-input')) {
         const cart = window.GlamEye?.Cart;
         const row = e.target.closest('.cart-row');
-        if (cart && row) cart.setQuantity(row.dataset.name, e.target.value);
+        if (cart && row) cart.setQuantity(row.dataset.sku, e.target.value);
       }
     });
     window.addEventListener('cart:update', renderCart);
@@ -85,13 +88,13 @@
     document.querySelectorAll('input[name="payment_method"]').forEach((r) => {
       r.addEventListener('change', function () {
         note.textContent = this.value === 'paypal'
-          ? '您已选择 PayPal，提交后将跳转到 PayPal 支付。'
-          : '您已选择 Stripe，提交后将进入信用卡支付。';
+          ? 'You will be redirected to PayPal to complete payment.'
+          : 'Secure 256-bit SSL encryption. We never store your card details.';
       });
     });
   }
 
-  function bindCheckoutSubmit() {
+  function bindSubmit() {
     const form = $('#checkout-form');
     if (!form) return;
     form.addEventListener('submit', async (e) => {
@@ -101,14 +104,11 @@
       const cart = window.GlamEye?.Cart;
 
       if (!cart || cart.items.length === 0) {
-        fb.textContent = '❌ 购物车为空，请先添加商品';
+        fb.textContent = 'Your cart is empty.';
         fb.className = 'form-feedback error';
         return;
       }
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
+      if (!form.checkValidity()) { form.reportValidity(); return; }
 
       btn.disabled = true;
       btn.querySelector('.btn-text').hidden = true;
@@ -117,41 +117,47 @@
 
       const fd = new FormData(form);
       const payload = {
-        customer_name: fd.get('customer_name'),
-        email:         fd.get('email'),
-        phone:         fd.get('phone'),
-        address:       fd.get('address'),
-        city:          fd.get('city'),
-        postal_code:   fd.get('postal_code'),
-        notes:         fd.get('notes'),
+        customer_name:  fd.get('customer_name'),
+        email:          fd.get('email'),
+        phone:          fd.get('phone'),
+        address:        fd.get('address'),
+        address_line2:  fd.get('address_line2'),
+        city:           fd.get('city'),
+        state:          fd.get('state'),
+        postal_code:    fd.get('postal_code'),
+        country:        'US',
+        notes:          fd.get('notes'),
         payment_method: fd.get('payment_method'),
-        items: cart.items.map((it) => ({ product_name: it.name, quantity: it.quantity })),
+        items: cart.items.map((it) => ({
+          sku: it.sku, product_name: it.name, quantity: it.quantity,
+        })),
       };
 
       try {
         const r = await fetch('api/create-order.php', {
-          method: 'POST',
+          method: 'POST', credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
         const j = await r.json();
         if (j.success && j.order_id) {
-          // 把 email 存到 sessionStorage，order-success.html 用它查订单
           sessionStorage.setItem('glameye_last_order', JSON.stringify({
             order_id: j.order_id, email: payload.email,
           }));
           cart.clear();
           window.location.href = j.next || ('/order-success.html?order_id=' + j.order_id);
         } else {
-          fb.textContent = '❌ ' + (j.error || '下单失败');
+          fb.textContent = j.error || 'Order failed. Please try again.';
           fb.className = 'form-feedback error';
-          btn.disabled = false;
-          btn.querySelector('.btn-text').hidden = false;
-          btn.querySelector('.btn-loading').hidden = true;
+          resetBtn();
         }
       } catch (err) {
-        fb.textContent = '❌ 网络错误：' + err.message;
+        fb.textContent = 'Network error: ' + err.message;
         fb.className = 'form-feedback error';
+        resetBtn();
+      }
+
+      function resetBtn() {
         btn.disabled = false;
         btn.querySelector('.btn-text').hidden = false;
         btn.querySelector('.btn-loading').hidden = true;
@@ -161,8 +167,8 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     renderCart();
-    bindCartEvents();
+    bindCart();
     bindPaymentNote();
-    bindCheckoutSubmit();
+    bindSubmit();
   });
 })();

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Wishlist · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Inter:wght@300;400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand"><img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="36" /></a>
+      <nav class="site-nav"><a href="/">Continue Shopping</a></nav>
+    </div>
+  </header>
+  <main class="container account-page">
+    <aside class="account-sidebar">
+      <h3>My Account</h3>
+      <nav class="account-nav">
+        <a href="account.html">Dashboard</a>
+        <a href="account-orders.html">Order History</a>
+        <a href="account-wishlist.html" class="active">Wishlist</a>
+        <a href="account-settings.html">Settings</a>
+        <a href="#" id="sidebar-logout">Sign Out</a>
+      </nav>
+    </aside>
+    <section class="account-content">
+      <h1>My Wishlist</h1>
+      <div id="wishlist-container" class="product-grid" style="margin-top:2rem;"><p class="muted">Loading…</p></div>
+    </section>
+  </main>
+  <script src="js/app.js"></script>
+  <script>
+    (async () => {
+      const u = await window.GlamEye.Auth.fetchMe();
+      if (!u) { window.location.href = '/login.html?redirect=/account-wishlist.html'; return; }
+      const container = document.getElementById('wishlist-container');
+      try {
+        const r = await fetch('api/wishlist.php', { credentials: 'include' });
+        const j = await r.json();
+        const items = j.items || [];
+        if (items.length === 0) {
+          container.innerHTML = '<p class="muted">Your wishlist is empty. <a href="/#shop">Find your favorites →</a></p>';
+          return;
+        }
+        const esc = window.GlamEye.Fmt.escape;
+        const m = window.GlamEye.Fmt.money;
+        container.innerHTML = items.map((p) => `
+          <article class="product-card">
+            <div class="product-image">
+              <img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy" />
+            </div>
+            <div class="product-info">
+              <h3>${esc(p.name)}</h3>
+              <div class="product-price-row"><span class="price">${m(p.price)}</span></div>
+              <button class="button button-primary button-block add-btn"
+                      data-sku="${esc(p.sku)}" data-name="${esc(p.name)}"
+                      data-price="${p.price}" data-image="${esc(p.image_url)}">Add to Cart</button>
+              <button class="button button-secondary button-block remove-btn"
+                      data-product="${p.id}" style="margin-top:.5rem;">Remove from Wishlist</button>
+            </div>
+          </article>`).join('');
+        container.addEventListener('click', async (e) => {
+          const add = e.target.closest('.add-btn');
+          if (add) {
+            window.GlamEye.Cart.add({
+              sku: add.dataset.sku, name: add.dataset.name,
+              price: parseFloat(add.dataset.price), image: add.dataset.image, quantity: 1,
+            });
+          }
+          const rm = e.target.closest('.remove-btn');
+          if (rm) {
+            await fetch('api/wishlist.php', {
+              method: 'DELETE', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ product_id: parseInt(rm.dataset.product, 10) }),
+            });
+            rm.closest('.product-card').remove();
+            window.GlamEye.Notification.show('Removed from wishlist');
+          }
+        });
+      } catch (e) {
+        container.innerHTML = '<p style="color:var(--error)">Failed to load wishlist.</p>';
+      }
+    })();
+    document.getElementById('sidebar-logout').addEventListener('click', (e) => { e.preventDefault(); window.GlamEye.Auth.logout(); });
+  </script>
+</body>
+</html>

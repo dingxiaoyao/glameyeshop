@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <radialGradient id="bg-drama" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1a1408"/>
+      <stop offset="100%" stop-color="#0a0a05"/>
+    </radialGradient>
+    <radialGradient id="iris-drama" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a3a4a"/>
+      <stop offset="50%" stop-color="#2a4a5a"/>
+      <stop offset="100%" stop-color="#0a1a25"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg-drama)"/>
+  <g transform="translate(400 330)">
+    <!-- smokey eye 眼影 -->
+    <ellipse cx="0" cy="-30" rx="240" ry="60" fill="#3a1a08" opacity="0.6"/>
+    <ellipse cx="0" cy="-15" rx="220" ry="40" fill="#1a0a04" opacity="0.7"/>
+    <!-- 眼白 -->
+    <path d="M -200 0 Q -100 -55 0 -55 Q 100 -55 200 0 Q 100 55 0 55 Q -100 55 -200 0 Z"
+          fill="#f8f5f0"/>
+    <!-- 虹膜 -->
+    <circle cx="0" cy="0" r="48" fill="url(#iris-drama)"/>
+    <circle cx="0" cy="0" r="18" fill="#000"/>
+    <circle cx="-10" cy="-12" r="9" fill="white" opacity="0.95"/>
+    <!-- 上睫毛（22mm dramatic 浓密上翘） -->
+    <g stroke="#0a0a0a" stroke-linecap="round" fill="none">
+      <!-- 内眼角短 -->
+      <path d="M -190 -20 Q -195 -55 -195 -68" stroke-width="3"/>
+      <path d="M -175 -32 Q -180 -75 -175 -92" stroke-width="3.5"/>
+      <path d="M -155 -42 Q -160 -90 -148 -110" stroke-width="4"/>
+      <!-- 中段：浓密又长 -->
+      <path d="M -130 -50 Q -132 -110 -115 -135" stroke-width="4.5"/>
+      <path d="M -110 -53 Q -110 -118 -88 -145"  stroke-width="4.8"/>
+      <path d="M  -90 -55 Q  -85 -125 -60 -150"  stroke-width="5"/>
+      <path d="M  -70 -55 Q  -60 -130 -32 -155"  stroke-width="5.2"/>
+      <path d="M  -50 -55 Q  -38 -132  -8 -158"  stroke-width="5.3"/>
+      <path d="M  -30 -55 Q  -15 -135  15 -160"  stroke-width="5.3"/>
+      <path d="M  -10 -55 Q    8 -135  35 -160"  stroke-width="5.3"/>
+      <path d="M   10 -55 Q   28 -132  55 -158"  stroke-width="5.2"/>
+      <path d="M   30 -55 Q   50 -130  72 -155"  stroke-width="5"/>
+      <path d="M   50 -55 Q   72 -125  90 -150"  stroke-width="4.8"/>
+      <path d="M   70 -55 Q   88 -120 105 -145"  stroke-width="4.5"/>
+      <path d="M   90 -53 Q  108 -115 122 -138"  stroke-width="4.2"/>
+      <!-- 外眼角延伸更长 -->
+      <path d="M  110 -50 Q  130 -110 145 -135"  stroke-width="4"/>
+      <path d="M  130 -45 Q  155 -103 170 -125"  stroke-width="3.8"/>
+      <path d="M  150 -38 Q  175 -90  192 -115"  stroke-width="3.5"/>
+      <path d="M  170 -30 Q  195 -75  212 -98"   stroke-width="3"/>
+      <path d="M  185 -18 Q  210 -55  225 -78"   stroke-width="2.5"/>
+    </g>
+    <!-- 下睫毛 -->
+    <g stroke="#0a0a0a" stroke-linecap="round" fill="none" stroke-width="2">
+      <path d="M -130 40 Q -128 65 -120 78"/>
+      <path d="M  -80 52 Q  -75 75 -65 88"/>
+      <path d="M  -30 56 Q  -20 78 -10 92"/>
+      <path d="M   30 56 Q   38 78  48 90"/>
+      <path d="M   80 52 Q   88 75  98 86"/>
+      <path d="M  130 40 Q  138 60  145 72"/>
+    </g>
+  </g>
+  <text x="400" y="555" text-anchor="middle" font-family="Georgia, serif"
+        font-size="18" font-weight="300" fill="#d4a955" letter-spacing="6">DRAMA · 22MM</text>
+</svg>

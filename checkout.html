@@ -1,116 +1,139 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="GlamEye - 快速、安全的在线结账，支持 Stripe 和 PayPal。" />
+  <meta name="description" content="Secure checkout for GlamEye lashes. Stripe + PayPal accepted." />
   <meta name="robots" content="noindex,nofollow" />
-  <title>GlamEye 结账</title>
+  <title>Checkout · GlamEye</title>
   <link rel="icon" href="favicon.ico" sizes="any" />
-  <link rel="icon" href="images/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&family=Inter:wght@300;400;500;600;700&display=swap" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <header class="site-header">
     <div class="container">
-      <a href="index.html" class="brand">
-        <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="40" />
+      <a href="/" class="brand">
+        <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="36" />
       </a>
       <nav class="site-nav">
-        <a href="index.html">首页</a>
-        <a href="index.html#products">产品</a>
+        <a href="/">Continue Shopping</a>
       </nav>
     </div>
   </header>
 
   <main class="container checkout-page">
-    <section class="checkout-panel">
-      <h1>🛍️ 立即结账</h1>
-      <p>填写收货信息，选择支付方式即可下单。</p>
-
-      <!-- 购物车明细 -->
-      <fieldset class="form-group">
-        <legend>🎁 订单商品</legend>
-        <div id="cart-list" class="cart-list">
-          <p class="cart-empty">购物车为空。<a href="index.html#products">去挑选商品 →</a></p>
-        </div>
-      </fieldset>
-
+    <div>
       <form id="checkout-form" class="checkout-form" novalidate>
         <fieldset class="form-group">
-          <legend>👤 顾客信息</legend>
-          <label>姓名 <span class="required">*</span>
-            <input type="text" name="customer_name" required maxlength="100" autocomplete="name" />
+          <legend>Cart</legend>
+          <div id="cart-list" class="cart-list">
+            <p class="cart-empty">Your cart is empty. <a href="/#shop">Browse our collection →</a></p>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-group">
+          <legend>Contact Info</legend>
+          <label>
+            <span class="label-text">Full Name <span class="required">*</span></span>
+            <input type="text" name="customer_name" required maxlength="200" autocomplete="name" />
           </label>
-          <label>邮箱地址 <span class="required">*</span>
+          <label>
+            <span class="label-text">Email <span class="required">*</span></span>
             <input type="email" name="email" required autocomplete="email" />
           </label>
-          <label>联系电话 <span class="required">*</span>
+          <label>
+            <span class="label-text">Phone <span class="required">*</span></span>
             <input type="tel" name="phone" pattern="[0-9\-\+\s\(\)]{5,32}" required autocomplete="tel" />
           </label>
         </fieldset>
 
         <fieldset class="form-group">
-          <legend>📦 收货地址</legend>
-          <label>详细地址 <span class="required">*</span>
-            <input type="text" name="address" placeholder="街道、门牌号" required maxlength="255" autocomplete="street-address" />
+          <legend>Shipping Address</legend>
+          <label>
+            <span class="label-text">Address Line 1 <span class="required">*</span></span>
+            <input type="text" name="address" placeholder="Street address" required maxlength="255" autocomplete="address-line1" />
+          </label>
+          <label>
+            <span class="label-text">Address Line 2</span>
+            <input type="text" name="address_line2" placeholder="Apt, suite, etc. (optional)" maxlength="255" autocomplete="address-line2" />
           </label>
           <div class="form-row">
-            <label>城市 <span class="required">*</span>
+            <label>
+              <span class="label-text">City <span class="required">*</span></span>
               <input type="text" name="city" required maxlength="100" autocomplete="address-level2" />
             </label>
-            <label>邮编
-              <input type="text" name="postal_code" maxlength="32" autocomplete="postal-code" />
+            <label>
+              <span class="label-text">State <span class="required">*</span></span>
+              <select name="state" required autocomplete="address-level1">
+                <option value="">Select state…</option>
+                <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+                <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
+                <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
+                <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
+                <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+                <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
+                <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
+                <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
+                <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
+                <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+                <option>SD</option><option>TN</option><option>TX</option><option>UT</option>
+                <option>VT</option><option>VA</option><option>WA</option><option>WV</option>
+                <option>WI</option><option>WY</option><option>DC</option>
+              </select>
             </label>
           </div>
-          <label>备注
-            <textarea name="notes" rows="2" maxlength="500" placeholder="可选：送货时间、特殊要求"></textarea>
+          <label>
+            <span class="label-text">ZIP Code <span class="required">*</span></span>
+            <input type="text" name="postal_code" pattern="[0-9]{5}(-[0-9]{4})?" placeholder="12345" required maxlength="10" autocomplete="postal-code" />
+          </label>
+          <label>
+            <span class="label-text">Order Notes</span>
+            <textarea name="notes" rows="2" maxlength="500" placeholder="Optional: delivery instructions, etc."></textarea>
           </label>
         </fieldset>
 
         <fieldset class="form-group">
-          <legend>💳 支付方式</legend>
-          <label class="radio-row">
-            <input type="radio" name="payment_method" value="stripe" checked />
-            Stripe（信用卡）
-          </label>
-          <label class="radio-row">
-            <input type="radio" name="payment_method" value="paypal" />
-            PayPal
-          </label>
-          <p class="payment-note" id="payment-note">您已选择 Stripe，提交后将进入信用卡支付。</p>
+          <legend>Payment Method</legend>
+          <div class="checkbox-row">
+            <input type="radio" name="payment_method" value="stripe" id="pay-stripe" checked />
+            <label for="pay-stripe">💳 Credit / Debit Card · Apple Pay · Google Pay (Stripe)</label>
+          </div>
+          <div class="checkbox-row">
+            <input type="radio" name="payment_method" value="paypal" id="pay-paypal" />
+            <label for="pay-paypal">🅿️ PayPal</label>
+          </div>
+          <p class="payment-note" id="payment-note">Secure 256-bit SSL encryption. We never store your card details.</p>
         </fieldset>
 
-        <label class="checkbox-label">
-          <input type="checkbox" name="agree_terms" required />
-          我已阅读并同意《服务条款》和《隐私政策》
-        </label>
+        <div class="checkbox-row">
+          <input type="checkbox" name="agree_terms" id="agree" required />
+          <label for="agree">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</label>
+        </div>
 
-        <button type="submit" class="button button-primary submit-btn">
-          <span class="btn-text">提交订单 · 进入支付</span>
-          <span class="btn-loading" hidden>处理中...</span>
+        <button type="submit" class="button button-primary button-block submit-btn" style="margin-top:1.5rem; padding:1.1rem;">
+          <span class="btn-text">Place Order · Continue to Payment</span>
+          <span class="btn-loading" hidden>Processing…</span>
         </button>
         <p class="form-feedback" id="checkout-feedback"></p>
-        <p class="text-center muted small">✅ 所有交易通过加密连接保护</p>
       </form>
-    </section>
+    </div>
 
     <aside class="checkout-summary">
-      <h2>📦 订单摘要</h2>
+      <h2>Order Summary</h2>
       <div id="summary-items" class="summary-items"></div>
-      <div class="summary-totals">
-        <div class="summary-row"><span>小计</span><span id="subtotal">¥0</span></div>
-        <div class="summary-row"><span>运费</span><span>¥0</span></div>
-        <div class="summary-row"><span>税费</span><span>¥0</span></div>
-        <div class="summary-row total"><span>总计</span><span id="total">¥0</span></div>
+      <div>
+        <div class="summary-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+        <div class="summary-row"><span>Shipping <small>(free over $50)</small></span><span id="shipping">$0.00</span></div>
+        <div class="summary-row"><span>Tax</span><span id="tax">$0.00</span></div>
+        <div class="summary-row total"><span>Total</span><span id="total">$0.00</span></div>
       </div>
-      <a href="index.html#products" class="button button-outline" style="display:block; text-align:center; margin-top:1rem;">← 继续购物</a>
     </aside>
   </main>
 
   <footer class="site-footer">
-    <div class="container">
-      <p class="footer-copyright">© 2026 GlamEye. 版权所有。</p>
+    <div class="footer-bottom container">
+      <p>© 2026 GlamEye, Inc. · Secure Checkout</p>
     </div>
   </footer>
 

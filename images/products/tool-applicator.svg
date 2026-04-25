@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <radialGradient id="bg-tool2" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#1a1408"/>
+      <stop offset="100%" stop-color="#080604"/>
+    </radialGradient>
+    <linearGradient id="goldHandle" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a8843a"/>
+      <stop offset="50%" stop-color="#f5d77b"/>
+      <stop offset="100%" stop-color="#a8843a"/>
+    </linearGradient>
+    <linearGradient id="metalTip" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e8e8e8"/>
+      <stop offset="100%" stop-color="#888"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg-tool2)"/>
+  <!-- 镊子（applicator tweezers） -->
+  <g transform="translate(400 300) rotate(-20)">
+    <!-- 上臂 -->
+    <path d="M -100 -3 L 90 -3 L 130 -25 L 100 -28 L -100 -8 Z" fill="url(#goldHandle)"/>
+    <!-- 下臂 -->
+    <path d="M -100 3 L 90 3 L 130 25 L 100 28 L -100 8 Z" fill="url(#goldHandle)" opacity="0.85"/>
+    <!-- 尖端金属 -->
+    <path d="M 130 -25 L 200 -8 L 200 8 L 130 25 Z" fill="url(#metalTip)"/>
+    <!-- 顶端 -->
+    <circle cx="-100" cy="0" r="5" fill="#d4a955"/>
+    <!-- 高光 -->
+    <line x1="-90" y1="-2" x2="80" y2="-2" stroke="#fff" stroke-width="0.8" opacity="0.5"/>
+  </g>
+  <text x="400" y="555" text-anchor="middle" font-family="Georgia, serif"
+        font-size="18" font-weight="300" fill="#d4a955" letter-spacing="6">PRECISION APPLICATOR</text>
+</svg>

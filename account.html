@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>My Account · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Inter:wght@300;400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand">
+        <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="36" />
+      </a>
+      <nav class="site-nav">
+        <a href="/">Continue Shopping</a>
+        <a href="#" id="logout-link">Sign Out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container account-page">
+    <aside class="account-sidebar">
+      <h3>My Account</h3>
+      <nav class="account-nav">
+        <a href="account.html" class="active">Dashboard</a>
+        <a href="account-orders.html">Order History</a>
+        <a href="account-wishlist.html">Wishlist</a>
+        <a href="account-settings.html">Settings</a>
+        <a href="#" id="sidebar-logout">Sign Out</a>
+      </nav>
+    </aside>
+    <section class="account-content" id="dashboard">
+      <h1>Welcome back, <span id="user-name">…</span></h1>
+      <p class="muted">Manage your orders, wishlist, and account settings.</p>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0;">
+        <a href="account-orders.html" class="cat-card" style="aspect-ratio: auto; padding: 1.5rem; text-decoration:none;">
+          <div>
+            <h3 style="font-size:1.25rem;">📦 Orders</h3>
+            <p class="muted small">Track and manage your orders</p>
+          </div>
+        </a>
+        <a href="account-wishlist.html" class="cat-card" style="aspect-ratio: auto; padding: 1.5rem; text-decoration:none;">
+          <div>
+            <h3 style="font-size:1.25rem;">❤ Wishlist</h3>
+            <p class="muted small">Save items for later</p>
+          </div>
+        </a>
+        <a href="account-settings.html" class="cat-card" style="aspect-ratio: auto; padding: 1.5rem; text-decoration:none;">
+          <div>
+            <h3 style="font-size:1.25rem;">⚙ Settings</h3>
+            <p class="muted small">Profile and password</p>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    (async () => {
+      const u = await window.GlamEye.Auth.fetchMe();
+      if (!u) { window.location.href = '/login.html'; return; }
+      document.getElementById('user-name').textContent = u.first_name || u.email;
+    })();
+    document.getElementById('logout-link').addEventListener('click', (e) => { e.preventDefault(); window.GlamEye.Auth.logout(); });
+    document.getElementById('sidebar-logout').addEventListener('click', (e) => { e.preventDefault(); window.GlamEye.Auth.logout(); });
+  </script>
+</body>
+</html>

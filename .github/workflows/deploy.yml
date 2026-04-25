@@ -1,14 +1,8 @@
-# ============================================================
-# .github/workflows/deploy.yml
-# 每次推送到 main 分支自动部署到 Vultr 服务器
-# ============================================================
-
 name: Deploy GLAMEYE to Vultr
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -40,37 +34,38 @@ jobs:
             cd "$DEPLOY_PATH"
             git fetch origin
             git reset --hard origin/main
-
-            # 同步文件 owner
             chown -R www-data:www-data "$DEPLOY_PATH"
 
-            # 数据库 schema（CREATE IF NOT EXISTS - 幂等）
+            # Schema (CREATE IF NOT EXISTS - 幂等)
             if [ -f database/setup.sql ]; then
               mysql --protocol=socket -u root glameyeshop < database/setup.sql 2>/dev/null || true
             fi
 
-            # 增量 ALTER 迁移（每条都用 || true，列已存在时忽略）
-            mysql --protocol=socket -u root glameyeshop 2>/dev/null <<'SQL' || true
-            ALTER TABLE orders ADD COLUMN address_line VARCHAR(255) NOT NULL DEFAULT '' AFTER phone;
-            ALTER TABLE orders ADD COLUMN city VARCHAR(100) NOT NULL DEFAULT '' AFTER address_line;
-            ALTER TABLE orders ADD COLUMN postal_code VARCHAR(32) NOT NULL DEFAULT '' AFTER city;
-            ALTER TABLE orders ADD COLUMN country VARCHAR(64) NOT NULL DEFAULT 'CN' AFTER postal_code;
-            ALTER TABLE orders ADD COLUMN payment_session_id VARCHAR(255) NULL AFTER payment_method;
-            ALTER TABLE orders ADD COLUMN notes TEXT NULL AFTER status;
-            ALTER TABLE orders ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
-            ALTER TABLE orders ADD INDEX idx_status (status);
-            ALTER TABLE wholesale_leads ADD COLUMN phone VARCHAR(64) DEFAULT NULL AFTER email;
-            ALTER TABLE wholesale_leads ADD COLUMN message TEXT DEFAULT NULL AFTER phone;
-            ALTER TABLE wholesale_leads ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'new' AFTER message;
-            ALTER TABLE wholesale_leads ADD INDEX idx_created_at (created_at);
-            ALTER TABLE wholesale_leads ADD INDEX idx_status (status);
-            SQL
+            # 增量 ALTER（旧库升级 - 每条独立执行避免一条失败影响后续）
+            for sql in \
+              "ALTER TABLE orders ADD COLUMN user_id INT DEFAULT NULL AFTER id" \
+              "ALTER TABLE orders ADD COLUMN address_line2 VARCHAR(255) DEFAULT '' AFTER address_line" \
+              "ALTER TABLE orders ADD COLUMN state VARCHAR(64) NOT NULL DEFAULT '' AFTER city" \
+              "ALTER TABLE orders ADD COLUMN subtotal DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER quantity" \
+              "ALTER TABLE orders ADD COLUMN shipping DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER subtotal" \
+              "ALTER TABLE orders ADD COLUMN tax DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER shipping" \
+              "ALTER TABLE orders ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'USD' AFTER amount" \
+              "ALTER TABLE orders ADD COLUMN payment_session_id VARCHAR(255) DEFAULT NULL AFTER payment_method" \
+              "ALTER TABLE orders ADD COLUMN notes TEXT NULL AFTER status" \
+              "ALTER TABLE orders ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" \
+              "ALTER TABLE orders ADD INDEX idx_user_id (user_id)" \
+              "ALTER TABLE orders ADD INDEX idx_status (status)" \
+              "ALTER TABLE order_items ADD COLUMN product_id INT DEFAULT NULL AFTER order_id" \
+              "ALTER TABLE order_items ADD COLUMN sku VARCHAR(64) DEFAULT '' AFTER product_name" \
+              "ALTER TABLE wholesale_leads ADD COLUMN phone VARCHAR(64) DEFAULT NULL AFTER email" \
+              "ALTER TABLE wholesale_leads ADD COLUMN message TEXT DEFAULT NULL AFTER phone" \
+              "ALTER TABLE wholesale_leads ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'new' AFTER message" \
+            ; do
+              mysql --protocol=socket -u root glameyeshop -e "$sql" 2>/dev/null || true
+            done
 
-            # 404 页 nginx 配置（仅首次需要，后续重复无害）
-            if ! grep -q 'error_page 404' /etc/nginx/sites-available/glameye 2>/dev/null; then
-              sed -i '/server_name.*;/a\    error_page 404 /404.html;\n    location = /404.html { internal; }' \
-                /etc/nginx/sites-available/glameye 2>/dev/null || true
-              nginx -t && systemctl reload nginx 2>/dev/null || true
-            fi
+            # 重载 PHP-FPM 让 session 变更生效
+            PHP_FPM=$(systemctl list-unit-files --type=service --no-legend | awk '/^php[0-9.]+-fpm\.service/{print $1; exit}')
+            [ -n "$PHP_FPM" ] && systemctl reload "$PHP_FPM" 2>/dev/null || true
 
-            echo "✅ GLAMEYE deployed at $(date) → $(git rev-parse --short HEAD)"
+            echo "✅ GlamEye deployed at $(date) → $(git rev-parse --short HEAD)"

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Order History · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Inter:wght@300;400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand">
+        <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="36" />
+      </a>
+      <nav class="site-nav"><a href="/">Continue Shopping</a></nav>
+    </div>
+  </header>
+  <main class="container account-page">
+    <aside class="account-sidebar">
+      <h3>My Account</h3>
+      <nav class="account-nav">
+        <a href="account.html">Dashboard</a>
+        <a href="account-orders.html" class="active">Order History</a>
+        <a href="account-wishlist.html">Wishlist</a>
+        <a href="account-settings.html">Settings</a>
+        <a href="#" id="sidebar-logout">Sign Out</a>
+      </nav>
+    </aside>
+    <section class="account-content">
+      <h1>Order History</h1>
+      <div id="orders-container" style="margin-top:2rem;"><p class="muted">Loading…</p></div>
+    </section>
+  </main>
+  <script src="js/app.js"></script>
+  <script>
+    (async () => {
+      const u = await window.GlamEye.Auth.fetchMe();
+      if (!u) { window.location.href = '/login.html?redirect=/account-orders.html'; return; }
+      const container = document.getElementById('orders-container');
+      try {
+        const r = await fetch('api/my-orders.php', { credentials: 'include' });
+        const j = await r.json();
+        const orders = j.orders || [];
+        if (orders.length === 0) {
+          container.innerHTML = '<p class="muted">You haven\'t placed any orders yet. <a href="/#shop">Browse our collection →</a></p>';
+          return;
+        }
+        const esc = window.GlamEye.Fmt.escape;
+        const m = window.GlamEye.Fmt.money;
+        container.innerHTML = orders.map((o) => `
+          <div style="padding:1.5rem; border:1px solid var(--border); border-radius: 12px; margin-bottom: 1rem; background: var(--black);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <div>
+                <strong style="color:var(--gold);">Order #${o.id}</strong>
+                <span class="muted small" style="margin-left: 1rem;">${esc(o.created_at)}</span>
+              </div>
+              <span class="product-badge ${o.status === 'paid' || o.status === 'delivered' ? 'bestseller' : ''}">${esc(o.status)}</span>
+            </div>
+            ${(o.items || []).map((i) => `<div class="summary-row"><span>${esc(i.product_name)} × ${i.quantity}</span><span>${m(i.line_total)}</span></div>`).join('')}
+            <div class="summary-row total"><span>Total</span><span>${m(o.amount)} ${esc(o.currency)}</span></div>
+          </div>
+        `).join('');
+      } catch (e) {
+        container.innerHTML = '<p style="color:var(--error)">Failed to load orders.</p>';
+      }
+    })();
+    document.getElementById('sidebar-logout').addEventListener('click', (e) => { e.preventDefault(); window.GlamEye.Auth.logout(); });
+  </script>
+</body>
+</html>

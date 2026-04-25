@@ -1,272 +1,264 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="GlamEye - 高品质玻璃眼镜在线商店，提供精致设计与舒适佩戴的完美结合。" />
-  <meta name="theme-color" content="#1a1a1a" />
-  <title>GlamEye | 玻璃眼镜在线商店</title>
+  <meta name="description" content="GlamEye - Premium luxury false eyelashes. Cruelty-free mink, faux mink, and accessories. Made for the modern beauty enthusiast." />
+  <meta name="theme-color" content="#0a0805" />
+  <title>GlamEye | Premium False Eyelashes · Mink, Faux & Tools</title>
 
-  <!-- Favicons -->
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" href="images/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="images/favicon-192.png" />
 
-  <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="GlamEye | 玻璃眼镜在线商店" />
-  <meta property="og:description" content="高品质玻璃眼镜，精致设计，舒适佩戴。" />
-  <meta property="og:image" content="images/logo-large.png" />
+  <meta property="og:title" content="GlamEye | Premium False Eyelashes" />
+  <meta property="og:description" content="Premium luxury false eyelashes. Cruelty-free mink, faux mink & tools." />
+  <meta property="og:image" content="/images/products/hero-lash.jpg" />
   <meta name="twitter:card" content="summary_large_image" />
 
-  <!-- 结构化数据 (Organization) -->
   <script type="application/ld+json">
   {
-    "@context": "https://schema.org",
-    "@type": "OnlineStore",
-    "name": "GlamEye",
-    "description": "高品质玻璃眼镜在线商店",
-    "url": "/",
-    "logo": "/images/logo-large.png"
+    "@context": "https://schema.org", "@type": "OnlineStore",
+    "name": "GlamEye", "description": "Premium false eyelashes",
+    "url": "/", "logo": "/images/logo.png"
   }
   </script>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <div class="top-bar">
+    ✨ <strong>Free U.S. Shipping</strong> on orders $50+ &nbsp;·&nbsp; 30-Day Returns &nbsp;·&nbsp; Cruelty-Free
+  </div>
+
   <header class="site-header">
     <div class="container">
-      <a href="index.html" class="brand" aria-label="GlamEye 首页">
-        <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="40" />
+      <a href="/" class="brand" aria-label="GlamEye Home">
+        <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="36" />
       </a>
-      <button class="nav-toggle" aria-label="打开导航" aria-expanded="false">
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
       <nav class="site-nav">
-        <a href="#products">产品</a>
-        <a href="#advantages">优势</a>
-        <a href="#wholesale">批发</a>
-        <a href="#contact">联系</a>
-        <a href="checkout.html" class="button button-secondary cart-button">
-          🛒 购物车 <span class="cart-count" id="cart-count">0</span>
-        </a>
+        <a href="#shop">Shop</a>
+        <a href="#mink">Mink</a>
+        <a href="#faux">Faux</a>
+        <a href="#tools">Tools</a>
+        <a href="#story">Story</a>
       </nav>
+      <div class="nav-actions">
+        <a href="account.html" class="icon-button" id="account-link" aria-label="Account">👤</a>
+        <a href="checkout.html" class="icon-button cart-button" aria-label="Cart">
+          🛒 <span class="cart-count" id="cart-count">0</span>
+        </a>
+      </div>
     </div>
   </header>
 
   <main>
     <!-- Hero -->
-    <section class="hero container">
-      <div class="hero-content">
-        <p class="eyebrow">GLASS EYEWEAR</p>
-        <h1>发现精致设计与舒适佩戴的完美结合</h1>
-        <p>GlamEye 以高品质玻璃镜片与轻盈镜架打造时尚眼镜，为您带来日常与商务场景的专业风采。</p>
-        <div class="hero-actions">
-          <a href="#products" class="button button-primary">浏览产品</a>
-          <a href="checkout.html" class="button button-outline">立即结账</a>
-        </div>
-      </div>
-      <div class="hero-image">
-        <img src="images/products/sample-glasses.jpg" alt="GlamEye 高级眼镜" loading="eager" width="1200" height="800" />
-      </div>
-    </section>
-
-    <!-- 宣传视频 -->
-    <section class="promo-video container">
-      <div class="section-header">
-        <h2>品牌故事</h2>
-        <p>看看我们如何打造每一副 GlamEye 眼镜</p>
-      </div>
-      <div class="video-wrapper">
-        <!-- 占位视频：用 SVG 动画做"视频"效果。后续上传真实 mp4 文件后替换 source -->
-        <video controls poster="images/products/sample-glasses.jpg" preload="none">
-          <source src="videos/brand-story.mp4" type="video/mp4" />
-          您的浏览器不支持 video 标签。
-        </video>
-        <div class="video-placeholder">
-          <p>📹 宣传视频占位</p>
-          <small>上传 MP4 到 <code>/var/www/glameye/videos/brand-story.mp4</code> 后自动启用</small>
+    <section class="hero">
+      <div class="hero-image-bg" style="background-image: url('images/products/hero-lash.jpg');"></div>
+      <div class="container">
+        <div class="hero-content">
+          <p class="eyebrow">Premium Lashes · Made in USA</p>
+          <h1>Eyes that say <em>everything</em>.</h1>
+          <p>Cruelty-free luxury lashes designed in California. From subtle wispy to full glam — find your signature look.</p>
+          <div class="hero-actions">
+            <a href="#shop" class="button button-primary">Shop the Collection</a>
+            <a href="#story" class="button button-outline">Our Story</a>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 优势 -->
-    <section id="advantages" class="section container">
-      <div class="section-header">
-        <h2>为什么选择 GlamEye</h2>
-        <p>我们的承诺是品质、舒适和风格的完美结合</p>
-      </div>
-      <div class="cards-grid">
-        <article class="card">
-          <div class="card-icon">👓</div>
-          <h3>高级玻璃镜片</h3>
-          <p>提供清晰度、耐刮花和抗反光的卓越表现，适合长期佩戴。</p>
-        </article>
-        <article class="card">
-          <div class="card-icon">💨</div>
-          <h3>轻巧舒适</h3>
-          <p>选用亲肤材料与流线型设计，让佩戴更轻盈舒适。</p>
-        </article>
-        <article class="card">
-          <div class="card-icon">✨</div>
-          <h3>精致工艺</h3>
-          <p>每一副眼镜都经过严格检验，确保外观与质感兼备。</p>
-        </article>
-        <article class="card">
-          <div class="card-icon">🚚</div>
-          <h3>快速配送</h3>
-          <p>全国 2-3 天送达，享受便捷购物体验。</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- 产品 -->
-    <section id="products" class="section container">
-      <div class="section-header">
-        <h2>推荐产品</h2>
-        <p>精选玻璃镜片眼镜，适合日常、办公与商务场景</p>
-      </div>
-      <div class="product-grid">
-        <article class="product-card" data-product="经典方形眼镜" data-price="699">
-          <div class="product-image">
-            <img src="images/products/product-1.jpg" alt="经典方形眼镜" loading="lazy" width="800" height="600" />
-            <span class="product-badge">热销</span>
-          </div>
-          <div class="product-info">
-            <h3>经典方形眼镜</h3>
-            <p>优雅外形，适合多种脸型。</p>
-            <div class="product-rating">
-              <span class="stars">★★★★★</span>
-              <span class="reviews">(128)</span>
-            </div>
-            <span class="price">¥699</span>
-            <button class="button button-primary add-to-cart-btn">加入购物车</button>
-          </div>
-        </article>
-        <article class="product-card" data-product="轻盈商务眼镜" data-price="788">
-          <div class="product-image">
-            <img src="images/products/product-2.jpg" alt="轻盈商务眼镜" loading="lazy" width="800" height="600" />
-            <span class="product-badge">新品</span>
-          </div>
-          <div class="product-info">
-            <h3>轻盈商务眼镜</h3>
-            <p>极简设计，商务与日常兼备。</p>
-            <div class="product-rating">
-              <span class="stars">★★★★☆</span>
-              <span class="reviews">(89)</span>
-            </div>
-            <span class="price">¥788</span>
-            <button class="button button-primary add-to-cart-btn">加入购物车</button>
-          </div>
-        </article>
-        <article class="product-card" data-product="复古圆形眼镜" data-price="798">
-          <div class="product-image">
-            <img src="images/products/product-3.jpg" alt="复古圆形眼镜" loading="lazy" width="800" height="600" />
-            <span class="product-badge">限量</span>
-          </div>
-          <div class="product-info">
-            <h3>复古圆形眼镜</h3>
-            <p>复古造型，显现独特品味。</p>
-            <div class="product-rating">
-              <span class="stars">★★★★★</span>
-              <span class="reviews">(156)</span>
-            </div>
-            <span class="price">¥798</span>
-            <button class="button button-primary add-to-cart-btn">加入购物车</button>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <!-- 信任 -->
-    <section class="trust-section container">
-      <h2>值得信赖</h2>
+    <!-- Trust bar -->
+    <section class="trust-section">
       <div class="trust-grid">
-        <div class="trust-item"><div class="trust-number">10K+</div><div class="trust-label">满意客户</div></div>
-        <div class="trust-item"><div class="trust-number">99.8%</div><div class="trust-label">好评率</div></div>
-        <div class="trust-item"><div class="trust-number">7天</div><div class="trust-label">无条件退货</div></div>
-        <div class="trust-item"><div class="trust-number">24h</div><div class="trust-label">客服支持</div></div>
+        <div class="trust-item">
+          <div class="trust-icon">🐰</div>
+          <h4>100% Cruelty-Free</h4>
+          <p>Vegan options available · Leaping Bunny certified</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🚚</div>
+          <h4>Free U.S. Shipping</h4>
+          <p>On orders $50+ · Ships in 1-2 business days</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">💎</div>
+          <h4>Reusable Up to 25 Wears</h4>
+          <p>Premium mink lashes you can love again</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">↩️</div>
+          <h4>30-Day Returns</h4>
+          <p>Not in love? Send it back · No questions asked</p>
+        </div>
       </div>
     </section>
 
-    <!-- 批发询单 -->
-    <section id="wholesale" class="section container wholesale-section">
+    <!-- Shop categories -->
+    <section id="shop" class="section container">
       <div class="section-header">
-        <h2>批发与定制合作</h2>
-        <p>欢迎眼镜店、机构、企业批量采购，提供专属价格与定制 logo</p>
+        <span class="eyebrow">Shop by Style</span>
+        <h2>Find Your Lash</h2>
+        <p>Three signature collections, designed for every occasion.</p>
       </div>
-      <form id="wholesale-form" class="wholesale-form">
-        <div class="form-row">
-          <label>公司名称 <span class="required">*</span>
-            <input type="text" name="company" required maxlength="200" />
-          </label>
-          <label>联系人 <span class="required">*</span>
-            <input type="text" name="contact" required maxlength="100" />
-          </label>
-        </div>
-        <div class="form-row">
-          <label>邮箱 <span class="required">*</span>
-            <input type="email" name="email" required />
-          </label>
-          <label>电话
-            <input type="tel" name="phone" maxlength="64" />
-          </label>
-        </div>
-        <label>需求说明
-          <textarea name="message" rows="4" placeholder="请告诉我们您的采购数量、品类偏好、定制要求等" maxlength="2000"></textarea>
-        </label>
-        <button type="submit" class="button button-primary">提交询单</button>
-        <p id="wholesale-feedback" class="form-feedback"></p>
-      </form>
+      <div class="cat-grid">
+        <a href="#mink" class="cat-card">
+          <img src="images/products/lash-glamour-25.jpg" alt="Mink Lashes Collection" loading="lazy" />
+          <div class="cat-card-content">
+            <h3>Mink Collection</h3>
+            <span class="cat-link">Shop Mink →</span>
+          </div>
+        </a>
+        <a href="#faux" class="cat-card">
+          <img src="images/products/lash-volume-18.jpg" alt="Faux Mink Collection" loading="lazy" />
+          <div class="cat-card-content">
+            <h3>Faux Mink (Vegan)</h3>
+            <span class="cat-link">Shop Faux →</span>
+          </div>
+        </a>
+        <a href="#tools" class="cat-card">
+          <img src="images/products/tool-case.jpg" alt="Tools & Accessories" loading="lazy" />
+          <div class="cat-card-content">
+            <h3>Tools & Accessories</h3>
+            <span class="cat-link">Shop Tools →</span>
+          </div>
+        </a>
+      </div>
     </section>
 
-    <!-- 联系 -->
-    <section id="contact" class="section container">
+    <!-- Mink products -->
+    <section id="mink" class="section container">
       <div class="section-header">
-        <h2>联系我们</h2>
-        <p>有任何问题，欢迎通过以下方式联系</p>
+        <span class="eyebrow">Mink Lashes</span>
+        <h2>Luxury Mink</h2>
+        <p>Cruelty-free, ethically sourced, reusable up to 25 wears.</p>
       </div>
-      <div class="contact-grid">
-        <div class="contact-item"><strong>客服邮箱：</strong>support@glameye.com</div>
-        <div class="contact-item"><strong>批发邮箱：</strong>wholesale@glameye.com</div>
-        <div class="contact-item"><strong>客服时间：</strong>周一至周日 09:00 - 21:00</div>
+      <div class="product-grid" data-category="mink"></div>
+    </section>
+
+    <!-- Faux products -->
+    <section id="faux" class="section container">
+      <div class="section-header">
+        <span class="eyebrow">Faux Mink — Vegan</span>
+        <h2>Vegan Faux Mink</h2>
+        <p>Indistinguishable from mink. 100% vegan. Lightweight comfort.</p>
+      </div>
+      <div class="product-grid" data-category="faux"></div>
+    </section>
+
+    <!-- Tools -->
+    <section id="tools" class="section container">
+      <div class="section-header">
+        <span class="eyebrow">The Essentials</span>
+        <h2>Tools & Accessories</h2>
+        <p>Pro-grade tools for flawless application, every time.</p>
+      </div>
+      <div class="product-grid" data-category="tools"></div>
+    </section>
+
+    <!-- Reviews -->
+    <section class="section container" id="reviews">
+      <div class="section-header">
+        <span class="eyebrow">From Our Lash Lovers</span>
+        <h2>★★★★★ 4.9 / 5</h2>
+        <p>Trusted by 50,000+ beauty enthusiasts across the U.S.</p>
+      </div>
+      <div class="reviews-grid">
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"These are hands down the most comfortable mink lashes I've ever worn. The Glamour 25mm is everything for a night out!"</p>
+          <p class="review-author">— Sarah M., Los Angeles, CA · ⭐ Verified Buyer</p>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"Vegan faux mink that looks 100% real. I've tried Lilly Lashes and Velour — GlamEye is just as good at half the price."</p>
+          <p class="review-author">— Jasmine R., Brooklyn, NY · ⭐ Verified Buyer</p>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"The applicator + glue combo is genius. I went from 20 minutes of struggle to under 5. Highly recommend!"</p>
+          <p class="review-author">— Maya K., Austin, TX · ⭐ Verified Buyer</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Story -->
+    <section id="story" class="section container">
+      <div class="section-header">
+        <span class="eyebrow">Our Story</span>
+        <h2>Designed in California, for the World</h2>
+        <p>GlamEye was born from a simple idea: luxury lashes shouldn't break the bank, and beauty shouldn't cost an animal its life. We hand-design every style in our LA studio, partner with ethical suppliers, and deliver to your door in days — not weeks.</p>
+      </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="newsletter-section">
+      <div class="container">
+        <h2>Join the GlamEye List</h2>
+        <p>Get 10% off your first order + early access to new drops.</p>
+        <form id="newsletter-form" class="newsletter-form">
+          <input type="email" name="email" placeholder="Your email address" required />
+          <button type="submit" class="button button-primary">Subscribe</button>
+        </form>
+        <p id="newsletter-feedback" class="form-feedback"></p>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h4>关于 GlamEye</h4>
-          <ul>
-            <li><a href="#advantages">公司介绍</a></li>
-            <li><a href="#products">品牌故事</a></li>
-            <li><a href="#wholesale">合作伙伴</a></li>
-          </ul>
-        </div>
-        <div class="footer-section">
-          <h4>客户服务</h4>
-          <ul>
-            <li><a href="#contact">联系我们</a></li>
-            <li><a href="#contact">常见问题</a></li>
-            <li><a href="#contact">退货政策</a></li>
-          </ul>
-        </div>
-        <div class="footer-section">
-          <h4>法律条款</h4>
-          <ul>
-            <li><a href="#">隐私政策</a></li>
-            <li><a href="#">用户协议</a></li>
-            <li><a href="#">Cookie 政策</a></li>
-          </ul>
-        </div>
+    <div class="footer-content">
+      <div class="footer-brand">
+        <a href="/" class="brand">
+          <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="36" />
+        </a>
+        <p>Premium false eyelashes designed in California. Cruelty-free, vegan options available, ships from the USA.</p>
       </div>
-      <hr class="footer-divider" />
-      <p class="footer-copyright">© 2026 GlamEye. 版权所有。</p>
+      <div class="footer-section">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="#mink">Mink Lashes</a></li>
+          <li><a href="#faux">Faux Mink</a></li>
+          <li><a href="#tools">Tools & Accessories</a></li>
+          <li><a href="#shop">All Products</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="#">Shipping & Returns</a></li>
+          <li><a href="#">FAQ</a></li>
+          <li><a href="#">Contact Us</a></li>
+          <li><a href="#">Application Guide</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Account</h4>
+        <ul>
+          <li><a href="login.html">Sign In</a></li>
+          <li><a href="signup.html">Create Account</a></li>
+          <li><a href="account.html">My Orders</a></li>
+          <li><a href="account-wishlist.html">Wishlist</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="footer-divider" />
+    <div class="footer-bottom container">
+      <p>© 2026 GlamEye, Inc. All rights reserved. Made with ❤ in Los Angeles.</p>
+      <div class="payment-icons">
+        <span>VISA</span><span>MC</span><span>AMEX</span><span>APPLE PAY</span><span>PAYPAL</span>
+      </div>
     </div>
   </footer>
 
   <script src="js/app.js"></script>
+  <script src="js/home.js"></script>
 </body>
 </html>

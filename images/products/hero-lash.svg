@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <defs>
+    <radialGradient id="heroBg" cx="50%" cy="50%" r="80%">
+      <stop offset="0%" stop-color="#2a1a08"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+    <radialGradient id="iris-h" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5a3a28"/>
+      <stop offset="100%" stop-color="#0a0500"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#heroBg)"/>
+  <g transform="translate(600 420)">
+    <ellipse cx="0" cy="-30" rx="350" ry="80" fill="#4a2810" opacity="0.5"/>
+    <path d="M -320 0 Q -160 -85 0 -85 Q 160 -85 320 0 Q 160 85 0 85 Q -160 85 -320 0 Z" fill="#fefcf8"/>
+    <circle cx="0" cy="0" r="75" fill="url(#iris-h)"/>
+    <circle cx="0" cy="0" r="30" fill="#000"/>
+    <circle cx="-18" cy="-20" r="13" fill="white" opacity="0.95"/>
+    <g stroke="#000" stroke-linecap="round" fill="none" stroke-width="6">
+      <path d="M -300 -30 Q -310 -100 -295 -130"/>
+      <path d="M -260 -55 Q -270 -135 -240 -180"/>
+      <path d="M -210 -75 Q -215 -170 -170 -215"/>
+      <path d="M -160 -85 Q -155 -195 -100 -240"/>
+      <path d="M -100 -88 Q  -85 -210  -25 -250"/>
+      <path d="M  -40 -88 Q  -20 -218   40 -250"/>
+      <path d="M   20 -88 Q   45 -215  100 -245"/>
+      <path d="M   80 -85 Q  105 -200  160 -230"/>
+      <path d="M  140 -78 Q  170 -180  220 -210"/>
+      <path d="M  200 -65 Q  230 -150  270 -180"/>
+      <path d="M  255 -45 Q  285 -110  315 -135"/>
+      <path d="M  300 -25 Q  320  -75  340 -100"/>
+    </g>
+    <g stroke="#000" stroke-linecap="round" fill="none" stroke-width="3">
+      <path d="M -150 65 Q -145 100 -130 120"/>
+      <path d="M  -50 80 Q  -38 115  -25 140"/>
+      <path d="M   50 80 Q   62 115   75 140"/>
+      <path d="M  150 65 Q  165 95  180 118"/>
+    </g>
+  </g>
+  <text x="600" y="120" text-anchor="middle" font-family="Georgia, serif"
+        font-size="32" font-weight="300" fill="#f5d77b" letter-spacing="14" font-style="italic">GlamEye</text>
+  <text x="600" y="160" text-anchor="middle" font-family="Helvetica" font-size="14"
+        fill="#d4a955" letter-spacing="10">PREMIUM LASHES · MADE IN USA</text>
+</svg>

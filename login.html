@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Inter:wght@300;400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand">
+        <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="36" />
+      </a>
+      <nav class="site-nav"><a href="/">Back to Shop</a></nav>
+    </div>
+  </header>
+  <main class="container" style="padding: 4rem 1rem;">
+    <div class="form-card">
+      <h1>Welcome Back</h1>
+      <p class="subtitle">Sign in to manage your orders and wishlist</p>
+      <form id="login-form" class="form-group">
+        <label>
+          <span class="label-text">Email</span>
+          <input type="email" name="email" required autocomplete="email" />
+        </label>
+        <label>
+          <span class="label-text">Password</span>
+          <input type="password" name="password" required autocomplete="current-password" minlength="8" />
+        </label>
+        <button type="submit" class="button button-primary button-block">Sign In</button>
+        <p id="login-feedback" class="form-feedback"></p>
+      </form>
+      <div class="divider">OR</div>
+      <p class="text-center muted small">
+        New to GlamEye? <a href="signup.html">Create an account</a>
+      </p>
+    </div>
+  </main>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fb = document.getElementById('login-feedback');
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      fb.textContent = 'Signing in...';
+      fb.className = 'form-feedback';
+      try {
+        const r = await fetch('api/auth.php?action=login', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const j = await r.json();
+        if (j.success) {
+          fb.textContent = '✨ Signed in! Redirecting…';
+          fb.className = 'form-feedback success';
+          const redirect = new URLSearchParams(location.search).get('redirect') || '/account.html';
+          setTimeout(() => window.location.href = redirect, 600);
+        } else {
+          fb.textContent = j.error || 'Sign in failed';
+          fb.className = 'form-feedback error';
+        }
+      } catch (err) {
+        fb.textContent = 'Network error';
+        fb.className = 'form-feedback error';
+      }
+    });
+  </script>
+</body>
+</html>

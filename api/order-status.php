@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
 
-// 公开接口：用 order_id + email 校验，返回订单状态
 $orderId = intval($_GET['order_id'] ?? 0);
 $email   = filter_var($_GET['email'] ?? '', FILTER_VALIDATE_EMAIL);
 
@@ -12,7 +11,7 @@ if ($orderId <= 0 || !$email) {
 try {
     $db = getDb();
     $stmt = $db->prepare(
-        'SELECT id, customer_name, product_name, quantity, amount, payment_method, status, created_at
+        'SELECT id, customer_name, product_name, quantity, amount, currency, payment_method, status, created_at
          FROM orders WHERE id = :id AND email = :email LIMIT 1'
     );
     $stmt->execute([':id' => $orderId, ':email' => $email]);

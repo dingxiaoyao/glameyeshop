@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <radialGradient id="bg-vol" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1f1408"/>
+      <stop offset="100%" stop-color="#0a0604"/>
+    </radialGradient>
+    <radialGradient id="iris-vol" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#283848"/>
+      <stop offset="100%" stop-color="#0f1a25"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg-vol)"/>
+  <g transform="translate(400 320)">
+    <ellipse cx="0" cy="-20" rx="225" ry="50" fill="#2a1a08" opacity="0.5"/>
+    <path d="M -200 0 Q -100 -55 0 -55 Q 100 -55 200 0 Q 100 55 0 55 Q -100 55 -200 0 Z" fill="#fafafa"/>
+    <circle cx="0" cy="0" r="50" fill="url(#iris-vol)"/>
+    <circle cx="0" cy="0" r="20" fill="#000"/>
+    <circle cx="-12" cy="-12" r="9" fill="white" opacity="0.95"/>
+    <!-- Volume Whisper: 浓密均匀 -->
+    <g stroke="#0f0a05" stroke-linecap="round" fill="none">
+      <path d="M -190 -18 Q -195 -55 -190 -68" stroke-width="3"/>
+      <path d="M -170 -32 Q -175 -75 -165 -90" stroke-width="3.5"/>
+      <path d="M -150 -42 Q -152 -85 -138 -100" stroke-width="3.8"/>
+      <path d="M -130 -48 Q -130 -92 -114 -108" stroke-width="4"/>
+      <path d="M -110 -52 Q -108 -97  -88 -113" stroke-width="4.2"/>
+      <path d="M  -90 -55 Q  -85 -100 -62 -118" stroke-width="4.3"/>
+      <path d="M  -70 -56 Q  -62 -103 -38 -122" stroke-width="4.4"/>
+      <path d="M  -50 -56 Q  -38 -105 -14 -125" stroke-width="4.5"/>
+      <path d="M  -30 -56 Q  -15 -105   8 -125" stroke-width="4.5"/>
+      <path d="M  -10 -56 Q    8 -105  30 -125" stroke-width="4.5"/>
+      <path d="M   10 -56 Q   28 -105  50 -125" stroke-width="4.5"/>
+      <path d="M   30 -56 Q   45 -105  70 -125" stroke-width="4.5"/>
+      <path d="M   50 -56 Q   62 -103  85 -122" stroke-width="4.4"/>
+      <path d="M   70 -55 Q   82 -100 100 -118" stroke-width="4.3"/>
+      <path d="M   90 -52 Q  100 -97  118 -113" stroke-width="4.2"/>
+      <path d="M  110 -48 Q  118 -92  135 -108" stroke-width="4"/>
+      <path d="M  130 -42 Q  138 -85  152 -100" stroke-width="3.8"/>
+      <path d="M  150 -32 Q  158 -75  168 -90" stroke-width="3.5"/>
+      <path d="M  170 -18 Q  178 -55  185 -68" stroke-width="3"/>
+    </g>
+    <g stroke="#0f0a05" stroke-linecap="round" fill="none" stroke-width="1.6">
+      <path d="M -130 38 Q -128 60 -120 72"/>
+      <path d="M  -65 52 Q  -58 75 -48 88"/>
+      <path d="M    0 56 Q    8 78  18 92"/>
+      <path d="M   65 52 Q   72 75  82 88"/>
+      <path d="M  130 38 Q  138 60 145 72"/>
+    </g>
+  </g>
+  <text x="400" y="540" text-anchor="middle" font-family="Georgia, serif"
+        font-size="18" font-weight="300" fill="#d4a955" letter-spacing="6">VOLUME WHISPER · 18MM · FAUX</text>
+</svg>

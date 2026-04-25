@@ -14,7 +14,6 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES => false,
 ];
 
-// 生产环境保护
 $appEnv = getenv('APP_ENV') ?: 'development';
 if ($appEnv === 'production' && ($dbUser === 'root' || $dbPass === '')) {
     http_response_code(500);
@@ -23,17 +22,13 @@ if ($appEnv === 'production' && ($dbUser === 'root' || $dbPass === '')) {
     exit;
 }
 
-// 服务端权威产品价格清单（防客户端篡改）
-const PRODUCT_CATALOG = [
-    '经典方形眼镜' => 699.00,
-    '轻盈商务眼镜' => 788.00,
-    '复古圆形眼镜' => 798.00,
-];
-
 const MAX_QUANTITY_PER_ITEM = 50;
-const MAX_ITEMS_PER_ORDER = 20;
+const MAX_ITEMS_PER_ORDER = 30;
 const ALLOWED_PAYMENT_METHODS = ['stripe', 'paypal'];
-const ALLOWED_ORDER_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'completed', 'cancelled', 'refunded'];
+const ALLOWED_ORDER_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'];
+
+const SESSION_COOKIE = 'glameye_sid';
+const SESSION_LIFETIME = 60 * 60 * 24 * 30;   // 30 天
 
 function getDb(): PDO {
     global $dsn, $dbUser, $dbPass, $options;
@@ -50,46 +45,13 @@ function sendJson($data, int $status = 200): void {
 
 function sendError(string $publicMessage, int $status = 500, ?Throwable $exception = null): void {
     if ($exception !== null) {
-        error_log(sprintf(
-            '[GlamEye] %s | %s | %s:%d',
-            get_class($exception),
-            $exception->getMessage(),
-            $exception->getFile(),
-            $exception->getLine()
-        ));
+        error_log(sprintf('[GlamEye] %s | %s | %s:%d',
+            get_class($exception), $exception->getMessage(),
+            $exception->getFile(), $exception->getLine()));
     }
     sendJson(['error' => $publicMessage], $status);
 }
 
-/**
- * HTTP Basic Auth 校验
- */
-function requireAdminAuth(): void {
-    $expectedUser = getenv('ADMIN_USER');
-    $expectedPass = getenv('ADMIN_PASS');
-
-    if (!$expectedUser || !$expectedPass) {
-        http_response_code(503);
-        header('Content-Type: text/plain; charset=utf-8');
-        echo 'Admin credentials not configured.';
-        exit;
-    }
-
-    $providedUser = $_SERVER['PHP_AUTH_USER'] ?? '';
-    $providedPass = $_SERVER['PHP_AUTH_PW'] ?? '';
-
-    if (!hash_equals($expectedUser, $providedUser) || !hash_equals($expectedPass, $providedPass)) {
-        header('WWW-Authenticate: Basic realm="GlamEye Admin"');
-        http_response_code(401);
-        header('Content-Type: text/plain; charset=utf-8');
-        echo 'Authentication required.';
-        exit;
-    }
-}
-
-/**
- * 解析 JSON 或 form 输入
- */
 function readInput(): array {
     $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
     if (stripos($contentType, 'application/json') !== false) {
@@ -98,4 +60,87 @@ function readInput(): array {
         return is_array($data) ? $data : [];
     }
     return $_POST;
+}
+
+function requireAdminAuth(): void {
+    $expectedUser = getenv('ADMIN_USER');
+    $expectedPass = getenv('ADMIN_PASS');
+    if (!$expectedUser || !$expectedPass) {
+        http_response_code(503);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Admin credentials not configured.';
+        exit;
+    }
+    $u = $_SERVER['PHP_AUTH_USER'] ?? '';
+    $p = $_SERVER['PHP_AUTH_PW'] ?? '';
+    if (!hash_equals($expectedUser, $u) || !hash_equals($expectedPass, $p)) {
+        header('WWW-Authenticate: Basic realm="GlamEye Admin"');
+        http_response_code(401);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Authentication required.';
+        exit;
+    }
+}
+
+// ============================================================
+// 用户 session（PHP native session）
+// ============================================================
+function startUserSession(): void {
+    if (session_status() === PHP_SESSION_ACTIVE) return;
+    session_name(SESSION_COOKIE);
+    session_set_cookie_params([
+        'lifetime' => SESSION_LIFETIME,
+        'path'     => '/',
+        'secure'   => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+    session_start();
+}
+
+function currentUser(): ?array {
+    startUserSession();
+    if (empty($_SESSION['user_id'])) return null;
+    static $cached = null;
+    if ($cached !== null && $cached['id'] === $_SESSION['user_id']) return $cached;
+    try {
+        $db = getDb();
+        $stmt = $db->prepare('SELECT id, email, first_name, last_name, phone, is_subscribed, email_verified, created_at FROM users WHERE id = :id LIMIT 1');
+        $stmt->execute([':id' => $_SESSION['user_id']]);
+        $cached = $stmt->fetch() ?: null;
+    } catch (Throwable $e) {
+        $cached = null;
+    }
+    return $cached;
+}
+
+function requireUser(): array {
+    $u = currentUser();
+    if (!$u) sendJson(['error' => 'Authentication required'], 401);
+    return $u;
+}
+
+/**
+ * 从 DB 获取活跃产品价格（取代硬编码 catalog）
+ */
+function getProductByName(string $name): ?array {
+    try {
+        $db = getDb();
+        $stmt = $db->prepare('SELECT id, sku, name, price, stock FROM products WHERE name = :name AND is_active = 1 LIMIT 1');
+        $stmt->execute([':name' => $name]);
+        return $stmt->fetch() ?: null;
+    } catch (Throwable $e) {
+        return null;
+    }
+}
+
+function getProductBySku(string $sku): ?array {
+    try {
+        $db = getDb();
+        $stmt = $db->prepare('SELECT id, sku, name, price, stock FROM products WHERE sku = :sku AND is_active = 1 LIMIT 1');
+        $stmt->execute([':sku' => $sku]);
+        return $stmt->fetch() ?: null;
+    } catch (Throwable $e) {
+        return null;
+    }
 }
