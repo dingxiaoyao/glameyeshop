@@ -205,118 +205,174 @@ VALUES
 ('GE-MINK-001', 'mink', 'natural',  'Whisper 14mm Mink',
  'Soft natural everyday lash · 14mm', 'Lightweight 14mm mink hairs on a clear band. Perfect for office, daily wear, no-makeup makeup looks. Cruelty-free, reusable up to 20 wears.',
  14, 'clear', 20, 18.00, 24.00, '/images/lash-photos/style-09-feather-eye.jpg',
- '["/images/lash-photos/style-09-feather-alt.jpg"]', 220, 1, 0, 1),
+ '["/images/lash-photos/style-09-feather-alt.jpg","/images/products/lash-natural-18.jpg","/images/products/lash-wispy-14.jpg"]', 220, 1, 0, 1),
 
 ('GE-MINK-002', 'mink', 'wispy',    'Featherlight 16mm Mink',
  'Wispy effect, weightless feel · 16mm', 'Crisscross wispy pattern that opens up the eye without weighing down lids. Cotton band for all-day comfort.',
  16, 'cotton', 22, 22.00, NULL, '/images/lash-photos/style-09-feather-alt.jpg',
- '["/images/lash-photos/style-09-feather-eye.jpg"]', 180, 1, 0, 2),
+ '["/images/lash-photos/style-09-feather-eye.jpg","/images/products/lash-wispy-14.jpg","/images/products/lash-natural-18.jpg"]', 180, 1, 0, 2),
 
 ('GE-MINK-003', 'mink', 'natural',  'Naked 18mm Mink',
  'Subtle volume + length · 18mm', 'Our most-worn lash. Adds noticeable lift without screaming "I am wearing lashes". Bestseller across NY/LA.',
  18, 'clear', 20, 24.00, NULL, '/images/lash-photos/style-18-velvet-eye.jpg',
- '["/images/lash-photos/style-18-velvet-split.jpg"]', 240, 1, 0, 3),
+ '["/images/lash-photos/style-18-velvet-split.jpg","/images/lash-photos/style-09-feather-eye.jpg","/images/products/lash-natural-18.jpg"]', 240, 1, 0, 3),
 
 ('GE-MINK-004', 'mink', 'dramatic', 'Stellar 20mm Mink',
  'Dramatic length for evening · 20mm', 'Long mink hairs with subtle volume — ideal for date nights and parties. Tapered ends for natural blend.',
- 20, 'cotton', 22, 32.00, NULL, '/images/lash-photos/style-17-ice-split.jpg', NULL, 150, 0, 1, 4),
+ 20, 'cotton', 22, 32.00, NULL, '/images/lash-photos/style-17-ice-split.jpg',
+ '["/images/lash-photos/style-14-frost-split.jpg","/images/products/lash-volume-18.jpg","/images/products/lash-drama-22.jpg"]', 150, 0, 1, 4),
 
 ('GE-MINK-005', 'mink', 'volume',   'Volcano 22mm Mink',
  'Maximum volume + drama · 22mm', 'Densely packed 22mm hairs for full-coverage glam. Try with cat-eye liner for the ultimate look.',
  22, 'cotton', 25, 38.00, 48.00, '/images/lash-photos/style-14-frost-split.jpg',
- '["/images/lash-photos/style-14-frost-eye.jpg"]', 120, 1, 0, 5),
+ '["/images/lash-photos/style-14-frost-eye.jpg","/images/lash-photos/style-17-ice-split.jpg","/images/products/lash-drama-22.jpg"]', 120, 1, 0, 5),
 
 ('GE-MINK-006', 'mink', 'cat-eye',  'Cat Couture 22mm Mink',
  'Wing-tip cat-eye drama · 22mm', 'Outer corners extend 4mm longer for instant cat-eye lift. Wear with winged liner.',
  22, 'cotton', 22, 36.00, NULL, '/images/lash-photos/style-14-frost-eye.jpg',
- '["/images/lash-photos/style-14-frost-split.jpg"]', 110, 0, 1, 6),
+ '["/images/lash-photos/style-14-frost-split.jpg","/images/lash-photos/style-17-ice-split.jpg","/images/products/lash-bold-22.jpg"]', 110, 0, 1, 6),
 
 ('GE-MINK-007', 'mink', 'glamour',  'Diamond 25mm Mink',
  'Maximalist runway lash · 25mm', 'Our longest mink. Couture-grade, hand-tied, reusable up to 25 wears. For occasions where you want to be unforgettable.',
  25, 'cotton', 25, 48.00, 58.00, '/images/lash-photos/style-18-velvet-split.jpg',
- '["/images/lash-photos/style-18-velvet-eye.jpg"]', 80, 1, 0, 7),
+ '["/images/lash-photos/style-18-velvet-eye.jpg","/images/lash-photos/style-14-frost-split.jpg","/images/products/lash-glamour-25.jpg"]', 80, 1, 0, 7),
 
 ('GE-MINK-008', 'mink', 'glamour',  'Fox Eye 25mm Mink',
  'Snatched fox-eye effect · 25mm', 'Tapered design that lifts and elongates the outer corner — TikTok favorite for the "fox eye" look.',
- 25, 'cotton', 25, 52.00, NULL, '/images/lash-photos/style-17-ice-split.jpg', NULL, 90, 0, 1, 8),
+ 25, 'cotton', 25, 52.00, NULL, '/images/lash-photos/style-17-ice-split.jpg',
+ '["/images/lash-photos/style-14-frost-split.jpg","/images/lash-photos/style-18-velvet-eye.jpg","/images/products/lash-glamour-25.jpg"]', 90, 0, 1, 8),
 
--- ===== Faux Mink (Vegan) (5 SKUs) — 复用同批用户照片，封面图旋转避免重复感 =====
+-- ===== Faux Mink (Vegan) (5 SKUs) =====
 ('GE-FAUX-001', 'faux', 'natural',  'Daily Wisp 14mm Faux',
  'Vegan everyday wisp · 14mm', '100% vegan synthetic fibers. Lightweight, fluffy, perfect for office or casual.',
- 14, 'clear', 12, 12.00, NULL, '/images/lash-photos/style-09-feather-eye.jpg', NULL, 320, 1, 0, 10),
+ 14, 'clear', 12, 12.00, NULL, '/images/lash-photos/style-09-feather-eye.jpg',
+ '["/images/products/lash-wispy-14.jpg","/images/products/lash-natural-18.jpg","/images/lash-photos/style-09-feather-alt.jpg"]', 320, 1, 0, 10),
 
 ('GE-FAUX-002', 'faux', 'wispy',    'Pillow Talk 16mm Faux',
  'Soft wispy + voluminous · 16mm', 'Comfortable cotton band, all-day wear. Vegan & cruelty-free.',
- 16, 'cotton', 15, 14.00, NULL, '/images/lash-photos/style-09-feather-alt.jpg', NULL, 280, 0, 0, 11),
+ 16, 'cotton', 15, 14.00, NULL, '/images/lash-photos/style-09-feather-alt.jpg',
+ '["/images/products/lash-volume-18.jpg","/images/lash-photos/style-09-feather-eye.jpg","/images/products/lash-natural-18.jpg"]', 280, 0, 0, 11),
 
 ('GE-FAUX-003', 'faux', 'volume',   'Volume Goddess 18mm Faux',
  'Voluminous vegan · 18mm', 'Indistinguishable from mink at half the price. Vegan-certified.',
- 18, 'cotton', 15, 16.00, 22.00, '/images/lash-photos/style-18-velvet-eye.jpg', NULL, 250, 1, 0, 12),
+ 18, 'cotton', 15, 16.00, 22.00, '/images/lash-photos/style-18-velvet-eye.jpg',
+ '["/images/products/lash-volume-18.jpg","/images/lash-photos/style-18-velvet-split.jpg","/images/lash-photos/style-09-feather-alt.jpg"]', 250, 1, 0, 12),
 
 ('GE-FAUX-004', 'faux', 'dramatic', 'Bombshell 20mm Faux',
  'Dramatic vegan glam · 20mm', 'Bold volume for date night & special events. Vegan synthetic.',
- 20, 'cotton', 15, 19.00, NULL, '/images/lash-photos/style-14-frost-split.jpg', NULL, 200, 0, 1, 13),
+ 20, 'cotton', 15, 19.00, NULL, '/images/lash-photos/style-14-frost-split.jpg',
+ '["/images/products/lash-drama-22.jpg","/images/lash-photos/style-14-frost-eye.jpg","/images/lash-photos/style-17-ice-split.jpg"]', 200, 0, 1, 13),
 
 ('GE-FAUX-005', 'faux', 'cat-eye',  'Wing It 22mm Faux',
  'Wing-tip vegan dramatic · 22mm', 'Cat-eye lift, vegan, reusable.',
- 22, 'cotton', 15, 22.00, NULL, '/images/lash-photos/style-17-ice-split.jpg', NULL, 180, 0, 1, 14),
+ 22, 'cotton', 15, 22.00, NULL, '/images/lash-photos/style-17-ice-split.jpg',
+ '["/images/products/lash-bold-22.jpg","/images/lash-photos/style-14-frost-split.jpg","/images/lash-photos/style-18-velvet-split.jpg"]', 180, 0, 1, 14),
 
--- ===== Magnetic Lashes (2 SKUs) — 用 Frost/Ice 系列暗示磁性高端感 =====
+-- ===== Magnetic Lashes (2 SKUs) =====
 ('GE-MAG-001', 'magnetic', 'natural',  'Magnet Wisp Set 16mm',
  'Magnetic eyeliner + lash kit · 16mm', 'No glue. Magnetic eyeliner included. 5 magnets along the band. Perfect for first-time users.',
  16, 'magnetic', 30, 28.00, 35.00, '/images/lash-photos/style-14-frost-eye.jpg',
- '["/images/lash-photos/style-14-frost-split.jpg"]', 150, 0, 1, 20),
+ '["/images/lash-photos/style-14-frost-split.jpg","/images/lash-photos/style-09-feather-eye.jpg","/images/products/lash-natural-18.jpg"]', 150, 0, 1, 20),
 
 ('GE-MAG-002', 'magnetic', 'dramatic','Magnet Drama Set 22mm',
  'Magnetic dramatic + liner · 22mm', 'Same magnetic technology, dramatic 22mm length. Reusable 30+ wears. Liner included.',
  22, 'magnetic', 30, 34.00, NULL, '/images/lash-photos/style-17-ice-split.jpg',
- '["/images/lash-photos/style-18-velvet-split.jpg"]', 110, 0, 1, 21),
+ '["/images/lash-photos/style-18-velvet-split.jpg","/images/lash-photos/style-14-frost-split.jpg","/images/products/lash-drama-22.jpg"]', 110, 0, 1, 21),
 
--- ===== Tools & Accessories (3 SKUs) — 工具暂保留 Unsplash（用户照片里没有工具图）=====
+-- ===== Tools & Accessories (3 SKUs) =====
 ('GE-TOOL-GLUE',  'tools', '',  'Crystal Clear Lash Adhesive · 5g',
  'Latex-free, 16-hour hold', 'Skin-safe, latex-free lash adhesive. Goes on white, dries clear. 16-hour hold.',
- NULL, NULL, NULL, 12.00, NULL, 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=800&q=80&auto=format&fit=crop', NULL, 400, 1, 0, 30),
+ NULL, NULL, NULL, 12.00, NULL, '/images/products/tool-glue.jpg',
+ '["/images/products/tool-applicator.jpg","/images/products/tool-case.jpg"]', 400, 1, 0, 30),
 
 ('GE-TOOL-APPL',  'tools', '',  'Precision Gold Applicator',
  'Stainless steel + gold-plated', 'Pro-grade applicator with non-slip gold-plated grip. Ideal for both beginners and pros.',
- NULL, NULL, NULL, 16.00, 20.00, 'https://images.unsplash.com/photo-1631214539947-c4c4d8b3e0c9?w=800&q=80&auto=format&fit=crop', NULL, 180, 0, 0, 31),
+ NULL, NULL, NULL, 16.00, 20.00, '/images/products/tool-applicator.jpg',
+ '["/images/products/tool-case.jpg","/images/products/tool-glue.jpg"]', 180, 0, 0, 31),
 
 ('GE-TOOL-CASE',  'tools', '',  'Luxury Lash Storage Case',
  'Magnetic mirror case · 5 pairs', 'Travel-friendly magnetic case with built-in mirror. Holds 5 pairs of lashes safely.',
- NULL, NULL, NULL, 28.00, NULL, 'https://images.unsplash.com/photo-1617897903246-719242758050?w=800&q=80&auto=format&fit=crop', NULL, 100, 0, 0, 32);
+ NULL, NULL, NULL, 28.00, NULL, '/images/products/tool-case.jpg',
+ '["/images/products/tool-applicator.jpg","/images/products/tool-glue.jpg"]', 100, 0, 0, 32);
 
--- 升级旧库的产品图（已存在的产品也用新图覆盖）
+-- ============================================================
+-- 升级旧库 + 给每个产品配 3-4 张 gallery 图
+-- 策略：主图用最匹配风格的真照片，gallery 混合其他真照 + SVG 产品图
+-- ============================================================
+
+-- ===== Mink 8 SKU =====
 UPDATE products SET image_url = '/images/lash-photos/style-09-feather-eye.jpg',
-    gallery_urls = '["/images/lash-photos/style-09-feather-alt.jpg"]'
+    gallery_urls = '["/images/lash-photos/style-09-feather-alt.jpg","/images/products/lash-natural-18.jpg","/images/products/lash-wispy-14.jpg"]'
   WHERE sku = 'GE-MINK-001';
+
 UPDATE products SET image_url = '/images/lash-photos/style-09-feather-alt.jpg',
-    gallery_urls = '["/images/lash-photos/style-09-feather-eye.jpg"]'
+    gallery_urls = '["/images/lash-photos/style-09-feather-eye.jpg","/images/products/lash-wispy-14.jpg","/images/products/lash-natural-18.jpg"]'
   WHERE sku = 'GE-MINK-002';
+
 UPDATE products SET image_url = '/images/lash-photos/style-18-velvet-eye.jpg',
-    gallery_urls = '["/images/lash-photos/style-18-velvet-split.jpg"]'
+    gallery_urls = '["/images/lash-photos/style-18-velvet-split.jpg","/images/lash-photos/style-09-feather-eye.jpg","/images/products/lash-natural-18.jpg"]'
   WHERE sku = 'GE-MINK-003';
-UPDATE products SET image_url = '/images/lash-photos/style-17-ice-split.jpg' WHERE sku = 'GE-MINK-004';
-UPDATE products SET image_url = '/images/lash-photos/style-14-frost-split.jpg',
-    gallery_urls = '["/images/lash-photos/style-14-frost-eye.jpg"]'
-  WHERE sku = 'GE-MINK-005';
-UPDATE products SET image_url = '/images/lash-photos/style-14-frost-eye.jpg',
-    gallery_urls = '["/images/lash-photos/style-14-frost-split.jpg"]'
-  WHERE sku = 'GE-MINK-006';
-UPDATE products SET image_url = '/images/lash-photos/style-18-velvet-split.jpg',
-    gallery_urls = '["/images/lash-photos/style-18-velvet-eye.jpg"]'
-  WHERE sku = 'GE-MINK-007';
-UPDATE products SET image_url = '/images/lash-photos/style-17-ice-split.jpg' WHERE sku = 'GE-MINK-008';
-UPDATE products SET image_url = '/images/lash-photos/style-09-feather-eye.jpg' WHERE sku = 'GE-FAUX-001';
-UPDATE products SET image_url = '/images/lash-photos/style-09-feather-alt.jpg' WHERE sku = 'GE-FAUX-002';
-UPDATE products SET image_url = '/images/lash-photos/style-18-velvet-eye.jpg' WHERE sku = 'GE-FAUX-003';
-UPDATE products SET image_url = '/images/lash-photos/style-14-frost-split.jpg' WHERE sku = 'GE-FAUX-004';
-UPDATE products SET image_url = '/images/lash-photos/style-17-ice-split.jpg' WHERE sku = 'GE-FAUX-005';
-UPDATE products SET image_url = '/images/lash-photos/style-14-frost-eye.jpg',
-    gallery_urls = '["/images/lash-photos/style-14-frost-split.jpg"]'
-  WHERE sku = 'GE-MAG-001';
+
 UPDATE products SET image_url = '/images/lash-photos/style-17-ice-split.jpg',
-    gallery_urls = '["/images/lash-photos/style-18-velvet-split.jpg"]'
+    gallery_urls = '["/images/lash-photos/style-14-frost-split.jpg","/images/products/lash-volume-18.jpg","/images/products/lash-drama-22.jpg"]'
+  WHERE sku = 'GE-MINK-004';
+
+UPDATE products SET image_url = '/images/lash-photos/style-14-frost-split.jpg',
+    gallery_urls = '["/images/lash-photos/style-14-frost-eye.jpg","/images/lash-photos/style-17-ice-split.jpg","/images/products/lash-drama-22.jpg"]'
+  WHERE sku = 'GE-MINK-005';
+
+UPDATE products SET image_url = '/images/lash-photos/style-14-frost-eye.jpg',
+    gallery_urls = '["/images/lash-photos/style-14-frost-split.jpg","/images/lash-photos/style-17-ice-split.jpg","/images/products/lash-bold-22.jpg"]'
+  WHERE sku = 'GE-MINK-006';
+
+UPDATE products SET image_url = '/images/lash-photos/style-18-velvet-split.jpg',
+    gallery_urls = '["/images/lash-photos/style-18-velvet-eye.jpg","/images/lash-photos/style-14-frost-split.jpg","/images/products/lash-glamour-25.jpg"]'
+  WHERE sku = 'GE-MINK-007';
+
+UPDATE products SET image_url = '/images/lash-photos/style-17-ice-split.jpg',
+    gallery_urls = '["/images/lash-photos/style-14-frost-split.jpg","/images/lash-photos/style-18-velvet-eye.jpg","/images/products/lash-glamour-25.jpg"]'
+  WHERE sku = 'GE-MINK-008';
+
+-- ===== Faux 5 SKU =====
+UPDATE products SET image_url = '/images/lash-photos/style-09-feather-eye.jpg',
+    gallery_urls = '["/images/products/lash-wispy-14.jpg","/images/products/lash-natural-18.jpg","/images/lash-photos/style-09-feather-alt.jpg"]'
+  WHERE sku = 'GE-FAUX-001';
+
+UPDATE products SET image_url = '/images/lash-photos/style-09-feather-alt.jpg',
+    gallery_urls = '["/images/products/lash-volume-18.jpg","/images/lash-photos/style-09-feather-eye.jpg","/images/products/lash-natural-18.jpg"]'
+  WHERE sku = 'GE-FAUX-002';
+
+UPDATE products SET image_url = '/images/lash-photos/style-18-velvet-eye.jpg',
+    gallery_urls = '["/images/products/lash-volume-18.jpg","/images/lash-photos/style-18-velvet-split.jpg","/images/lash-photos/style-09-feather-alt.jpg"]'
+  WHERE sku = 'GE-FAUX-003';
+
+UPDATE products SET image_url = '/images/lash-photos/style-14-frost-split.jpg',
+    gallery_urls = '["/images/products/lash-drama-22.jpg","/images/lash-photos/style-14-frost-eye.jpg","/images/lash-photos/style-17-ice-split.jpg"]'
+  WHERE sku = 'GE-FAUX-004';
+
+UPDATE products SET image_url = '/images/lash-photos/style-17-ice-split.jpg',
+    gallery_urls = '["/images/products/lash-bold-22.jpg","/images/lash-photos/style-14-frost-split.jpg","/images/lash-photos/style-18-velvet-split.jpg"]'
+  WHERE sku = 'GE-FAUX-005';
+
+-- ===== Magnetic 2 SKU =====
+UPDATE products SET image_url = '/images/lash-photos/style-14-frost-eye.jpg',
+    gallery_urls = '["/images/lash-photos/style-14-frost-split.jpg","/images/lash-photos/style-09-feather-eye.jpg","/images/products/lash-natural-18.jpg"]'
+  WHERE sku = 'GE-MAG-001';
+
+UPDATE products SET image_url = '/images/lash-photos/style-17-ice-split.jpg',
+    gallery_urls = '["/images/lash-photos/style-18-velvet-split.jpg","/images/lash-photos/style-14-frost-split.jpg","/images/products/lash-drama-22.jpg"]'
   WHERE sku = 'GE-MAG-002';
 
--- Hero 图也覆盖
+-- ===== Tools 3 SKU =====
+UPDATE products SET image_url = '/images/products/tool-glue.jpg',
+    gallery_urls = '["/images/products/tool-applicator.jpg","/images/products/tool-case.jpg"]'
+  WHERE sku = 'GE-TOOL-GLUE';
+UPDATE products SET image_url = '/images/products/tool-applicator.jpg',
+    gallery_urls = '["/images/products/tool-case.jpg","/images/products/tool-glue.jpg"]'
+  WHERE sku = 'GE-TOOL-APPL';
+UPDATE products SET image_url = '/images/products/tool-case.jpg',
+    gallery_urls = '["/images/products/tool-applicator.jpg","/images/products/tool-glue.jpg"]'
+  WHERE sku = 'GE-TOOL-CASE';
+
+-- Hero 图覆盖
 UPDATE site_settings SET `value` = '/images/lash-photos/style-14-frost-split.jpg' WHERE `key` = 'hero_image_url';
