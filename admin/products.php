@@ -55,7 +55,22 @@
           </label>
         </div>
         <label><span class="label-text"><?= htmlspecialchars(t('image_url')) ?></span>
-          <input type="text" name="image_url" placeholder="/images/products/xxx.jpg" />
+          <div style="display:flex; gap:.5rem;">
+            <input type="text" name="image_url" id="p-image-url" placeholder="/uploads/2026/04/xxx.jpg or paste URL" style="flex:1;" />
+            <label class="button button-outline button-sm" style="cursor:pointer; white-space:nowrap;">
+              📤 Upload
+              <input type="file" id="p-image-upload" accept="image/*" hidden />
+            </label>
+          </div>
+          <small id="p-image-status" class="muted" style="display:block; margin-top:.35rem;"></small>
+        </label>
+        <label><span class="label-text">Gallery Images (optional, JSON array of URLs)</span>
+          <textarea name="gallery_urls" id="p-gallery" rows="3" placeholder='["/uploads/2026/04/abc.jpg","/uploads/2026/04/def.jpg"]'></textarea>
+          <label class="button button-ghost button-sm" style="cursor:pointer; margin-top:.35rem; display:inline-flex;">
+            📤 Upload to gallery (multiple)
+            <input type="file" id="p-gallery-upload" accept="image/*" multiple hidden />
+          </label>
+          <small id="p-gallery-status" class="muted" style="display:block; margin-top:.35rem;"></small>
         </label>
         <div class="form-row">
           <label><span class="label-text"><?= htmlspecialchars(t('stock')) ?></span>
@@ -128,6 +143,8 @@
 
   function openModal(p = null) {
     fb.textContent = ''; fb.className = 'form-feedback';
+    document.getElementById('p-image-status').textContent = '';
+    document.getElementById('p-gallery-status').textContent = '';
     form.reset();
     if (p) {
       document.getElementById('modal-title').textContent = T.edit + ' · ' + p.name;
@@ -140,6 +157,9 @@
       form.price.value = p.price;
       form.compare_at_price.value = p.compare_at_price || '';
       form.image_url.value = p.image_url || '';
+      form.gallery_urls.value = p.gallery_urls
+        ? (typeof p.gallery_urls === 'string' ? p.gallery_urls : JSON.stringify(p.gallery_urls))
+        : '';
       form.stock.value = p.stock;
       form.sort_order.value = p.sort_order;
       form.is_active.checked = p.is_active == 1;
@@ -149,6 +169,56 @@
     }
     modal.style.display = 'flex';
   }
+
+  // 上传单图 → 填到 image_url
+  document.getElementById('p-image-upload').addEventListener('change', async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const status = document.getElementById('p-image-status');
+    status.textContent = 'Uploading…';
+    const fd = new FormData(); fd.append('file', f);
+    try {
+      const r = await fetch('../api/admin-upload.php', { method:'POST', credentials:'include', body: fd });
+      const j = await r.json();
+      if (j.success) {
+        document.getElementById('p-image-url').value = j.url;
+        status.textContent = '✓ ' + j.url + ' (' + (j.size/1024).toFixed(0) + 'KB)';
+        status.style.color = 'var(--success)';
+      } else {
+        status.textContent = '✗ ' + (j.error || 'failed');
+        status.style.color = 'var(--error)';
+      }
+    } catch (err) {
+      status.textContent = '✗ Network error';
+      status.style.color = 'var(--error)';
+    }
+    e.target.value = '';
+  });
+
+  // 上传多图 → 追加到 gallery_urls
+  document.getElementById('p-gallery-upload').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const status = document.getElementById('p-gallery-status');
+    const ta = document.getElementById('p-gallery');
+    let existing = [];
+    try { existing = JSON.parse(ta.value || '[]'); if (!Array.isArray(existing)) existing = []; } catch { existing = []; }
+
+    let done = 0;
+    for (const f of files) {
+      status.textContent = `Uploading ${++done}/${files.length}…`;
+      const fd = new FormData(); fd.append('file', f);
+      try {
+        const r = await fetch('../api/admin-upload.php', { method:'POST', credentials:'include', body: fd });
+        const j = await r.json();
+        if (j.success) existing.push(j.url);
+      } catch (err) {}
+    }
+    ta.value = JSON.stringify(existing);
+    status.textContent = `✓ Added ${done} image(s) to gallery (${existing.length} total)`;
+    status.style.color = 'var(--success)';
+    e.target.value = '';
+  });
 
   function closeModal() { modal.style.display = 'none'; }
 

@@ -29,7 +29,14 @@
           <textarea name="description" rows="2"></textarea>
         </label>
         <label><span class="label-text">Cover Image URL (optional)</span>
-          <input type="url" name="cover_url" />
+          <div style="display:flex; gap:.5rem;">
+            <input type="text" name="cover_url" id="v-cover-url" style="flex:1;" />
+            <label class="button button-outline button-sm" style="cursor:pointer; white-space:nowrap;">
+              📤 Upload
+              <input type="file" id="v-cover-upload" accept="image/*" hidden />
+            </label>
+          </div>
+          <small id="v-cover-status" class="muted" style="display:block; margin-top:.35rem;"></small>
         </label>
         <div class="form-row">
           <label><span class="label-text">Related Product ID (optional)</span>
@@ -137,6 +144,23 @@
         load();
       } catch (e) { alert('Delete failed'); }
     }
+  });
+
+  // Cover upload
+  document.getElementById('v-cover-upload').addEventListener('change', async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const status = document.getElementById('v-cover-status');
+    status.textContent = 'Uploading…';
+    const fd = new FormData(); fd.append('file', f);
+    try {
+      const r = await fetch('../api/admin-upload.php', { method:'POST', credentials:'include', body: fd });
+      const j = await r.json();
+      if (j.success) {
+        document.getElementById('v-cover-url').value = j.url;
+        status.textContent = '✓ ' + j.url; status.style.color = 'var(--success)';
+      } else { status.textContent = '✗ ' + (j.error || 'failed'); status.style.color = 'var(--error)'; }
+    } catch (err) { status.textContent = '✗ Network error'; status.style.color = 'var(--error)'; }
+    e.target.value = '';
   });
 
   document.getElementById('save-btn').addEventListener('click', async () => {

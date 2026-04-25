@@ -36,6 +36,32 @@ jobs:
             git reset --hard origin/main
             chown -R www-data:www-data "$DEPLOY_PATH"
 
+            # Uploads 目录（用户文件持久化，git 不管）
+            mkdir -p "$DEPLOY_PATH/uploads"
+            chown -R www-data:www-data "$DEPLOY_PATH/uploads"
+            chmod 755 "$DEPLOY_PATH/uploads"
+
+            # PHP-FPM 调大上传限制（200M 视频）
+            POOL_CONF=$(ls /etc/php/*/fpm/pool.d/www.conf 2>/dev/null | head -1)
+            if [ -n "$POOL_CONF" ] && ! grep -q '# GLAMEYE_UPLOAD' "$POOL_CONF"; then
+              cat >> "$POOL_CONF" <<'POOL'
+
+; # GLAMEYE_UPLOAD
+php_admin_value[upload_max_filesize] = 210M
+php_admin_value[post_max_size]       = 220M
+php_admin_value[memory_limit]        = 256M
+php_admin_value[max_execution_time]  = 120
+POOL
+              PHP_FPM=$(systemctl list-unit-files --type=service --no-legend | awk '/^php[0-9.]+-fpm\.service/{print $1; exit}')
+              [ -n "$PHP_FPM" ] && systemctl restart "$PHP_FPM"
+            fi
+
+            # nginx 调大 client_max_body_size（如果 vhost 没配过）
+            if ! grep -q 'client_max_body_size' /etc/nginx/sites-enabled/glameye 2>/dev/null; then
+              sed -i '/server_name.*\b173\.199\b.*;/a\    client_max_body_size 220M;' /etc/nginx/sites-enabled/glameye 2>/dev/null || true
+              nginx -t && systemctl reload nginx 2>/dev/null || true
+            fi
+
             # Schema (CREATE IF NOT EXISTS - 幂等)
             if [ -f database/setup.sql ]; then
               mysql --protocol=socket -u root glameyeshop < database/setup.sql 2>/dev/null || true

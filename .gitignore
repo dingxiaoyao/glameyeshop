@@ -8,3 +8,7 @@ node_modules/
 
 # Local-only deployment helper
 setup-deploy.sh
+
+# User-uploaded files - persist on server, never in git
+uploads/
+!uploads/.gitkeep
