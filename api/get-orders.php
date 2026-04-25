@@ -1,11 +1,20 @@
 <?php
 require_once __DIR__ . '/config.php';
 
+// 仅管理员可访问
+requireAdminAuth();
+
 try {
     $db = getDb();
-    $stmt = $db->query('SELECT id, product_name, quantity, amount, email, phone, payment_method, status, created_at FROM orders ORDER BY created_at DESC LIMIT 20');
+    $stmt = $db->prepare(
+        'SELECT id, customer_name, product_name, quantity, amount, email, phone, payment_method, status, created_at
+         FROM orders
+         ORDER BY created_at DESC
+         LIMIT 50'
+    );
+    $stmt->execute();
     $orders = $stmt->fetchAll();
     sendJson(['orders' => $orders]);
 } catch (PDOException $exception) {
-    sendJson(['error' => $exception->getMessage()], 500);
+    sendError('Failed to fetch orders', 500, $exception);
 }
