@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>/#mink</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>/#faux</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>/#tools</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>/login.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>/signup.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://glameyeshop.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://glameyeshop.com/shop.html</loc><changefreq>weekly</changefreq><priority>0.95</priority></url>
+  <url><loc>https://glameyeshop.com/shop.html?category=mink</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://glameyeshop.com/shop.html?category=faux</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://glameyeshop.com/shop.html?category=tools</loc><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://glameyeshop.com/about.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://glameyeshop.com/wholesale.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://glameyeshop.com/contact.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://glameyeshop.com/login.html</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://glameyeshop.com/signup.html</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://glameyeshop.com/product.html?sku=GE-MINK-NAT-18</loc><priority>0.8</priority></url>
+  <url><loc>https://glameyeshop.com/product.html?sku=GE-MINK-DRA-22</loc><priority>0.8</priority></url>
+  <url><loc>https://glameyeshop.com/product.html?sku=GE-MINK-GLM-25</loc><priority>0.8</priority></url>
+  <url><loc>https://glameyeshop.com/product.html?sku=GE-FAUX-WSP-14</loc><priority>0.8</priority></url>
+  <url><loc>https://glameyeshop.com/product.html?sku=GE-FAUX-VOL-18</loc><priority>0.8</priority></url>
+  <url><loc>https://glameyeshop.com/product.html?sku=GE-FAUX-BLD-22</loc><priority>0.8</priority></url>
+  <url><loc>https://glameyeshop.com/product.html?sku=GE-TOOL-GLUE</loc><priority>0.8</priority></url>
+  <url><loc>https://glameyeshop.com/product.html?sku=GE-TOOL-APPL</loc><priority>0.8</priority></url>
+  <url><loc>https://glameyeshop.com/product.html?sku=GE-TOOL-CASE</loc><priority>0.8</priority></url>
 </urlset>

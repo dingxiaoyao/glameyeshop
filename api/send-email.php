@@ -21,7 +21,7 @@ $body    = (string)($input['body'] ?? '');
 if (!$to || !$subject || !$body) sendJson(['error' => 'to/subject/body required'], 422);
 
 // TODO: 接入真实邮件服务
-// $sent = mail($to, $subject, $body, "From: noreply@glameye.com\r\nContent-Type: text/html; charset=utf-8");
+// $sent = mail($to, $subject, $body, "From: noreply@glameyeshop.com\r\nContent-Type: text/html; charset=utf-8");
 
 error_log("[GlamEye] Email queued to=$to subject=$subject");
 sendJson(['success' => true, 'queued' => true, 'note' => 'Email service not yet configured']);

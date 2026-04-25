@@ -4,7 +4,15 @@ Disallow: /admin/
 Disallow: /api/
 Disallow: /database/
 Disallow: /checkout.html
+Disallow: /cart.html
 Disallow: /order-success.html
 Disallow: /account*
 
-Sitemap: /sitemap.xml
+# 社交媒体爬虫允许抓 OG
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+Sitemap: https://glameyeshop.com/sitemap.xml
