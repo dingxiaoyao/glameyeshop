@@ -119,9 +119,44 @@
   };
 
   // ============== Init ==============
+  // ============== Page Tracking ==============
+  function trackPageView() {
+    try {
+      const data = JSON.stringify({
+        path: location.pathname + (location.search || ''),
+        referer: document.referrer || '',
+      });
+      // sendBeacon: fire-and-forget, won't block page navigation
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/track.php', new Blob([data], { type: 'application/json' }));
+      } else {
+        fetch('/api/track.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: data, keepalive: true }).catch(() => {});
+      }
+    } catch (e) {}
+  }
+
+  // ============== SEO Lock (noindex) ==============
+  async function applySeoLock() {
+    try {
+      const r = await fetch('/api/settings.php', { cache: 'force-cache' });
+      const s = await r.json();
+      if (s.seo_blocked === '1') {
+        // 注入 meta noindex（如果还没有）
+        if (!document.querySelector('meta[name="robots"][content*="noindex"]')) {
+          const m = document.createElement('meta');
+          m.name = 'robots';
+          m.content = 'noindex, nofollow, noarchive';
+          document.head.appendChild(m);
+        }
+      }
+    } catch (e) {}
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     Cart.load();
     Cart.updateBadge();
+    trackPageView();
+    applySeoLock();
 
     // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach((a) => {

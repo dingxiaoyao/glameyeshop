@@ -43,15 +43,14 @@ jobs:
 
             # PHP-FPM 调大上传限制（200M 视频）
             POOL_CONF=$(ls /etc/php/*/fpm/pool.d/www.conf 2>/dev/null | head -1)
-            if [ -n "$POOL_CONF" ] && ! grep -q '# GLAMEYE_UPLOAD' "$POOL_CONF"; then
-              cat >> "$POOL_CONF" <<'POOL'
-
-; # GLAMEYE_UPLOAD
-php_admin_value[upload_max_filesize] = 210M
-php_admin_value[post_max_size]       = 220M
-php_admin_value[memory_limit]        = 256M
-php_admin_value[max_execution_time]  = 120
-POOL
+            if [ -n "$POOL_CONF" ] && ! grep -q 'GLAMEYE_UPLOAD' "$POOL_CONF"; then
+              {
+                printf '\n; GLAMEYE_UPLOAD\n'
+                printf 'php_admin_value[upload_max_filesize] = 210M\n'
+                printf 'php_admin_value[post_max_size]       = 220M\n'
+                printf 'php_admin_value[memory_limit]        = 256M\n'
+                printf 'php_admin_value[max_execution_time]  = 120\n'
+              } >> "$POOL_CONF"
               PHP_FPM=$(systemctl list-unit-files --type=service --no-legend | awk '/^php[0-9.]+-fpm\.service/{print $1; exit}')
               [ -n "$PHP_FPM" ] && systemctl restart "$PHP_FPM"
             fi
@@ -96,6 +95,12 @@ POOL
             ; do
               mysql --protocol=socket -u root glameyeshop -e "$sql" 2>/dev/null || true
             done
+
+            # nginx：把 /robots.txt 重写到 /robots.php（动态）
+            if ! grep -q 'rewrite ^/robots.txt' /etc/nginx/sites-enabled/glameye 2>/dev/null; then
+              sed -i '/server_name.*\b173\.199\b.*;/a\    rewrite ^/robots\\.txt$ /robots.php last;' /etc/nginx/sites-enabled/glameye 2>/dev/null || true
+              nginx -t && systemctl reload nginx 2>/dev/null || true
+            fi
 
             # 重载 PHP-FPM
             PHP_FPM=$(systemctl list-unit-files --type=service --no-legend | awk '/^php[0-9.]+-fpm\.service/{print $1; exit}')

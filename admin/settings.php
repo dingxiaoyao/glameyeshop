@@ -33,6 +33,19 @@
   </div>
 </div>
 
+<div class="admin-card" style="border-color: var(--warn);">
+  <h3 style="color: var(--warn);">🚧 SEO / Search Engines</h3>
+  <div class="form-group">
+    <div class="checkbox-row">
+      <input type="checkbox" data-key="seo_blocked" id="seo-blocked-toggle" data-bool="1" />
+      <label for="seo-blocked-toggle">
+        <strong style="color: var(--cream);">Block search engines</strong><br>
+        <small class="muted"><?= $lang === 'zh' ? '勾选 = robots.txt 拦截 + 所有页面注入 noindex meta。准备正式发布时取消勾选即可。' : 'When checked: robots.txt blocks all crawlers + noindex meta injected on every page. Uncheck when ready to launch publicly.' ?></small>
+      </label>
+    </div>
+  </div>
+</div>
+
 <div class="admin-card">
   <h3>Hero Image</h3>
   <div class="form-group">
@@ -65,7 +78,12 @@
     const map = {};
     (j.settings || []).forEach(s => map[s.key] = s.value);
     document.querySelectorAll('[data-key]').forEach(el => {
-      el.value = map[el.dataset.key] || '';
+      const v = map[el.dataset.key] || '';
+      if (el.dataset.bool) {
+        el.checked = (v === '1');
+      } else {
+        el.value = v;
+      }
     });
   } catch (e) { fb.textContent = 'Load failed'; fb.className = 'form-feedback error'; }
 
@@ -91,11 +109,12 @@
     fb.textContent = 'Saving…'; fb.className = 'form-feedback';
     let ok = 0, fail = 0;
     for (const el of document.querySelectorAll('[data-key]')) {
+      const value = el.dataset.bool ? (el.checked ? '1' : '0') : el.value;
       try {
         const r = await fetch('../api/admin-settings.php', {
           method: 'POST', credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: el.dataset.key, value: el.value }),
+          body: JSON.stringify({ key: el.dataset.key, value }),
         });
         const j = await r.json();
         if (j.success) ok++; else fail++;

@@ -166,6 +166,23 @@ CREATE TABLE IF NOT EXISTS site_settings (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 访客统计
+CREATE TABLE IF NOT EXISTS page_views (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    path VARCHAR(500) NOT NULL,
+    ip VARCHAR(45) NOT NULL,
+    user_agent VARCHAR(500) DEFAULT '',
+    referer VARCHAR(500) DEFAULT '',
+    country VARCHAR(8) DEFAULT '',
+    is_bot TINYINT(1) NOT NULL DEFAULT 0,
+    user_id INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_path (path(191)),
+    INDEX idx_ip (ip),
+    INDEX idx_created_at (created_at),
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS discount_codes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(64) NOT NULL UNIQUE,
@@ -190,7 +207,8 @@ INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 ('social_facebook',    'https://facebook.com/glameye'),
 ('amazon_store_url',   ''),
 ('amazon_status',      'coming_soon'),
-('hero_image_url',     '/images/lash-photos/style-14-frost-split.jpg');
+('hero_image_url',     '/images/lash-photos/style-14-frost-split.jpg'),
+('seo_blocked',        '1');  -- 默认拦截搜索引擎，上线就绪后改 0
 
 -- ============================================================
 -- 种子产品：18 个 SKU 覆盖 mink/faux/magnetic/tools
