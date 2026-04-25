@@ -5,3 +5,6 @@ vendor/
 node_modules/
 *.log
 *.cache
+
+# Local-only deployment helper
+setup-deploy.sh
