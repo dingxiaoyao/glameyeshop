@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Story · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand"><img src="images/logo.png" alt="GlamEye" class="brand-logo" /></a>
+      <button class="nav-toggle"><span></span><span></span><span></span></button>
+      <nav class="site-nav">
+        <a href="/">Home</a><a href="shop.html">Shop</a>
+        <a href="about.html" class="active">Story</a>
+        <a href="wholesale.html">Wholesale</a><a href="contact.html">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="account.html" class="icon-button">👤</a>
+        <a href="cart.html" class="icon-button">🛍 <span class="cart-count" id="cart-count">0</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" style="min-height: 50vh;">
+      <div class="hero-bg" style="background-image: url('images/products/lash-glamour-25.jpg');"></div>
+      <div class="container">
+        <div class="hero-content text-center" style="margin: 0 auto;">
+          <span class="eyebrow">Our Story</span>
+          <h1>Beauty, <em>elevated</em>.</h1>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container-sm">
+      <div style="text-align: center; max-width: 720px; margin: 0 auto;">
+        <p style="color: var(--text); font-size: 1.15rem; line-height: 1.8; margin-bottom: 2rem;">
+          GlamEye started in a small Los Angeles studio in 2024 with a question:
+          <em style="color: var(--gold);">why does luxury have to mean exclusive — or unkind?</em>
+        </p>
+        <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 2rem;">
+          We saw an industry where premium false eyelashes were either over-priced trophies or cheap, throwaway products. We saw an industry where "cruelty-free" was often a marketing word, not a sourcing decision.
+        </p>
+        <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 2rem;">
+          So we built a different brand. We hand-design every style in our LA studio. We partner with ethical suppliers who never harm animals. We use packaging you can reuse. And we sell direct, so we can offer truly luxurious lashes at honest prices.
+        </p>
+        <div class="divider-gold"></div>
+        <p style="color: var(--cream); font-style: italic; font-family: var(--serif); font-size: 1.5rem; line-height: 1.5; margin: 2rem 0;">
+          "Luxury isn't a price tag. It's how something is made — and how it makes you feel."
+        </p>
+        <p class="muted small" style="margin-bottom: 3rem;">— GlamEye Founder</p>
+        <a href="shop.html" class="button button-primary">Shop the Collection</a>
+      </div>
+    </section>
+
+    <section class="section container">
+      <div class="section-header">
+        <span class="eyebrow">Our Promise</span>
+        <h2>Three Things We Will Never Do</h2>
+        <div class="divider-gold"></div>
+      </div>
+      <div class="cards-grid" style="display:grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        <div class="form-card" style="text-align: center;">
+          <div style="font-size: 2.5rem; margin-bottom: 1rem;">🐰</div>
+          <h3 style="color: var(--cream);">Never Test on Animals</h3>
+          <p class="muted small">Leaping Bunny certified. Vegan options across the line.</p>
+        </div>
+        <div class="form-card" style="text-align: center;">
+          <div style="font-size: 2.5rem; margin-bottom: 1rem;">🌿</div>
+          <h3 style="color: var(--cream);">Never Use Cheap Adhesives</h3>
+          <p class="muted small">Latex-free, dermatologist-tested glue you can wear all day.</p>
+        </div>
+        <div class="form-card" style="text-align: center;">
+          <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚖️</div>
+          <h3 style="color: var(--cream);">Never Inflate Prices</h3>
+          <p class="muted small">Direct-to-consumer means honest pricing — no middleman markup.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom container">
+      <p>© 2026 GlamEye, Inc. · Made with ❤ in Los Angeles</p>
+    </div>
+  </footer>
+  <script src="js/app.js"></script>
+</body>
+</html>

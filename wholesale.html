@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wholesale · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand"><img src="images/logo.png" alt="GlamEye" class="brand-logo" /></a>
+      <nav class="site-nav">
+        <a href="/">Home</a><a href="shop.html">Shop</a>
+        <a href="about.html">Story</a>
+        <a href="wholesale.html" class="active">Wholesale</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="account.html" class="icon-button">👤</a>
+        <a href="cart.html" class="icon-button">🛍 <span class="cart-count" id="cart-count">0</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 4rem 1.25rem;">
+    <div style="text-align:center; max-width: 720px; margin: 0 auto 3rem;">
+      <span class="eyebrow">Wholesale Inquiries</span>
+      <h1>Sell GlamEye in Your Store</h1>
+      <div class="divider-gold"></div>
+      <p class="muted">Salons, beauty bars, boutiques and online retailers — let's build something glamorous together.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 1100px; margin: 0 auto; align-items: start;">
+      <div>
+        <h3 style="color: var(--cream); margin-bottom: 1rem;">Why Partner with GlamEye</h3>
+        <ul style="list-style: none; padding: 0; color: var(--text-muted); line-height: 2;">
+          <li><strong style="color: var(--gold);">→ Up to 60% margin</strong> with MSRP recommendations</li>
+          <li><strong style="color: var(--gold);">→ Free U.S. shipping</strong> on orders $500+</li>
+          <li><strong style="color: var(--gold);">→ Custom packaging</strong> with your logo (MOQ 200)</li>
+          <li><strong style="color: var(--gold);">→ Net 30 terms</strong> for established retailers</li>
+          <li><strong style="color: var(--gold);">→ Dedicated account manager</strong></li>
+          <li><strong style="color: var(--gold);">→ Marketing assets</strong> (photos, copy, video)</li>
+          <li><strong style="color: var(--gold);">→ MAP pricing protection</strong></li>
+        </ul>
+        <p class="muted small" style="margin-top: 2rem;">
+          Minimum order: <strong style="color: var(--cream);">$300</strong> · Lead time: <strong style="color: var(--cream);">5–7 business days</strong>
+        </p>
+      </div>
+      <div class="form-card" style="max-width: 100%; margin: 0;">
+        <h2 style="font-family: var(--serif); color: var(--cream); margin-bottom: 1.5rem;">Request Wholesale Pricing</h2>
+        <form id="wholesale-form" class="form-group">
+          <div class="form-row">
+            <label><span class="label-text">Company Name <span class="required">*</span></span>
+              <input type="text" name="company" required maxlength="200" />
+            </label>
+            <label><span class="label-text">Contact Person <span class="required">*</span></span>
+              <input type="text" name="contact" required maxlength="100" />
+            </label>
+          </div>
+          <label><span class="label-text">Business Email <span class="required">*</span></span>
+            <input type="email" name="email" required />
+          </label>
+          <label><span class="label-text">Phone</span>
+            <input type="tel" name="phone" maxlength="64" />
+          </label>
+          <label><span class="label-text">Tell us about your business</span>
+            <textarea name="message" rows="5" maxlength="2000"
+              placeholder="Number of locations, est. monthly volume, products of interest, etc."></textarea>
+          </label>
+          <button type="submit" class="button button-primary button-block">Submit Inquiry</button>
+          <p id="wholesale-feedback" class="form-feedback"></p>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom container"><p>© 2026 GlamEye, Inc.</p></div>
+  </footer>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('wholesale-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fb = document.getElementById('wholesale-feedback');
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      fb.textContent = 'Submitting…'; fb.className = 'form-feedback';
+      try {
+        const r = await fetch('api/wholesale-lead.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const j = await r.json();
+        if (j.success) { fb.textContent = '✨ Inquiry received! Our wholesale team will respond within 1 business day.'; fb.className = 'form-feedback success'; e.target.reset(); }
+        else { fb.textContent = j.error || 'Failed'; fb.className = 'form-feedback error'; }
+      } catch (err) { fb.textContent = 'Network error'; fb.className = 'form-feedback error'; }
+    });
+  </script>
+</body>
+</html>

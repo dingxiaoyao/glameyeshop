@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand"><img src="images/logo.png" alt="GlamEye" class="brand-logo" /></a>
+      <nav class="site-nav">
+        <a href="/">Home</a><a href="shop.html">Shop</a>
+        <a href="about.html">Story</a><a href="wholesale.html">Wholesale</a>
+        <a href="contact.html" class="active">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="account.html" class="icon-button">👤</a>
+        <a href="cart.html" class="icon-button">🛍 <span class="cart-count" id="cart-count">0</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 4rem 1.25rem;">
+    <div style="text-align:center; max-width: 720px; margin: 0 auto 3rem;">
+      <span class="eyebrow">Get in Touch</span>
+      <h1>We'd Love to Hear From You</h1>
+      <div class="divider-gold"></div>
+      <p class="muted">Questions? Feedback? Press? Wholesale? We answer every email within 24 hours.</p>
+    </div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 1000px; margin: 0 auto;">
+      <div>
+        <h3 style="color: var(--cream); margin-bottom: 1.25rem;">Reach Us Directly</h3>
+        <p class="muted" style="margin-bottom: .5rem;"><strong style="color:var(--gold);">General:</strong> hello@glameye.com</p>
+        <p class="muted" style="margin-bottom: .5rem;"><strong style="color:var(--gold);">Support:</strong> support@glameye.com</p>
+        <p class="muted" style="margin-bottom: .5rem;"><strong style="color:var(--gold);">Wholesale:</strong> wholesale@glameye.com</p>
+        <p class="muted" style="margin-bottom: .5rem;"><strong style="color:var(--gold);">Press:</strong> press@glameye.com</p>
+        <p class="muted" style="margin-top: 2rem;"><strong style="color:var(--gold);">Studio:</strong><br>1234 Beverly Blvd<br>Los Angeles, CA 90048</p>
+        <p class="muted" style="margin-top: 2rem;"><strong style="color:var(--gold);">Hours:</strong><br>Mon–Fri 9am–6pm PT<br>Sat–Sun 10am–4pm PT</p>
+      </div>
+      <div class="form-card" style="max-width: 100%; margin: 0;">
+        <form id="contact-form" class="form-group">
+          <label><span class="label-text">Name <span class="required">*</span></span>
+            <input type="text" name="contact" required maxlength="100" />
+          </label>
+          <label><span class="label-text">Email <span class="required">*</span></span>
+            <input type="email" name="email" required />
+          </label>
+          <label><span class="label-text">Subject</span>
+            <input type="text" name="company" maxlength="200" />
+          </label>
+          <label><span class="label-text">Message <span class="required">*</span></span>
+            <textarea name="message" rows="5" required maxlength="2000"></textarea>
+          </label>
+          <button type="submit" class="button button-primary button-block">Send Message</button>
+          <p id="contact-feedback" class="form-feedback"></p>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom container"><p>© 2026 GlamEye, Inc.</p></div>
+  </footer>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('contact-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fb = document.getElementById('contact-feedback');
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      data.company = data.company || 'Customer Inquiry';
+      fb.textContent = 'Sending…'; fb.className = 'form-feedback';
+      try {
+        const r = await fetch('api/wholesale-lead.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const j = await r.json();
+        if (j.success) { fb.textContent = '✨ Message sent! We\'ll reply within 24 hours.'; fb.className = 'form-feedback success'; e.target.reset(); }
+        else { fb.textContent = j.error || 'Failed'; fb.className = 'form-feedback error'; }
+      } catch (err) { fb.textContent = 'Network error'; fb.className = 'form-feedback error'; }
+    });
+  </script>
+</body>
+</html>

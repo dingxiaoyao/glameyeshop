@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shopping Cart · GlamEye</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand"><img src="images/logo.png" alt="GlamEye" class="brand-logo" /></a>
+      <nav class="site-nav">
+        <a href="/">Home</a><a href="shop.html">Shop</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="account.html" class="icon-button">👤</a>
+        <a href="cart.html" class="icon-button">🛍 <span class="cart-count has-items" id="cart-count">0</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main class="cart-page">
+    <h1>Shopping Cart</h1>
+    <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem;" id="cart-layout">
+      <div>
+        <div id="cart-list" class="cart-items">
+          <div class="cart-empty-state">
+            <div class="icon">🛍</div>
+            <h3 style="color: var(--cream);">Your cart is empty</h3>
+            <p class="muted" style="margin: 1rem 0 1.5rem;">Discover our luxury lash collection.</p>
+            <a href="shop.html" class="button button-primary">Shop the Collection</a>
+          </div>
+        </div>
+      </div>
+      <aside class="cart-summary" id="cart-summary" hidden>
+        <h3>Order Summary</h3>
+        <div class="summary-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+        <div class="summary-row"><span>Shipping <small>(free over $50)</small></span><span id="shipping">$0.00</span></div>
+        <div class="summary-row"><span>Tax</span><span id="tax">$0.00</span></div>
+        <div class="summary-row total"><span>Total</span><span id="total">$0.00</span></div>
+        <a href="checkout.html" class="button button-primary button-block" style="margin-top: 1.5rem;">Continue to Checkout →</a>
+        <a href="shop.html" class="button button-ghost button-block" style="margin-top: .5rem;">Continue Shopping</a>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom container">
+      <p>© 2026 GlamEye, Inc.</p>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    (function () {
+      const fmt = window.GlamEye.Fmt;
+      const escape = fmt.escape, money = fmt.money;
+
+      function render() {
+        const cart = window.GlamEye.Cart;
+        const list = document.getElementById('cart-list');
+        const summary = document.getElementById('cart-summary');
+        if (cart.items.length === 0) {
+          list.innerHTML = `<div class="cart-empty-state">
+            <div class="icon">🛍</div>
+            <h3 style="color: var(--cream);">Your cart is empty</h3>
+            <p class="muted" style="margin: 1rem 0 1.5rem;">Discover our luxury lash collection.</p>
+            <a href="shop.html" class="button button-primary">Shop the Collection</a>
+          </div>`;
+          summary.hidden = true;
+          return;
+        }
+        summary.hidden = false;
+        list.innerHTML = cart.items.map((it) => `
+          <div class="cart-row" data-sku="${escape(it.sku)}">
+            <img src="${escape(it.image)}" alt="${escape(it.name)}" />
+            <div class="cart-row-name">
+              <strong>${escape(it.name)}</strong>
+              <span class="muted small">${money(it.price)} each</span>
+            </div>
+            <div class="cart-row-qty">
+              <button class="qty-btn" data-action="dec">−</button>
+              <input type="number" class="qty-input" min="1" max="50" value="${it.quantity}" />
+              <button class="qty-btn" data-action="inc">+</button>
+            </div>
+            <div class="cart-row-total">${money(it.price * it.quantity)}</div>
+            <button class="cart-row-remove">×</button>
+          </div>`).join('');
+
+        const subtotal = cart.subtotal();
+        const shipping = subtotal >= 50 ? 0 : 5.99;
+        document.getElementById('subtotal').textContent = money(subtotal);
+        document.getElementById('shipping').textContent = subtotal >= 50 ? 'FREE' : money(shipping);
+        document.getElementById('tax').textContent = money(0);
+        document.getElementById('total').textContent = money(subtotal + shipping);
+      }
+
+      document.getElementById('cart-list').addEventListener('click', (e) => {
+        const cart = window.GlamEye.Cart;
+        const row = e.target.closest('.cart-row');
+        if (!row) return;
+        const sku = row.dataset.sku;
+        if (e.target.matches('.qty-btn[data-action="inc"]')) {
+          const it = cart.items.find((i) => i.sku === sku);
+          if (it) cart.setQuantity(sku, it.quantity + 1);
+        } else if (e.target.matches('.qty-btn[data-action="dec"]')) {
+          const it = cart.items.find((i) => i.sku === sku);
+          if (it) cart.setQuantity(sku, it.quantity - 1);
+        } else if (e.target.matches('.cart-row-remove')) {
+          cart.remove(sku);
+        }
+      });
+      document.getElementById('cart-list').addEventListener('change', (e) => {
+        if (e.target.matches('.qty-input')) {
+          const cart = window.GlamEye.Cart;
+          const row = e.target.closest('.cart-row');
+          if (cart && row) cart.setQuantity(row.dataset.sku, e.target.value);
+        }
+      });
+      window.addEventListener('cart:update', render);
+      document.addEventListener('DOMContentLoaded', render);
+    })();
+  </script>
+</body>
+</html>

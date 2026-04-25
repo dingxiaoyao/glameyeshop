@@ -1,175 +1,136 @@
-<?php
-require_once __DIR__ . '/../api/config.php';
-require_once __DIR__ . '/../api/i18n.php';
-requireAdminAuth();
-$lang = adminLang();
-?>
-<!DOCTYPE html>
-<html lang="<?= $lang === 'zh' ? 'zh-CN' : 'en' ?>">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="robots" content="noindex,nofollow" />
-  <title>GlamEye <?= htmlspecialchars(t('admin_panel')) ?></title>
-  <link rel="icon" href="../favicon.ico" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Inter:wght@300;400;500;600;700&display=swap" />
-  <link rel="stylesheet" href="../css/styles.css" />
-  <style>
-    .admin-table { width:100%; border-collapse:collapse; font-size:.85rem; background:var(--black-card); border-radius:12px; overflow:hidden; }
-    .admin-table th { background:var(--black-soft); padding:.75rem; text-align:left; border-bottom:1px solid var(--border); color:var(--gold); font-family:inherit; font-weight:600; letter-spacing:1px; text-transform:uppercase; font-size:.75rem; }
-    .admin-table td { padding:.75rem; border-bottom:1px solid var(--border-soft); vertical-align:top; color:var(--cream); }
-    .admin-table tr:hover { background:rgba(212,169,85,0.05); }
-    .status-select { padding:.4rem; border-radius:4px; border:1px solid var(--border); background:var(--black); color:var(--cream); font-size:.8rem; }
-    .status-select:focus { outline: none; border-color: var(--gold); }
-    .filter-bar { display:flex; gap:.5rem; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; }
-    .filter-btn { padding:.5rem 1rem; background:var(--black-card); border:1px solid var(--border); color:var(--cream); border-radius:4px; cursor:pointer; font-size:.8rem; letter-spacing:1px; text-transform:uppercase; }
-    .filter-btn.active { background:var(--gold); color:var(--black); border-color:var(--gold); }
-    .stat-card { background:var(--black-card); padding:1.5rem; border-radius:12px; border:1px solid var(--border); }
-    .stat-num { font-size:2rem; font-weight:700; color:var(--gold); font-family: 'Playfair Display', serif; }
-    .stat-label { color:var(--text-muted); font-size:.8rem; letter-spacing:1px; text-transform:uppercase; }
-    .lang-switch { display:inline-flex; gap:.25rem; }
-    .lang-switch a { padding:.25rem .5rem; border:1px solid var(--border); border-radius:4px; color:var(--cream); font-size:.75rem; }
-    .lang-switch a.active { background:var(--gold); color:var(--black); border-color:var(--gold); }
-  </style>
-</head>
-<body>
-  <header class="site-header">
-    <div class="container">
-      <a href="../" class="brand">
-        <img src="../images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="36" />
-        <span style="margin-left:.75rem; color:var(--gold); font-size:.85rem; letter-spacing:2px; text-transform:uppercase;">Admin</span>
-      </a>
-      <nav class="site-nav">
-        <span class="lang-switch">
-          <a href="?lang=en" class="<?= $lang === 'en' ? 'active' : '' ?>">EN</a>
-          <a href="?lang=zh" class="<?= $lang === 'zh' ? 'active' : '' ?>">中</a>
-        </span>
-        <span style="color:var(--text-muted); font-size:.85rem;">
-          👤 <?= htmlspecialchars($_SERVER['PHP_AUTH_USER'] ?? 'admin') ?>
-        </span>
-        <a href="../">← <?= htmlspecialchars(t('back_to_site')) ?></a>
-      </nav>
-    </div>
-  </header>
+<?php $pageTitle = 'Dashboard'; $activeNav = 'dashboard'; require __DIR__ . '/_layout.php'; ?>
+<h1>📊 <?= htmlspecialchars(t('dashboard')) ?></h1>
 
-  <main class="container" style="padding: 2rem 1rem;">
-    <h1 style="color: var(--cream);">📦 <?= htmlspecialchars(t('order_management')) ?></h1>
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label"><?= htmlspecialchars(t('today_sales')) ?></div>
+    <div class="kpi-value" id="kpi-today-rev">—</div>
+    <div class="kpi-trend" id="kpi-today-cnt">— <?= htmlspecialchars(t('orders')) ?></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><?= htmlspecialchars(t('month_sales')) ?></div>
+    <div class="kpi-value" id="kpi-month-rev">—</div>
+    <div class="kpi-trend" id="kpi-month-cnt">— <?= htmlspecialchars(t('orders')) ?></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><?= htmlspecialchars(t('total_revenue')) ?></div>
+    <div class="kpi-value" id="kpi-total-rev">—</div>
+    <div class="kpi-trend" id="kpi-total-cnt">— <?= htmlspecialchars(t('orders')) ?></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><?= htmlspecialchars(t('total_customers')) ?></div>
+    <div class="kpi-value" id="kpi-customers">—</div>
+    <div class="kpi-trend" id="kpi-subs">— <?= htmlspecialchars(t('subscribers')) ?></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><?= htmlspecialchars(t('pending_orders')) ?></div>
+    <div class="kpi-value" id="kpi-pending">—</div>
+    <div class="kpi-trend"><a href="orders.php?status=pending"><?= htmlspecialchars(t('orders')) ?> →</a></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><?= htmlspecialchars(t('low_stock')) ?></div>
+    <div class="kpi-value" id="kpi-lowstock" style="color: var(--warn);">—</div>
+    <div class="kpi-trend"><a href="products.php"><?= htmlspecialchars(t('products')) ?> →</a></div>
+  </div>
+</div>
 
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin:1.5rem 0;">
-      <div class="stat-card"><div class="stat-num" id="stat-total">-</div><div class="stat-label"><?= htmlspecialchars(t('total_orders')) ?></div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-pending">-</div><div class="stat-label"><?= htmlspecialchars(t('pending')) ?></div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-paid">-</div><div class="stat-label"><?= htmlspecialchars(t('paid')) ?></div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-revenue">-</div><div class="stat-label"><?= htmlspecialchars(t('total_revenue')) ?></div></div>
-    </div>
+<div class="admin-card">
+  <h3><?= htmlspecialchars(t('sales_30d')) ?></h3>
+  <div class="chart-bars" id="sales-chart"></div>
+  <div class="chart-labels" id="sales-labels"></div>
+</div>
 
-    <div class="filter-bar">
-      <span><?= htmlspecialchars(t('filter_status')) ?>:</span>
-      <button class="filter-btn active" data-filter=""><?= htmlspecialchars(t('all')) ?></button>
-      <button class="filter-btn" data-filter="pending"><?= htmlspecialchars(t('pending')) ?></button>
-      <button class="filter-btn" data-filter="paid"><?= htmlspecialchars(t('paid')) ?></button>
-      <button class="filter-btn" data-filter="processing"><?= htmlspecialchars(t('processing')) ?></button>
-      <button class="filter-btn" data-filter="shipped"><?= htmlspecialchars(t('shipped')) ?></button>
-      <button class="filter-btn" data-filter="delivered"><?= htmlspecialchars(t('delivered')) ?></button>
-      <button class="filter-btn" data-filter="cancelled"><?= htmlspecialchars(t('cancelled')) ?></button>
-      <button id="refresh-btn" class="filter-btn" style="margin-left:auto;">🔄 <?= htmlspecialchars(t('refresh')) ?></button>
-    </div>
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+  <div class="admin-card">
+    <h3><?= htmlspecialchars(t('top_products')) ?></h3>
+    <div id="top-products"></div>
+  </div>
+  <div class="admin-card">
+    <h3><?= htmlspecialchars(t('low_stock_alert')) ?></h3>
+    <div id="low-stock-list"></div>
+  </div>
+</div>
 
-    <div id="orders-container" style="overflow-x:auto;">
-      <p class="muted"><?= htmlspecialchars(t('loading')) ?></p>
-    </div>
-  </main>
+<div class="admin-card">
+  <h3><?= htmlspecialchars(t('recent_orders')) ?></h3>
+  <div id="recent-orders"></div>
+</div>
 
-  <script>
-    const T = <?= tjs() ?>;
-    (function () {
-      const container = document.getElementById('orders-container');
-      let allowedStatuses = [];
-      let currentFilter = '';
+<script>
+(async () => {
+  function escape(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function money(n) { return '$' + Number(n || 0).toFixed(2); }
+  try {
+    const r = await fetch('../api/admin-stats.php', { credentials: 'include' });
+    const j = await r.json();
+    const k = j.kpi;
+    document.getElementById('kpi-today-rev').textContent  = money(k.today_revenue);
+    document.getElementById('kpi-today-cnt').textContent  = k.today_orders + ' ' + T.orders;
+    document.getElementById('kpi-month-rev').textContent  = money(k.month_revenue);
+    document.getElementById('kpi-month-cnt').textContent  = k.month_orders + ' ' + T.orders;
+    document.getElementById('kpi-total-rev').textContent  = money(k.total_revenue);
+    document.getElementById('kpi-total-cnt').textContent  = k.total_orders + ' ' + T.orders;
+    document.getElementById('kpi-customers').textContent  = k.total_customers;
+    document.getElementById('kpi-subs').textContent       = k.newsletter_subs + ' ' + T.subscribers;
+    document.getElementById('kpi-pending').textContent    = k.pending_orders;
+    document.getElementById('kpi-lowstock').textContent   = k.low_stock;
 
-      function escape(s) {
-        return String(s ?? '').replace(/[&<>"']/g, (c) =>
-          ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-      }
-
-      function renderTable(orders) {
-        if (!orders.length) { container.innerHTML = '<p class="muted">' + T.no_orders + '</p>'; return; }
-        const head = `<thead><tr>
-          <th>${T.order_id}</th><th>${T.date}</th><th>${T.customer}</th>
-          <th>${T.items}</th><th>${T.amount}</th><th>${T.payment}</th>
-          <th>${T.address}</th><th>${T.status}</th>
-        </tr></thead>`;
-        const rows = orders.map((o) => {
-          const items = (o.items || []).length
-            ? o.items.map(i => `${escape(i.product_name)} × ${i.quantity}`).join('<br>')
-            : `${escape(o.product_name)} × ${o.quantity}`;
-          const addr = `${escape(o.address_line || '')} ${escape(o.city || '')} ${escape(o.state || '')} ${escape(o.postal_code || '')}`.trim();
-          const opts = allowedStatuses.map((s) =>
-            `<option value="${s}"${s === o.status ? ' selected' : ''}>${T[s] || s}</option>`).join('');
-          return `<tr>
-            <td><strong style="color:var(--gold)">#${o.id}</strong></td>
-            <td>${escape(o.created_at)}</td>
-            <td><strong>${escape(o.customer_name)}</strong><br>
-                <small class="muted">${escape(o.email)}</small><br>
-                <small class="muted">${escape(o.phone)}</small></td>
-            <td>${items}</td>
-            <td><strong>$${escape(o.amount)}</strong></td>
-            <td>${escape(o.payment_method)}</td>
-            <td><small class="muted">${addr || '-'}</small></td>
-            <td><select class="status-select" data-id="${o.id}">${opts}</select></td>
-          </tr>`;
-        }).join('');
-        container.innerHTML = `<table class="admin-table">${head}<tbody>${rows}</tbody></table>`;
-      }
-
-      function updateStats(orders) {
-        document.getElementById('stat-total').textContent = orders.length;
-        document.getElementById('stat-pending').textContent = orders.filter(o => o.status === 'pending').length;
-        document.getElementById('stat-paid').textContent = orders.filter(o => ['paid','shipped','delivered'].includes(o.status)).length;
-        const rev = orders.filter(o => ['paid','shipped','delivered'].includes(o.status)).reduce((s, o) => s + Number(o.amount), 0);
-        document.getElementById('stat-revenue').textContent = '$' + rev.toFixed(2);
-      }
-
-      async function load() {
-        container.innerHTML = '<p class="muted">' + T.loading + '</p>';
-        try {
-          const url = '../api/get-orders.php' + (currentFilter ? '?status=' + currentFilter : '');
-          const r = await fetch(url, { credentials: 'include' });
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          const j = await r.json();
-          allowedStatuses = j.allowed_statuses || [];
-          updateStats(j.orders || []);
-          renderTable(j.orders || []);
-        } catch (e) {
-          container.innerHTML = `<p style="color:var(--error);">${T.load_failed}: ${e.message}</p>`;
-        }
-      }
-
-      container.addEventListener('change', async (e) => {
-        if (!e.target.matches('.status-select')) return;
-        const id = e.target.dataset.id;
-        const newStatus = e.target.value;
-        e.target.disabled = true;
-        try {
-          const r = await fetch('../api/update-order-status.php', {
-            method: 'POST', credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ order_id: id, status: newStatus }),
-          });
-          const j = await r.json();
-          if (!j.success) throw new Error(j.error || 'failed');
-        } catch (err) { alert('Update failed: ' + err.message); load(); }
-        finally { e.target.disabled = false; }
+    // Sales chart
+    const sales = j.sales_30d || [];
+    const maxRev = Math.max(...sales.map((d) => Number(d.revenue)), 1);
+    const chartEl = document.getElementById('sales-chart');
+    const labelsEl = document.getElementById('sales-labels');
+    chartEl.innerHTML = '';
+    labelsEl.innerHTML = '';
+    if (sales.length === 0) {
+      chartEl.innerHTML = '<div style="margin:auto; color:var(--text-muted)">No sales data yet</div>';
+    } else {
+      sales.forEach((d) => {
+        const h = (Number(d.revenue) / maxRev * 100) + '%';
+        const bar = document.createElement('div');
+        bar.className = 'chart-bar';
+        bar.style.height = h;
+        bar.dataset.tooltip = `${d.d}: ${money(d.revenue)} · ${d.orders} ${T.orders}`;
+        chartEl.appendChild(bar);
+        const lbl = document.createElement('span');
+        lbl.textContent = d.d.slice(5);
+        labelsEl.appendChild(lbl);
       });
+    }
 
-      document.querySelectorAll('.filter-btn[data-filter]').forEach((b) => {
-        b.addEventListener('click', () => {
-          document.querySelectorAll('.filter-btn[data-filter]').forEach(x => x.classList.remove('active'));
-          b.classList.add('active'); currentFilter = b.dataset.filter; load();
-        });
-      });
-      document.getElementById('refresh-btn').addEventListener('click', load);
-      load();
-    })();
-  </script>
-</body>
-</html>
+    // Top products
+    const tp = j.top_products || [];
+    document.getElementById('top-products').innerHTML = tp.length
+      ? '<table class="admin-table"><tbody>' + tp.map((p) =>
+          `<tr><td>${escape(p.product_name)}</td><td style="text-align:right;">${p.qty} sold</td><td style="text-align:right; color:var(--gold);">${money(p.rev)}</td></tr>`
+        ).join('') + '</tbody></table>'
+      : '<p class="muted">No data yet.</p>';
+
+    // Low stock
+    const ls = j.low_stock || [];
+    document.getElementById('low-stock-list').innerHTML = ls.length
+      ? '<table class="admin-table"><tbody>' + ls.map((p) =>
+          `<tr><td>${escape(p.name)}</td><td><small class="muted">${escape(p.sku)}</small></td><td style="text-align:right; color:var(--warn);"><strong>${p.stock}</strong></td></tr>`
+        ).join('') + '</tbody></table>'
+      : '<p class="muted">All stocked up ✓</p>';
+
+    // Recent orders
+    const ro = j.recent_orders || [];
+    document.getElementById('recent-orders').innerHTML = ro.length
+      ? '<table class="admin-table"><thead><tr><th>#</th><th>' + T.customer + '</th><th>' + T.amount + '</th><th>' + T.status + '</th><th>' + T.date + '</th></tr></thead><tbody>'
+        + ro.map((o) => `<tr>
+            <td><a href="orders.php">#${o.id}</a></td>
+            <td>${escape(o.customer_name)}</td>
+            <td>${money(o.amount)}</td>
+            <td><span class="status-badge status-${escape(o.status)}">${T[o.status] || o.status}</span></td>
+            <td><small class="muted">${escape(o.created_at)}</small></td>
+          </tr>`).join('')
+        + '</tbody></table>'
+      : '<p class="muted">No orders yet.</p>';
+  } catch (e) {
+    document.querySelector('.admin-main').insertAdjacentHTML('beforeend',
+      '<p style="color:var(--error)">Failed to load stats: ' + e.message + '</p>');
+  }
+})();
+</script>
+<?php require __DIR__ . '/_footer.php'; ?>

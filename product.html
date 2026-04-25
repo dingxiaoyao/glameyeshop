@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand"><img src="images/logo.png" alt="GlamEye" class="brand-logo" /></a>
+      <button class="nav-toggle"><span></span><span></span><span></span></button>
+      <nav class="site-nav">
+        <a href="/">Home</a><a href="shop.html">Shop</a>
+        <a href="about.html">Story</a><a href="wholesale.html">Wholesale</a><a href="contact.html">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="account.html" class="icon-button">👤</a>
+        <a href="cart.html" class="icon-button">🛍 <span class="cart-count" id="cart-count">0</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 1.5rem 1.25rem 0;">
+    <p class="muted small">
+      <a href="/">Home</a> &nbsp;/&nbsp;
+      <a href="shop.html">Shop</a> &nbsp;/&nbsp;
+      <span id="breadcrumb-product">Product</span>
+    </p>
+  </main>
+
+  <article class="product-detail">
+    <div class="product-detail-image">
+      <img id="p-image" src="" alt="" />
+    </div>
+    <div class="product-detail-info">
+      <span class="product-cat" id="p-cat">…</span>
+      <h1 id="p-name">Loading…</h1>
+      <div class="product-rating">★★★★★ <span class="reviews" id="p-reviews">(0)</span></div>
+      <div style="display: flex; align-items: baseline; gap: 1rem; margin: 1rem 0;">
+        <span class="price" id="p-price">—</span>
+        <span class="price-old" id="p-price-old" hidden>—</span>
+      </div>
+      <p class="description" id="p-desc">…</p>
+
+      <div class="qty-selector">
+        <label>Quantity</label>
+        <div class="cart-row-qty">
+          <button class="qty-btn" id="dec-btn" type="button">−</button>
+          <input type="number" class="qty-input" id="qty" min="1" max="50" value="1" />
+          <button class="qty-btn" id="inc-btn" type="button">+</button>
+        </div>
+      </div>
+
+      <div style="display:flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="button button-primary" id="add-to-cart-btn">Add to Cart</button>
+        <button class="button button-outline" id="wishlist-toggle">♡ Save</button>
+      </div>
+
+      <div class="product-meta">
+        <div><strong>SKU:</strong> <span id="p-sku">—</span></div>
+        <div><strong>Stock:</strong> <span id="p-stock">—</span></div>
+        <div><strong>Shipping:</strong> Free U.S. shipping on orders $50+</div>
+        <div><strong>Returns:</strong> 30-day no-questions-asked returns</div>
+        <div><strong>Cruelty-free:</strong> Always · Vegan options available</div>
+      </div>
+    </div>
+  </article>
+
+  <section class="section container">
+    <div class="section-header">
+      <span class="eyebrow">You may also like</span>
+      <h2>More from GlamEye</h2>
+      <div class="divider-gold"></div>
+    </div>
+    <div class="product-grid" id="related-products"></div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-bottom container">
+      <p>© 2026 GlamEye, Inc. · Made with ❤ in Los Angeles</p>
+      <div class="payment-icons"><span>VISA</span><span>MC</span><span>AMEX</span><span>APPLE PAY</span><span>PAYPAL</span></div>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      const sku = params.get('sku');
+      if (!sku) { document.getElementById('p-name').textContent = 'Product not found'; return; }
+      const fmt = window.GlamEye.Fmt;
+      try {
+        const r = await fetch('api/products.php');
+        const j = await r.json();
+        const list = j.products || [];
+        const p = list.find((x) => x.sku === sku);
+        if (!p) { document.getElementById('p-name').textContent = 'Product not found'; return; }
+
+        document.title = p.name + ' · GlamEye';
+        document.getElementById('breadcrumb-product').textContent = p.name;
+        document.getElementById('p-image').src = p.image_url;
+        document.getElementById('p-image').alt = p.name;
+        document.getElementById('p-cat').textContent = p.category;
+        document.getElementById('p-name').textContent = p.name;
+        document.getElementById('p-price').textContent = fmt.money(p.price);
+        document.getElementById('p-desc').textContent = p.short_description || p.description || '';
+        document.getElementById('p-sku').textContent = p.sku;
+        document.getElementById('p-stock').textContent = p.stock > 0 ? `${p.stock} in stock` : 'Out of stock';
+        document.getElementById('p-reviews').textContent = `(${100 + (p.id * 7)})`;
+        if (p.compare_at_price && Number(p.compare_at_price) > Number(p.price)) {
+          document.getElementById('p-price-old').textContent = fmt.money(p.compare_at_price);
+          document.getElementById('p-price-old').hidden = false;
+        }
+
+        const qty = document.getElementById('qty');
+        document.getElementById('inc-btn').addEventListener('click', () => qty.value = Math.min(50, (parseInt(qty.value, 10) || 1) + 1));
+        document.getElementById('dec-btn').addEventListener('click', () => qty.value = Math.max(1, (parseInt(qty.value, 10) || 1) - 1));
+
+        document.getElementById('add-to-cart-btn').addEventListener('click', () => {
+          window.GlamEye.Cart.add({
+            sku: p.sku, name: p.name, price: p.price, image: p.image_url,
+            quantity: parseInt(qty.value, 10) || 1,
+          });
+        });
+
+        document.getElementById('wishlist-toggle').addEventListener('click', async () => {
+          if (!window.GlamEye.Auth.isLoggedIn()) {
+            window.location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
+            return;
+          }
+          try {
+            await fetch('api/wishlist.php', {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ product_id: p.id }),
+            });
+            window.GlamEye.Notification.show('Saved to wishlist ♥');
+          } catch (e) { window.GlamEye.Notification.show('Failed', 'error'); }
+        });
+
+        // Related products
+        const related = list.filter((x) => x.category === p.category && x.sku !== p.sku).slice(0, 3);
+        const escape = fmt.escape, money = fmt.money;
+        document.getElementById('related-products').innerHTML = related.map((rp) => `
+          <article class="product-card">
+            <div class="product-image">
+              <a href="product.html?sku=${escape(rp.sku)}"><img src="${escape(rp.image_url)}" alt="${escape(rp.name)}" loading="lazy" /></a>
+            </div>
+            <div class="product-info">
+              <span class="product-cat">${escape(rp.category)}</span>
+              <h3><a href="product.html?sku=${escape(rp.sku)}" style="color:inherit;">${escape(rp.name)}</a></h3>
+              <div class="product-price-row"><span class="price">${money(rp.price)}</span></div>
+              <a href="product.html?sku=${escape(rp.sku)}" class="button button-outline button-block">View Details</a>
+            </div>
+          </article>`).join('');
+      } catch (e) {
+        document.getElementById('p-name').textContent = 'Failed to load';
+      }
+    })();
+  </script>
+</body>
+</html>
