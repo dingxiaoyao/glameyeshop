@@ -9,17 +9,64 @@
   <meta property="og:image" content="https://glameyeshop.com/images/products/hero-lash.jpg" />
   <meta property="og:site_name" content="GlamEye" />
   <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://images.unsplash.com" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .pdp { display: grid; grid-template-columns: 1.1fr 1fr; gap: 4rem; padding: 3rem 1.25rem; max-width: 1320px; margin: 0 auto; }
+    .pdp-gallery { position: sticky; top: 5rem; align-self: start; }
+    .pdp-main-img { aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-card); margin-bottom: 1rem; }
+    .pdp-main-img img { width:100%; height:100%; object-fit: cover; }
+    .pdp-thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
+    .pdp-thumb { aspect-ratio: 1; border-radius: var(--radius); overflow: hidden; background: var(--bg-card); border: 1px solid var(--border-soft); cursor: pointer; transition: border-color .2s; }
+    .pdp-thumb img { width:100%; height:100%; object-fit: cover; }
+    .pdp-thumb:hover, .pdp-thumb.active { border-color: var(--gold); }
+
+    .pdp-info { padding: 1rem 0; }
+    .pdp-title { font-family: var(--serif); font-size: clamp(2rem, 4vw, 3rem); color: var(--cream); margin-bottom: .75rem; line-height: 1.1; }
+    .pdp-rating { display:flex; align-items:center; gap:.5rem; margin-bottom: 1.25rem; }
+    .pdp-rating-stars { color: var(--gold); font-size: 1.05rem; letter-spacing: 2px; }
+    .pdp-rating-count { color: var(--text-muted); font-size: .85rem; }
+    .pdp-price-row { display:flex; align-items:baseline; gap:1rem; margin: 1rem 0; }
+    .pdp-price { font-size: 2.25rem; font-weight: 600; color: var(--cream); font-family: var(--serif); }
+    .pdp-price-old { font-size: 1.2rem; color: var(--text-dim); text-decoration: line-through; font-family: var(--serif); }
+    .pdp-save-badge { background: var(--error); color: var(--cream); padding: .15rem .5rem; border-radius: var(--radius-sm); font-size: .7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .pdp-desc { color: var(--text); line-height: 1.8; margin: 1.5rem 0; font-size: 1rem; }
+
+    .pdp-specs {
+      display: grid; gap: .65rem;
+      margin: 1.5rem 0; padding: 1.25rem;
+      background: var(--bg-card); border-radius: var(--radius-lg);
+      border: 1px solid var(--border-soft);
+    }
+    .pdp-specs > div { display: flex; justify-content: space-between; font-size: .9rem; }
+    .pdp-specs strong { color: var(--gold); font-family: var(--sans); font-weight: 600; }
+
+    .pdp-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+    .pdp-qty-row { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0 1rem; }
+    .pdp-qty-row label { color: var(--text-muted); font-size: .8rem; letter-spacing: 2px; text-transform: uppercase; }
+
+    .pdp-trust { display: grid; gap: .65rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-soft); color: var(--text-muted); font-size: .88rem; }
+    .pdp-trust strong { color: var(--cream); margin-right: .5rem; }
+
+    @media (max-width: 960px) {
+      .pdp { grid-template-columns: 1fr; gap: 2rem; }
+      .pdp-gallery { position: static; }
+    }
+  </style>
 </head>
 <body>
+  <div class="top-bar">✨ Free U.S. Shipping <strong>$50+</strong> &nbsp;·&nbsp; 30-Day Returns &nbsp;·&nbsp; Cruelty-Free</div>
   <header class="site-header">
     <div class="container">
       <a href="/" class="brand"><img src="images/logo.png" alt="GlamEye" class="brand-logo" /></a>
       <button class="nav-toggle"><span></span><span></span><span></span></button>
       <nav class="site-nav">
-        <a href="/">Home</a><a href="shop.html">Shop</a>
-        <a href="about.html">Story</a><a href="wholesale.html">Wholesale</a><a href="contact.html">Contact</a>
+        <a href="/">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="videos.html">TikTok</a>
+        <a href="about.html">Story</a>
+        <a href="contact.html">Contact</a>
       </nav>
       <div class="nav-actions">
         <a href="account.html" class="icon-button">👤</a>
@@ -32,25 +79,44 @@
     <p class="muted small">
       <a href="/">Home</a> &nbsp;/&nbsp;
       <a href="shop.html">Shop</a> &nbsp;/&nbsp;
+      <span id="breadcrumb-cat">…</span> &nbsp;/&nbsp;
       <span id="breadcrumb-product">Product</span>
     </p>
   </main>
 
-  <article class="product-detail">
-    <div class="product-detail-image">
-      <img id="p-image" src="" alt="" />
+  <article class="pdp">
+    <div class="pdp-gallery">
+      <div class="pdp-main-img"><img id="p-main-img" src="" alt="" /></div>
+      <div class="pdp-thumbs" id="p-thumbs"></div>
     </div>
-    <div class="product-detail-info">
-      <span class="product-cat" id="p-cat">…</span>
-      <h1 id="p-name">Loading…</h1>
-      <div class="product-rating">★★★★★ <span class="reviews" id="p-reviews">(0)</span></div>
-      <div style="display: flex; align-items: baseline; gap: 1rem; margin: 1rem 0;">
-        <span class="price" id="p-price">—</span>
-        <span class="price-old" id="p-price-old" hidden>—</span>
-      </div>
-      <p class="description" id="p-desc">…</p>
 
-      <div class="qty-selector">
+    <div class="pdp-info">
+      <span class="product-cat" id="p-cat">…</span>
+      <h1 class="pdp-title" id="p-name">Loading…</h1>
+
+      <div class="pdp-rating">
+        <span class="pdp-rating-stars" id="p-stars">★★★★★</span>
+        <span class="pdp-rating-count" id="p-reviews">(0 reviews)</span>
+      </div>
+
+      <div class="pdp-price-row">
+        <span class="pdp-price" id="p-price">—</span>
+        <span class="pdp-price-old" id="p-price-old" hidden>—</span>
+        <span class="pdp-save-badge" id="p-save-badge" hidden>Save 25%</span>
+      </div>
+
+      <p class="pdp-desc" id="p-desc">…</p>
+
+      <div class="pdp-specs">
+        <div><strong>Style</strong> <span id="p-style">—</span></div>
+        <div><strong>Length</strong> <span id="p-length">—</span></div>
+        <div><strong>Band Type</strong> <span id="p-band">—</span></div>
+        <div><strong>Reusable</strong> <span id="p-reusable">—</span></div>
+        <div><strong>SKU</strong> <span id="p-sku">—</span></div>
+        <div><strong>Stock</strong> <span id="p-stock">—</span></div>
+      </div>
+
+      <div class="pdp-qty-row">
         <label>Quantity</label>
         <div class="cart-row-qty">
           <button class="qty-btn" id="dec-btn" type="button">−</button>
@@ -59,17 +125,17 @@
         </div>
       </div>
 
-      <div style="display:flex; gap: 1rem; flex-wrap: wrap;">
-        <button class="button button-primary" id="add-to-cart-btn">Add to Cart</button>
-        <button class="button button-outline" id="wishlist-toggle">♡ Save</button>
+      <div class="pdp-actions">
+        <button class="button button-primary button-lg" id="add-to-cart-btn">Add to Cart</button>
+        <button class="button button-outline" id="buy-now-btn">Buy Now</button>
+        <button class="button button-ghost" id="wishlist-toggle" aria-label="Save"><span style="font-size:1.2rem;">♡</span></button>
       </div>
 
-      <div class="product-meta">
-        <div><strong>SKU:</strong> <span id="p-sku">—</span></div>
-        <div><strong>Stock:</strong> <span id="p-stock">—</span></div>
-        <div><strong>Shipping:</strong> Free U.S. shipping on orders $50+</div>
-        <div><strong>Returns:</strong> 30-day no-questions-asked returns</div>
-        <div><strong>Cruelty-free:</strong> Always · Vegan options available</div>
+      <div class="pdp-trust">
+        <div><strong>🚚 Free U.S. Shipping</strong> on orders $50+ · Ships in 1-2 business days</div>
+        <div><strong>↩️ 30-Day Returns</strong> No questions asked</div>
+        <div><strong>🐰 Cruelty-Free</strong> Always · Vegan options available</div>
+        <div><strong>🔒 Secure Checkout</strong> Stripe + PayPal · 256-bit SSL</div>
       </div>
     </div>
   </article>
@@ -98,37 +164,67 @@
       if (!sku) { document.getElementById('p-name').textContent = 'Product not found'; return; }
       const fmt = window.GlamEye.Fmt;
       try {
-        const r = await fetch('api/products.php');
+        const r = await fetch('api/products.php?sku=' + encodeURIComponent(sku));
         const j = await r.json();
-        const list = j.products || [];
-        const p = list.find((x) => x.sku === sku);
+        const p = j.product;
         if (!p) { document.getElementById('p-name').textContent = 'Product not found'; return; }
 
         document.title = p.name + ' · GlamEye';
+        document.getElementById('breadcrumb-cat').textContent = p.category;
         document.getElementById('breadcrumb-product').textContent = p.name;
-        document.getElementById('p-image').src = p.image_url;
-        document.getElementById('p-image').alt = p.name;
-        document.getElementById('p-cat').textContent = p.category;
+
+        // Gallery: main + thumbs (use main image first, then gallery_urls)
+        const allImages = [p.image_url].concat(p.gallery_urls || []).filter(Boolean);
+        document.getElementById('p-main-img').src = allImages[0] || '';
+        document.getElementById('p-main-img').alt = p.name;
+        const thumbsEl = document.getElementById('p-thumbs');
+        thumbsEl.innerHTML = allImages.map((url, i) => `
+          <div class="pdp-thumb ${i === 0 ? 'active' : ''}" data-img="${fmt.escape(url)}">
+            <img src="${fmt.escape(url)}" alt="${fmt.escape(p.name)} ${i+1}" loading="lazy" />
+          </div>
+        `).join('');
+        thumbsEl.addEventListener('click', (e) => {
+          const t = e.target.closest('.pdp-thumb');
+          if (!t) return;
+          document.querySelectorAll('.pdp-thumb').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          document.getElementById('p-main-img').src = t.dataset.img;
+        });
+
+        document.getElementById('p-cat').textContent = p.category + (p.style ? ' · ' + p.style : '');
         document.getElementById('p-name').textContent = p.name;
         document.getElementById('p-price').textContent = fmt.money(p.price);
-        document.getElementById('p-desc').textContent = p.short_description || p.description || '';
+        document.getElementById('p-desc').textContent = p.description || p.short_description || '';
         document.getElementById('p-sku').textContent = p.sku;
         document.getElementById('p-stock').textContent = p.stock > 0 ? `${p.stock} in stock` : 'Out of stock';
-        document.getElementById('p-reviews').textContent = `(${100 + (p.id * 7)})`;
+        document.getElementById('p-style').textContent = p.style || '—';
+        document.getElementById('p-length').textContent = p.length_mm ? p.length_mm + 'mm' : '—';
+        document.getElementById('p-band').textContent = p.band_type || '—';
+        document.getElementById('p-reusable').textContent = p.reusable_count ? 'Up to ' + p.reusable_count + ' wears' : '—';
+        document.getElementById('p-reviews').textContent = `(${100 + (p.id * 7)} reviews)`;
+
         if (p.compare_at_price && Number(p.compare_at_price) > Number(p.price)) {
           document.getElementById('p-price-old').textContent = fmt.money(p.compare_at_price);
           document.getElementById('p-price-old').hidden = false;
+          const savePct = Math.round((1 - Number(p.price) / Number(p.compare_at_price)) * 100);
+          document.getElementById('p-save-badge').textContent = `Save ${savePct}%`;
+          document.getElementById('p-save-badge').hidden = false;
         }
 
         const qty = document.getElementById('qty');
         document.getElementById('inc-btn').addEventListener('click', () => qty.value = Math.min(50, (parseInt(qty.value, 10) || 1) + 1));
         document.getElementById('dec-btn').addEventListener('click', () => qty.value = Math.max(1, (parseInt(qty.value, 10) || 1) - 1));
 
-        document.getElementById('add-to-cart-btn').addEventListener('click', () => {
+        function addToCart() {
           window.GlamEye.Cart.add({
             sku: p.sku, name: p.name, price: p.price, image: p.image_url,
             quantity: parseInt(qty.value, 10) || 1,
           });
+        }
+        document.getElementById('add-to-cart-btn').addEventListener('click', addToCart);
+        document.getElementById('buy-now-btn').addEventListener('click', () => {
+          addToCart();
+          setTimeout(() => window.location.href = '/checkout.html', 300);
         });
 
         document.getElementById('wishlist-toggle').addEventListener('click', async () => {
@@ -147,7 +243,8 @@
         });
 
         // Related products
-        const related = list.filter((x) => x.category === p.category && x.sku !== p.sku).slice(0, 3);
+        const allR = await fetch('api/products.php?category=' + encodeURIComponent(p.category)).then(r => r.json());
+        const related = (allR.products || []).filter(x => x.sku !== p.sku).slice(0, 4);
         const escape = fmt.escape, money = fmt.money;
         document.getElementById('related-products').innerHTML = related.map((rp) => `
           <article class="product-card">
@@ -155,7 +252,7 @@
               <a href="product.html?sku=${escape(rp.sku)}"><img src="${escape(rp.image_url)}" alt="${escape(rp.name)}" loading="lazy" /></a>
             </div>
             <div class="product-info">
-              <span class="product-cat">${escape(rp.category)}</span>
+              <span class="product-cat">${escape(rp.category)}${rp.length_mm ? ' · ' + rp.length_mm + 'mm' : ''}</span>
               <h3><a href="product.html?sku=${escape(rp.sku)}" style="color:inherit;">${escape(rp.name)}</a></h3>
               <div class="product-price-row"><span class="price">${money(rp.price)}</span></div>
               <a href="product.html?sku=${escape(rp.sku)}" class="button button-outline button-block">View Details</a>

@@ -41,7 +41,7 @@ jobs:
               mysql --protocol=socket -u root glameyeshop < database/setup.sql 2>/dev/null || true
             fi
 
-            # 增量 ALTER（旧库升级 - 每条独立执行避免一条失败影响后续）
+            # 增量 ALTER（每条独立，列已存在时忽略）
             for sql in \
               "ALTER TABLE orders ADD COLUMN user_id INT DEFAULT NULL AFTER id" \
               "ALTER TABLE orders ADD COLUMN address_line2 VARCHAR(255) DEFAULT '' AFTER address_line" \
@@ -60,11 +60,18 @@ jobs:
               "ALTER TABLE wholesale_leads ADD COLUMN phone VARCHAR(64) DEFAULT NULL AFTER email" \
               "ALTER TABLE wholesale_leads ADD COLUMN message TEXT DEFAULT NULL AFTER phone" \
               "ALTER TABLE wholesale_leads ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'new' AFTER message" \
+              "ALTER TABLE products ADD COLUMN style VARCHAR(50) DEFAULT '' AFTER category" \
+              "ALTER TABLE products ADD COLUMN length_mm INT DEFAULT NULL AFTER description" \
+              "ALTER TABLE products ADD COLUMN band_type VARCHAR(50) DEFAULT 'cotton' AFTER length_mm" \
+              "ALTER TABLE products ADD COLUMN reusable_count INT DEFAULT NULL AFTER band_type" \
+              "ALTER TABLE products ADD COLUMN gallery_urls TEXT DEFAULT NULL AFTER image_url" \
+              "ALTER TABLE products ADD COLUMN is_bestseller TINYINT(1) NOT NULL DEFAULT 0" \
+              "ALTER TABLE products ADD COLUMN is_new TINYINT(1) NOT NULL DEFAULT 0" \
             ; do
               mysql --protocol=socket -u root glameyeshop -e "$sql" 2>/dev/null || true
             done
 
-            # 重载 PHP-FPM 让 session 变更生效
+            # 重载 PHP-FPM
             PHP_FPM=$(systemctl list-unit-files --type=service --no-legend | awk '/^php[0-9.]+-fpm\.service/{print $1; exit}')
             [ -n "$PHP_FPM" ] && systemctl reload "$PHP_FPM" 2>/dev/null || true
 

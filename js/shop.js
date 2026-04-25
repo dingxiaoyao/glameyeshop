@@ -7,18 +7,19 @@
 
   function card(p) {
     const sale = p.compare_at_price && Number(p.compare_at_price) > Number(p.price);
-    const stockTag = p.stock < 30 ? '<span class="product-badge new">Limited</span>' : '';
+    const badge = p.is_new == 1 ? 'new' : (sale ? 'sale' : (p.is_bestseller == 1 ? 'bestseller' : ''));
+    const badgeText = p.is_new == 1 ? 'New' : (sale ? 'Sale' : (p.is_bestseller == 1 ? 'Bestseller' : ''));
     return `
       <article class="product-card" data-id="${p.id}">
         <div class="product-image">
           <a href="product.html?sku=${escape(p.sku)}">
             <img src="${escape(p.image_url)}" alt="${escape(p.name)}" loading="lazy" />
           </a>
-          ${sale ? '<span class="product-badge sale">Sale</span>' : stockTag}
+          ${badge ? `<span class="product-badge ${badge}">${badgeText}</span>` : ''}
           <button class="wishlist-btn" data-product="${p.id}">♡</button>
         </div>
         <div class="product-info">
-          <span class="product-cat">${escape(p.category)}</span>
+          <span class="product-cat">${escape(p.category)}${p.length_mm ? ' · ' + p.length_mm + 'mm' : ''}</span>
           <h3><a href="product.html?sku=${escape(p.sku)}" style="color:inherit;">${escape(p.name)}</a></h3>
           <p>${escape(p.short_description || '')}</p>
           <div class="product-rating">★★★★★ <span class="reviews">(${100 + (p.id * 7)})</span></div>
@@ -57,7 +58,7 @@
     document.querySelectorAll('.filter-chip').forEach((c) => c.classList.remove('active'));
     const target = document.querySelector(`.filter-chip[data-cat="${cat}"]`);
     if (target) target.classList.add('active');
-    const titles = { mink: 'Mink Lashes', faux: 'Faux Mink (Vegan)', tools: 'Tools & Accessories', '': 'Shop the Collection' };
+    const titles = { mink: 'Mink Lashes', faux: 'Faux Mink (Vegan)', magnetic: 'Magnetic Lashes', tools: 'Tools & Accessories', '': 'Shop the Collection' };
     document.getElementById('shop-title').textContent = titles[cat] || titles[''];
   }
 

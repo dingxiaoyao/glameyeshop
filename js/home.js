@@ -1,23 +1,25 @@
-// Homepage: load featured products
+// Homepage: load featured products + featured videos + social icons + hero from settings
 (function () {
   'use strict';
   const fmt = window.GlamEye.Fmt;
-  function escape(s) { return fmt.escape(s); }
-  function money(n)  { return fmt.money(n); }
+  const escape = (s) => fmt.escape(s);
+  const money  = (n) => fmt.money(n);
 
-  function card(p) {
+  function productCard(p) {
     const sale = p.compare_at_price && Number(p.compare_at_price) > Number(p.price);
+    const badge = p.is_new == 1 ? 'new' : (sale ? 'sale' : (p.is_bestseller == 1 ? 'bestseller' : ''));
+    const badgeText = p.is_new == 1 ? 'New' : (sale ? 'Sale' : (p.is_bestseller == 1 ? 'Bestseller' : ''));
     return `
       <article class="product-card" data-id="${p.id}">
         <div class="product-image">
           <a href="product.html?sku=${escape(p.sku)}">
             <img src="${escape(p.image_url)}" alt="${escape(p.name)}" loading="lazy" />
           </a>
-          ${sale ? '<span class="product-badge sale">Sale</span>' : ''}
+          ${badge ? `<span class="product-badge ${badge}">${badgeText}</span>` : ''}
           <button class="wishlist-btn" data-product="${p.id}" aria-label="Save">♡</button>
         </div>
         <div class="product-info">
-          <span class="product-cat">${escape(p.category)}</span>
+          <span class="product-cat">${escape(p.category)}${p.length_mm ? ' · ' + p.length_mm + 'mm' : ''}</span>
           <h3><a href="product.html?sku=${escape(p.sku)}" style="color:inherit;">${escape(p.name)}</a></h3>
           <p>${escape(p.short_description || '')}</p>
           <div class="product-rating">★★★★★ <span class="reviews">(${100 + (p.id * 7)})</span></div>
@@ -37,19 +39,101 @@
   async function loadFeatured() {
     const container = document.getElementById('featured-products');
     if (!container) return;
-    const limit = parseInt(container.dataset.limit || '3', 10);
+    const limit = parseInt(container.dataset.limit || '4', 10);
     try {
       const r = await fetch('api/products.php');
       const j = await r.json();
-      const products = (j.products || []).slice(0, limit);
-      container.innerHTML = products.map(card).join('');
+      // 优先 bestseller，其次 new，再按排序
+      const products = (j.products || [])
+        .sort((a, b) => (b.is_bestseller || 0) - (a.is_bestseller || 0))
+        .slice(0, limit);
+      container.innerHTML = products.map(productCard).join('');
     } catch (e) {
-      container.innerHTML = '<p class="muted text-center">Failed to load featured products.</p>';
+      container.innerHTML = '<p class="muted text-center" style="grid-column:1/-1;">Failed to load products.</p>';
     }
+  }
+
+  async function loadFeaturedVideos() {
+    const container = document.getElementById('featured-videos');
+    if (!container) return;
+    try {
+      const r = await fetch('api/videos.php?featured=1&limit=4');
+      const j = await r.json();
+      const videos = j.videos || [];
+      if (videos.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1;">
+            <div class="icon">🎬</div>
+            <p class="muted">No videos yet — partnering with creators soon!</p>
+            <a href="videos.html" class="button button-outline" style="margin-top:1rem;">Visit TikTok page →</a>
+          </div>`;
+        // 加载 TikTok embed.js
+        if (!document.querySelector('script[src*="tiktok.com/embed.js"]')) {
+          const s = document.createElement('script');
+          s.async = true; s.src = 'https://www.tiktok.com/embed.js';
+          document.body.appendChild(s);
+        }
+        return;
+      }
+      container.innerHTML = videos.map((v) => `
+        <div style="background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); overflow: hidden;">
+          <div style="aspect-ratio: 9/16; background: var(--bg);">
+            <iframe src="https://www.tiktok.com/embed/v2/${escape(v.video_id)}" style="width:100%; height:100%; border:0;" allowfullscreen scrolling="no"></iframe>
+          </div>
+          <div style="padding: 1rem;">
+            <p style="color: var(--gold); font-size: .85rem;">@${escape(v.creator_handle)}</p>
+            ${v.title ? `<p style="color: var(--cream); margin-top:.25rem;">${escape(v.title)}</p>` : ''}
+          </div>
+        </div>`).join('');
+      // load tiktok embed script
+      if (!document.querySelector('script[src*="tiktok.com/embed.js"]')) {
+        const s = document.createElement('script');
+        s.async = true; s.src = 'https://www.tiktok.com/embed.js';
+        document.body.appendChild(s);
+      }
+    } catch (e) {
+      container.innerHTML = '<p class="muted text-center" style="grid-column:1/-1;">Failed to load videos.</p>';
+    }
+  }
+
+  async function loadSettings() {
+    try {
+      const settings = await fetch('api/settings.php').then(r => r.json());
+      // Hero image
+      if (settings.hero_image_url) {
+        const heroBg = document.getElementById('hero-bg');
+        if (heroBg) heroBg.style.backgroundImage = `url('${settings.hero_image_url}')`;
+      }
+      // Social icons
+      const social = document.getElementById('social-icons');
+      if (social) {
+        const icons = {
+          social_tiktok:    { icon: '🎵', label: 'TikTok' },
+          social_instagram: { icon: '📷', label: 'Instagram' },
+          social_youtube:   { icon: '▶',  label: 'YouTube' },
+          social_pinterest: { icon: '📌', label: 'Pinterest' },
+          social_facebook:  { icon: 'f',  label: 'Facebook' },
+        };
+        const html = Object.entries(icons)
+          .filter(([k]) => settings[k])
+          .map(([k, v]) => `<a href="${settings[k]}" target="_blank" rel="noopener" aria-label="${v.label}" class="social-icon">${v.icon}</a>`)
+          .join('');
+        // Amazon
+        if (settings.amazon_status === 'live' && settings.amazon_store_url) {
+          social.innerHTML = html + `<a href="${settings.amazon_store_url}" target="_blank" rel="noopener" class="social-icon" aria-label="Amazon">🛒</a>`;
+        } else if (settings.amazon_status === 'coming_soon') {
+          social.innerHTML = html + `<span class="social-icon disabled" title="Amazon Coming Soon">🛒</span>`;
+        } else {
+          social.innerHTML = html;
+        }
+      }
+    } catch (e) { /* graceful degrade */ }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     loadFeatured();
+    loadFeaturedVideos();
+    loadSettings();
 
     // Add to cart delegation
     document.body.addEventListener('click', async (e) => {

@@ -7,11 +7,11 @@
   <meta name="theme-color" content="#0a0805" />
   <title>GlamEye | Luxury False Eyelashes · Made in USA</title>
 
+  <link rel="canonical" href="https://glameyeshop.com/" />
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" href="images/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="images/favicon-192.png" />
 
-  <link rel="canonical" href="https://glameyeshop.com/" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://glameyeshop.com/" />
   <meta property="og:title" content="GlamEye | Luxury False Eyelashes" />
@@ -19,29 +19,14 @@
   <meta property="og:image" content="https://glameyeshop.com/images/products/hero-lash.jpg" />
   <meta property="og:site_name" content="GlamEye" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:site" content="@glameye" />
 
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "OnlineStore",
-    "name": "GlamEye",
-    "alternateName": "GlamEye Lashes",
-    "url": "https://glameyeshop.com",
-    "logo": "https://glameyeshop.com/images/logo.png",
-    "description": "Premium luxury false eyelashes. Cruelty-free mink, vegan faux mink, and pro tools. Made in USA.",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Los Angeles",
-      "addressRegion": "CA",
-      "addressCountry": "US"
-    },
-    "sameAs": []
-  }
+  {"@context":"https://schema.org","@type":"OnlineStore","name":"GlamEye","url":"https://glameyeshop.com","logo":"https://glameyeshop.com/images/logo.png","description":"Premium luxury false eyelashes. Cruelty-free mink, vegan faux mink, and pro tools."}
   </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://images.unsplash.com" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -61,9 +46,9 @@
       <nav class="site-nav">
         <a href="/" class="active">Home</a>
         <a href="shop.html">Shop</a>
+        <a href="videos.html">TikTok</a>
         <a href="about.html">Story</a>
         <a href="wholesale.html">Wholesale</a>
-        <a href="contact.html">Contact</a>
       </nav>
       <div class="nav-actions">
         <a href="account.html" class="icon-button" aria-label="Account">👤</a>
@@ -76,8 +61,8 @@
 
   <main>
     <!-- Hero -->
-    <section class="hero">
-      <div class="hero-bg" style="background-image: url('images/products/hero-lash.jpg');"></div>
+    <section class="hero" id="hero-section">
+      <div class="hero-bg" id="hero-bg" style="background-image: url('https://images.unsplash.com/photo-1583241800698-9c2e0c47f1c8?w=1920&q=80&auto=format&fit=crop');"></div>
       <div class="container">
         <div class="hero-content">
           <span class="eyebrow">Premium · Cruelty-Free · Made in USA</span>
@@ -101,21 +86,21 @@
       </div>
       <div class="cat-grid">
         <a href="shop.html?category=mink" class="cat-card">
-          <img src="images/products/lash-glamour-25.jpg" alt="Mink Collection" loading="lazy" />
+          <img src="https://images.unsplash.com/photo-1577897745441-b0815ea33fdc?w=800&q=80&auto=format&fit=crop" alt="Mink Collection" loading="lazy" />
           <div class="cat-card-content">
             <h3>Mink Collection</h3>
             <span class="cat-link">Shop Mink →</span>
           </div>
         </a>
         <a href="shop.html?category=faux" class="cat-card">
-          <img src="images/products/lash-volume-18.jpg" alt="Faux Mink Collection" loading="lazy" />
+          <img src="https://images.unsplash.com/photo-1633113085479-66d4d83c2d4e?w=800&q=80&auto=format&fit=crop" alt="Faux Mink Collection" loading="lazy" />
           <div class="cat-card-content">
             <h3>Vegan Faux Mink</h3>
             <span class="cat-link">Shop Faux →</span>
           </div>
         </a>
         <a href="shop.html?category=tools" class="cat-card">
-          <img src="images/products/tool-case.jpg" alt="Tools & Accessories" loading="lazy" />
+          <img src="https://images.unsplash.com/photo-1617897903246-719242758050?w=800&q=80&auto=format&fit=crop" alt="Tools & Accessories" loading="lazy" />
           <div class="cat-card-content">
             <h3>Tools & Accessories</h3>
             <span class="cat-link">Shop Tools →</span>
@@ -132,9 +117,25 @@
         <div class="divider-gold"></div>
         <p>The lashes our community can't stop talking about.</p>
       </div>
-      <div class="product-grid" id="featured-products" data-limit="3"></div>
+      <div class="product-grid" id="featured-products" data-limit="4"></div>
       <div class="text-center" style="margin-top: 3rem;">
         <a href="shop.html" class="button button-outline">View All Products →</a>
+      </div>
+    </section>
+
+    <!-- TikTok showcase -->
+    <section class="section container" id="tiktok-section">
+      <div class="section-header">
+        <span class="eyebrow">As Seen on TikTok</span>
+        <h2>The GlamEye Community</h2>
+        <div class="divider-gold"></div>
+        <p>Watch real customers transform their look. Tag <strong style="color:var(--gold);">@glameye</strong> to be featured.</p>
+      </div>
+      <div id="featured-videos" style="display:grid; gap:1.5rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        <p class="muted text-center" style="grid-column:1/-1;">Loading videos…</p>
+      </div>
+      <div class="text-center" style="margin-top: 2rem;">
+        <a href="videos.html" class="button button-outline">View All Videos →</a>
       </div>
     </section>
 
@@ -164,17 +165,6 @@
       </div>
     </section>
 
-    <!-- Story snippet -->
-    <section class="section container-sm text-center">
-      <span class="eyebrow">Our Story</span>
-      <h2>Designed in California</h2>
-      <div class="divider-gold"></div>
-      <p style="color: var(--text-muted); font-size: 1.1rem; line-height: 1.8; margin-bottom: 2rem;">
-        GlamEye was born from a simple idea: luxury lashes shouldn't break the bank, and beauty shouldn't cost an animal its life. Every style is hand-designed in our LA studio, sourced from ethical partners, and shipped from the U.S. — to your door in days, not weeks.
-      </p>
-      <a href="about.html" class="button button-outline">Read the Full Story →</a>
-    </section>
-
     <!-- Reviews -->
     <section class="section container">
       <div class="section-header">
@@ -186,17 +176,17 @@
       <div class="reviews-grid">
         <div class="review-card">
           <div class="review-stars">★★★★★</div>
-          <p class="review-text">"The most comfortable mink lashes I've ever worn. Glamour 25mm is everything for a night out!"</p>
+          <p class="review-text">"The most comfortable mink lashes I've ever worn. Diamond 25mm is everything for a night out!"</p>
           <p class="review-author">— Sarah M., Los Angeles, CA · Verified Buyer</p>
         </div>
         <div class="review-card">
           <div class="review-stars">★★★★★</div>
-          <p class="review-text">"Vegan faux mink that looks 100% real. Just as good as Lilly Lashes at half the price."</p>
+          <p class="review-text">"Vegan faux mink that looks 100% real. Just as good as the $40 brands at half the price."</p>
           <p class="review-author">— Jasmine R., Brooklyn, NY · Verified Buyer</p>
         </div>
         <div class="review-card">
           <div class="review-stars">★★★★★</div>
-          <p class="review-text">"The applicator + glue combo is genius. From 20 minutes of struggle to under 5. Recommend!"</p>
+          <p class="review-text">"The applicator + glue combo is genius. From 20 minutes of struggle to under 5 — recommend!"</p>
           <p class="review-author">— Maya K., Austin, TX · Verified Buyer</p>
         </div>
       </div>
@@ -224,12 +214,14 @@
           <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="36" />
         </a>
         <p>Luxury false eyelashes designed in California. Cruelty-free, vegan options available, ships from the U.S.</p>
+        <div class="social-icons" id="social-icons"></div>
       </div>
       <div class="footer-section">
         <h4>Shop</h4>
         <ul>
           <li><a href="shop.html?category=mink">Mink Lashes</a></li>
-          <li><a href="shop.html?category=faux">Faux Mink</a></li>
+          <li><a href="shop.html?category=faux">Faux Mink (Vegan)</a></li>
+          <li><a href="shop.html?category=magnetic">Magnetic Lashes</a></li>
           <li><a href="shop.html?category=tools">Tools & Accessories</a></li>
           <li><a href="shop.html">All Products</a></li>
         </ul>
@@ -240,7 +232,7 @@
           <li><a href="about.html">Our Story</a></li>
           <li><a href="contact.html">Contact</a></li>
           <li><a href="wholesale.html">Wholesale</a></li>
-          <li><a href="contact.html">Shipping & Returns</a></li>
+          <li><a href="videos.html">TikTok</a></li>
         </ul>
       </div>
       <div class="footer-section">
