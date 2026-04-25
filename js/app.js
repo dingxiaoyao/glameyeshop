@@ -1,155 +1,186 @@
 // ============================================================
-// GLAMEYE - 应用程序脚本
+// GlamEye - 全站脚本（购物车、导航、通知）
 // ============================================================
+(function () {
+  'use strict';
 
-/**
- * 购物车管理
- */
-const Cart = {
-  items: [],
+  // ============== Cart ==============
+  const Cart = {
+    items: [],
+    storageKey: 'glameye_cart_v1',
 
-  // 添加商品到购物车
-  addItem(name, price) {
-    const existingItem = this.items.find((item) => item.name === name);
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      this.items.push({ name, price, quantity: 1 });
-    }
-    this.save();
-    this.showNotification(`✨ "${name}" 已加入购物车！`);
-  },
-
-  // 移除商品
-  removeItem(name) {
-    this.items = this.items.filter((item) => item.name !== name);
-    this.save();
-  },
-
-  // 获取总价
-  getTotal() {
-    return this.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  },
-
-  // 获取商品数量
-  getCount() {
-    return this.items.reduce((count, item) => count + item.quantity, 0);
-  },
-
-  // 清空购物车
-  clear() {
-    this.items = [];
-    this.save();
-  },
-
-  // 保存到 localStorage
-  save() {
-    localStorage.setItem("cart", JSON.stringify(this.items));
-  },
-
-  // 从 localStorage 加载
-  load() {
-    const saved = localStorage.getItem("cart");
-    this.items = saved ? JSON.parse(saved) : [];
-  },
-
-  // 显示通知
-  showNotification(message) {
-    const notification = document.createElement("div");
-    notification.className = "notification";
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-      notification.classList.add("show");
-    }, 10);
-
-    setTimeout(() => {
-      notification.classList.remove("show");
-      setTimeout(() => notification.remove(), 300);
-    }, 2500);
-  },
-};
-
-/**
- * 全局函数 - 加入购物车
- */
-function addToCart(name, price) {
-  Cart.addItem(name, price);
-}
-
-/**
- * DOM 加载完成后的初始化
- */
-document.addEventListener("DOMContentLoaded", function () {
-  // 加载购物车
-  Cart.load();
-
-  // 支付方式提示
-  const method = document.getElementById("payment-method");
-  const note = document.getElementById("payment-note");
-  if (method && note) {
-    const updateNote = () => {
-      const selected = method.value;
-      note.textContent =
-        selected === "paypal"
-          ? "您已选择 PayPal 付款，我们将在提交后为您生成安全支付链接。"
-          : "您已选择 Stripe 付款，提交后请继续完成信用卡支付。";
-    };
-    method.addEventListener("change", updateNote);
-    updateNote();
-  }
-
-  // 平滑滚动链接
-  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-    anchor.addEventListener("click", function (e) {
-      e.preventDefault();
-      const target = document.querySelector(this.getAttribute("href"));
-      if (target) {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
+    load() {
+      try {
+        const raw = localStorage.getItem(this.storageKey);
+        this.items = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(this.items)) this.items = [];
+      } catch (e) {
+        this.items = [];
       }
-    });
-  });
+    },
 
-  // 懒加载图片
-  if ("IntersectionObserver" in window) {
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          img.src = img.dataset.src || img.src;
-          img.classList.add("loaded");
-          observer.unobserve(img);
-        }
+    save() {
+      try {
+        localStorage.setItem(this.storageKey, JSON.stringify(this.items));
+      } catch (e) {
+        console.warn('Cart save failed:', e);
+      }
+      this.updateBadge();
+      window.dispatchEvent(new CustomEvent('cart:update', { detail: this.items }));
+    },
+
+    add(name, price) {
+      const existing = this.items.find((i) => i.name === name);
+      if (existing) {
+        existing.quantity = Math.min(50, existing.quantity + 1);
+      } else {
+        this.items.push({ name, price: Number(price) || 0, quantity: 1 });
+      }
+      this.save();
+      Notification.show(`✨ 已加入购物车："${name}"`);
+    },
+
+    setQuantity(name, qty) {
+      const it = this.items.find((i) => i.name === name);
+      if (!it) return;
+      const q = Math.max(0, Math.min(50, parseInt(qty, 10) || 0));
+      if (q === 0) this.remove(name);
+      else { it.quantity = q; this.save(); }
+    },
+
+    remove(name) {
+      this.items = this.items.filter((i) => i.name !== name);
+      this.save();
+    },
+
+    clear() {
+      this.items = [];
+      this.save();
+    },
+
+    total() {
+      return this.items.reduce((s, i) => s + i.price * i.quantity, 0);
+    },
+
+    count() {
+      return this.items.reduce((c, i) => c + i.quantity, 0);
+    },
+
+    updateBadge() {
+      const el = document.getElementById('cart-count');
+      if (el) {
+        const c = this.count();
+        el.textContent = c;
+        el.style.display = c > 0 ? 'inline-flex' : 'none';
+      }
+    },
+  };
+
+  // ============== Notification ==============
+  const Notification = {
+    container: null,
+    ensure() {
+      if (!this.container) {
+        this.container = document.createElement('div');
+        this.container.className = 'notification-container';
+        document.body.appendChild(this.container);
+      }
+    },
+    show(msg, type = 'success') {
+      this.ensure();
+      const n = document.createElement('div');
+      n.className = `notification notification--${type}`;
+      n.textContent = msg;
+      this.container.appendChild(n);
+      requestAnimationFrame(() => n.classList.add('show'));
+      setTimeout(() => {
+        n.classList.remove('show');
+        setTimeout(() => n.remove(), 300);
+      }, 2800);
+    },
+  };
+
+  // ============== 全局函数 ==============
+  function addToCart(name, price) { Cart.add(name, price); }
+
+  // ============== 初始化 ==============
+  document.addEventListener('DOMContentLoaded', () => {
+    Cart.load();
+    Cart.updateBadge();
+
+    // 给 .add-to-cart-btn 绑定事件（从 data-product/data-price 读取）
+    document.querySelectorAll('.add-to-cart-btn').forEach((btn) => {
+      const card = btn.closest('[data-product]');
+      if (!card) return;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const name = card.getAttribute('data-product');
+        const price = parseFloat(card.getAttribute('data-price') || '0');
+        Cart.add(name, price);
       });
     });
 
-    document.querySelectorAll("img[data-src]").forEach((img) => {
-      imageObserver.observe(img);
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach((a) => {
+      a.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href === '#' || href.length < 2) return;
+        const t = document.querySelector(href);
+        if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
     });
-  }
 
-  // 页面加载完成后的动画
-  document.body.classList.add("loaded");
-});
+    // 导航汉堡按钮
+    const toggle = document.querySelector('.nav-toggle');
+    const nav = document.querySelector('.site-nav');
+    if (toggle && nav) {
+      toggle.addEventListener('click', () => {
+        const open = nav.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      nav.querySelectorAll('a').forEach((a) => {
+        a.addEventListener('click', () => {
+          nav.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
 
-/**
- * 设置页面跟踪（可选）
- */
-window.addEventListener("load", function () {
-  // 页面加载完成
-  console.log("✅ GLAMEYE 加载完成");
-});
+    // 批发询单 AJAX 提交
+    const wholesaleForm = document.getElementById('wholesale-form');
+    if (wholesaleForm) {
+      wholesaleForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fb = document.getElementById('wholesale-feedback');
+        const data = Object.fromEntries(new FormData(wholesaleForm).entries());
+        fb.textContent = '提交中...';
+        fb.className = 'form-feedback';
+        try {
+          const r = await fetch('api/wholesale-lead.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+          const j = await r.json();
+          if (j.success) {
+            fb.textContent = '✅ 已收到您的询单，我们会在 1 个工作日内联系您。';
+            fb.className = 'form-feedback success';
+            wholesaleForm.reset();
+          } else {
+            fb.textContent = '❌ ' + (j.error || '提交失败');
+            fb.className = 'form-feedback error';
+          }
+        } catch (err) {
+          fb.textContent = '❌ 网络错误，请稍后再试';
+          fb.className = 'form-feedback error';
+        }
+      });
+    }
 
-/**
- * 错误处理
- */
-window.addEventListener("error", function (event) {
-  console.error("❌ 错误:", event.message);
-});
+    document.body.classList.add('loaded');
+  });
 
-/**
- * 导出函数供 HTML 调用
- */
-window.addToCart = addToCart;
-window.Cart = Cart;
+  // ============== 暴露到全局 ==============
+  window.GlamEye = { Cart, Notification };
+  window.addToCart = addToCart;
+})();

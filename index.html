@@ -3,48 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="GLAMEYE - 高品质玻璃眼镜在线商店，提供精致设计与舒适佩戴的完美结合。" />
-  <title>GLAMEYE | 玻璃眼镜在线商店</title>
-  <!-- Open Graph -->
+  <meta name="description" content="GlamEye - 高品质玻璃眼镜在线商店，提供精致设计与舒适佩戴的完美结合。" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <title>GlamEye | 玻璃眼镜在线商店</title>
+
+  <!-- Favicons -->
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" href="images/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="images/favicon-192.png" />
+
+  <!-- Open Graph / Twitter -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="GLAMEYE | 玻璃眼镜在线商店" />
+  <meta property="og:title" content="GlamEye | 玻璃眼镜在线商店" />
   <meta property="og:description" content="高品质玻璃眼镜，精致设计，舒适佩戴。" />
-  <meta property="og:image" content="images/products/sample-glasses.jpg" />
-  <!-- Twitter Card -->
+  <meta property="og:image" content="images/logo-large.png" />
   <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- 结构化数据 (Organization) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "OnlineStore",
+    "name": "GlamEye",
+    "description": "高品质玻璃眼镜在线商店",
+    "url": "/",
+    "logo": "/images/logo-large.png"
+  }
+  </script>
+
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <header class="site-header">
     <div class="container">
-      <a href="index.html" class="brand">GLAMEYE</a>
-      <nav>
+      <a href="index.html" class="brand" aria-label="GlamEye 首页">
+        <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="40" />
+      </a>
+      <button class="nav-toggle" aria-label="打开导航" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav">
         <a href="#products">产品</a>
         <a href="#advantages">优势</a>
-        <a href="checkout.html" class="button button-secondary">立即购买</a>
+        <a href="#wholesale">批发</a>
+        <a href="#contact">联系</a>
+        <a href="checkout.html" class="button button-secondary cart-button">
+          🛒 购物车 <span class="cart-count" id="cart-count">0</span>
+        </a>
       </nav>
     </div>
   </header>
 
   <main>
+    <!-- Hero -->
     <section class="hero container">
       <div class="hero-content">
         <p class="eyebrow">GLASS EYEWEAR</p>
         <h1>发现精致设计与舒适佩戴的完美结合</h1>
-        <p>GLAMEYE 以高品质玻璃镜片与轻盈镜架打造时尚眼镜，为您带来日常与商务场景的专业风采。</p>
+        <p>GlamEye 以高品质玻璃镜片与轻盈镜架打造时尚眼镜，为您带来日常与商务场景的专业风采。</p>
         <div class="hero-actions">
-          <a href="checkout.html" class="button button-primary">开始购买</a>
-          <a href="#products" class="button button-outline">查看产品</a>
+          <a href="#products" class="button button-primary">浏览产品</a>
+          <a href="checkout.html" class="button button-outline">立即结账</a>
         </div>
       </div>
       <div class="hero-image">
-        <img src="images/products/sample-glasses.jpg" alt="GLAMEYE 眼镜" loading="lazy" />
+        <img src="images/products/sample-glasses.jpg" alt="GlamEye 高级眼镜" loading="eager" width="1200" height="800" />
       </div>
     </section>
 
+    <!-- 宣传视频 -->
+    <section class="promo-video container">
+      <div class="section-header">
+        <h2>品牌故事</h2>
+        <p>看看我们如何打造每一副 GlamEye 眼镜</p>
+      </div>
+      <div class="video-wrapper">
+        <!-- 占位视频：用 SVG 动画做"视频"效果。后续上传真实 mp4 文件后替换 source -->
+        <video controls poster="images/products/sample-glasses.jpg" preload="none">
+          <source src="videos/brand-story.mp4" type="video/mp4" />
+          您的浏览器不支持 video 标签。
+        </video>
+        <div class="video-placeholder">
+          <p>📹 宣传视频占位</p>
+          <small>上传 MP4 到 <code>/var/www/glameye/videos/brand-story.mp4</code> 后自动启用</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- 优势 -->
     <section id="advantages" class="section container">
       <div class="section-header">
-        <h2>为什么选择 GLAMEYE</h2>
+        <h2>为什么选择 GlamEye</h2>
         <p>我们的承诺是品质、舒适和风格的完美结合</p>
       </div>
       <div class="cards-grid">
@@ -71,15 +120,16 @@
       </div>
     </section>
 
+    <!-- 产品 -->
     <section id="products" class="section container">
       <div class="section-header">
         <h2>推荐产品</h2>
         <p>精选玻璃镜片眼镜，适合日常、办公与商务场景</p>
       </div>
       <div class="product-grid">
-        <article class="product-card">
+        <article class="product-card" data-product="经典方形眼镜" data-price="699">
           <div class="product-image">
-            <img src="images/products/product-1.jpg" alt="经典方形眼镜" loading="lazy" />
+            <img src="images/products/product-1.jpg" alt="经典方形眼镜" loading="lazy" width="800" height="600" />
             <span class="product-badge">热销</span>
           </div>
           <div class="product-info">
@@ -90,12 +140,12 @@
               <span class="reviews">(128)</span>
             </div>
             <span class="price">¥699</span>
-            <button class="button button-primary" onclick="addToCart('经典方形眼镜', 699)">加入购物车</button>
+            <button class="button button-primary add-to-cart-btn">加入购物车</button>
           </div>
         </article>
-        <article class="product-card">
+        <article class="product-card" data-product="轻盈商务眼镜" data-price="788">
           <div class="product-image">
-            <img src="images/products/product-2.jpg" alt="轻盈商务眼镜" loading="lazy" />
+            <img src="images/products/product-2.jpg" alt="轻盈商务眼镜" loading="lazy" width="800" height="600" />
             <span class="product-badge">新品</span>
           </div>
           <div class="product-info">
@@ -106,12 +156,12 @@
               <span class="reviews">(89)</span>
             </div>
             <span class="price">¥788</span>
-            <button class="button button-primary" onclick="addToCart('轻盈商务眼镜', 788)">加入购物车</button>
+            <button class="button button-primary add-to-cart-btn">加入购物车</button>
           </div>
         </article>
-        <article class="product-card">
+        <article class="product-card" data-product="复古圆形眼镜" data-price="798">
           <div class="product-image">
-            <img src="images/products/product-3.jpg" alt="复古圆形眼镜" loading="lazy" />
+            <img src="images/products/product-3.jpg" alt="复古圆形眼镜" loading="lazy" width="800" height="600" />
             <span class="product-badge">限量</span>
           </div>
           <div class="product-info">
@@ -122,31 +172,64 @@
               <span class="reviews">(156)</span>
             </div>
             <span class="price">¥798</span>
-            <button class="button button-primary" onclick="addToCart('复古圆形眼镜', 798)">加入购物车</button>
+            <button class="button button-primary add-to-cart-btn">加入购物车</button>
           </div>
         </article>
       </div>
     </section>
 
+    <!-- 信任 -->
     <section class="trust-section container">
       <h2>值得信赖</h2>
       <div class="trust-grid">
-        <div class="trust-item">
-          <div class="trust-number">10K+</div>
-          <div class="trust-label">满意客户</div>
+        <div class="trust-item"><div class="trust-number">10K+</div><div class="trust-label">满意客户</div></div>
+        <div class="trust-item"><div class="trust-number">99.8%</div><div class="trust-label">好评率</div></div>
+        <div class="trust-item"><div class="trust-number">7天</div><div class="trust-label">无条件退货</div></div>
+        <div class="trust-item"><div class="trust-number">24h</div><div class="trust-label">客服支持</div></div>
+      </div>
+    </section>
+
+    <!-- 批发询单 -->
+    <section id="wholesale" class="section container wholesale-section">
+      <div class="section-header">
+        <h2>批发与定制合作</h2>
+        <p>欢迎眼镜店、机构、企业批量采购，提供专属价格与定制 logo</p>
+      </div>
+      <form id="wholesale-form" class="wholesale-form">
+        <div class="form-row">
+          <label>公司名称 <span class="required">*</span>
+            <input type="text" name="company" required maxlength="200" />
+          </label>
+          <label>联系人 <span class="required">*</span>
+            <input type="text" name="contact" required maxlength="100" />
+          </label>
         </div>
-        <div class="trust-item">
-          <div class="trust-number">99.8%</div>
-          <div class="trust-label">好评率</div>
+        <div class="form-row">
+          <label>邮箱 <span class="required">*</span>
+            <input type="email" name="email" required />
+          </label>
+          <label>电话
+            <input type="tel" name="phone" maxlength="64" />
+          </label>
         </div>
-        <div class="trust-item">
-          <div class="trust-number">7天</div>
-          <div class="trust-label">无条件退货</div>
-        </div>
-        <div class="trust-item">
-          <div class="trust-number">24h</div>
-          <div class="trust-label">客服支持</div>
-        </div>
+        <label>需求说明
+          <textarea name="message" rows="4" placeholder="请告诉我们您的采购数量、品类偏好、定制要求等" maxlength="2000"></textarea>
+        </label>
+        <button type="submit" class="button button-primary">提交询单</button>
+        <p id="wholesale-feedback" class="form-feedback"></p>
+      </form>
+    </section>
+
+    <!-- 联系 -->
+    <section id="contact" class="section container">
+      <div class="section-header">
+        <h2>联系我们</h2>
+        <p>有任何问题，欢迎通过以下方式联系</p>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-item"><strong>客服邮箱：</strong>support@glameye.com</div>
+        <div class="contact-item"><strong>批发邮箱：</strong>wholesale@glameye.com</div>
+        <div class="contact-item"><strong>客服时间：</strong>周一至周日 09:00 - 21:00</div>
       </div>
     </section>
   </main>
@@ -155,19 +238,19 @@
     <div class="container">
       <div class="footer-content">
         <div class="footer-section">
-          <h4>关于 GLAMEYE</h4>
+          <h4>关于 GlamEye</h4>
           <ul>
-            <li><a href="#">公司介绍</a></li>
-            <li><a href="#">品牌故事</a></li>
-            <li><a href="#">媒体报道</a></li>
+            <li><a href="#advantages">公司介绍</a></li>
+            <li><a href="#products">品牌故事</a></li>
+            <li><a href="#wholesale">合作伙伴</a></li>
           </ul>
         </div>
         <div class="footer-section">
           <h4>客户服务</h4>
           <ul>
-            <li><a href="#">联系我们</a></li>
-            <li><a href="#">常见问题</a></li>
-            <li><a href="#">退货政策</a></li>
+            <li><a href="#contact">联系我们</a></li>
+            <li><a href="#contact">常见问题</a></li>
+            <li><a href="#contact">退货政策</a></li>
           </ul>
         </div>
         <div class="footer-section">
@@ -175,12 +258,12 @@
           <ul>
             <li><a href="#">隐私政策</a></li>
             <li><a href="#">用户协议</a></li>
-            <li><a href="#">cookie 政策</a></li>
+            <li><a href="#">Cookie 政策</a></li>
           </ul>
         </div>
       </div>
       <hr class="footer-divider" />
-      <p class="footer-copyright">© 2026 GLAMEYE. 版权所有。</p>
+      <p class="footer-copyright">© 2026 GlamEye. 版权所有。</p>
     </div>
   </footer>
 

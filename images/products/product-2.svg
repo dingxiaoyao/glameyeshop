@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5f3f0"/>
+      <stop offset="100%" stop-color="#e0d8c8"/>
+    </linearGradient>
+    <linearGradient id="frame2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c0a572"/>
+      <stop offset="100%" stop-color="#9b8556"/>
+    </linearGradient>
+    <radialGradient id="lens2" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fff5e0" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#d4b876" stop-opacity="0.2"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg2)"/>
+  <!-- 轻盈商务眼镜（细金边） -->
+  <g transform="translate(400 300)">
+    <!-- 半框设计 -->
+    <path d="M -280 -10 L -280 50 Q -280 70 -260 70 L -100 70 Q -80 70 -80 50 L -80 -10"
+          fill="url(#lens2)" stroke="url(#frame2)" stroke-width="6"/>
+    <path d="M 80 -10 L 80 50 Q 80 70 100 70 L 260 70 Q 280 70 280 50 L 280 -10"
+          fill="url(#lens2)" stroke="url(#frame2)" stroke-width="6"/>
+    <!-- 上方细线 -->
+    <line x1="-280" y1="-10" x2="-80" y2="-10" stroke="url(#frame2)" stroke-width="3"/>
+    <line x1="80"   y1="-10" x2="280" y2="-10" stroke="url(#frame2)" stroke-width="3"/>
+    <!-- 鼻梁 -->
+    <path d="M -80 0 Q 0 -8 80 0" fill="none" stroke="url(#frame2)" stroke-width="4" stroke-linecap="round"/>
+    <!-- 镜腿 -->
+    <path d="M -280 0 Q -340 -10 -360 -50" fill="none" stroke="url(#frame2)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M  280 0 Q  340 -10  360 -50" fill="none" stroke="url(#frame2)" stroke-width="4" stroke-linecap="round"/>
+    <!-- 高光 -->
+    <ellipse cx="-180" cy="20" rx="50" ry="15" fill="white" opacity="0.5"/>
+    <ellipse cx="180"  cy="20" rx="50" ry="15" fill="white" opacity="0.5"/>
+  </g>
+  <text x="400" y="540" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+        font-size="28" font-weight="300" fill="#666" letter-spacing="4">BUSINESS SLIM</text>
+</svg>

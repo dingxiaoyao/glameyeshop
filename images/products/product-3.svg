@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0f0f1e"/>
+    </linearGradient>
+    <linearGradient id="frame3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8b6f47"/>
+      <stop offset="100%" stop-color="#6b4f30"/>
+    </linearGradient>
+    <radialGradient id="lens3" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#3a3530" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#1a1814" stop-opacity="0.5"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg3)"/>
+  <!-- 复古圆形眼镜 -->
+  <g transform="translate(400 300)">
+    <!-- 圆形镜片 -->
+    <circle cx="-160" cy="0" r="100"
+            fill="url(#lens3)" stroke="url(#frame3)" stroke-width="10"/>
+    <circle cx="160"  cy="0" r="100"
+            fill="url(#lens3)" stroke="url(#frame3)" stroke-width="10"/>
+    <!-- 鼻梁 -->
+    <path d="M -60 -5 Q 0 -25 60 -5" fill="none" stroke="url(#frame3)" stroke-width="10" stroke-linecap="round"/>
+    <!-- 镜腿 -->
+    <path d="M -260 -10 Q -320 -20 -340 -60" fill="none" stroke="url(#frame3)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M  260 -10 Q  320 -20  340 -60" fill="none" stroke="url(#frame3)" stroke-width="8" stroke-linecap="round"/>
+    <!-- 镜片高光 -->
+    <ellipse cx="-185" cy="-30" rx="25" ry="15" fill="white" opacity="0.3"/>
+    <ellipse cx="135"  cy="-30" rx="25" ry="15" fill="white" opacity="0.3"/>
+  </g>
+  <text x="400" y="540" text-anchor="middle" font-family="Georgia, serif"
+        font-size="28" font-weight="400" fill="#a8895a" letter-spacing="6" font-style="italic">VINTAGE ROUND</text>
+</svg>

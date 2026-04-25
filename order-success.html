@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>订单提交成功 | GlamEye</title>
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="images/logo.png" alt="GlamEye" class="brand-logo" width="160" height="40" />
+      </a>
+    </div>
+  </header>
+
+  <main class="container" style="max-width: 700px; padding: 4rem 1rem;">
+    <div class="checkout-panel" style="text-align:center;">
+      <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+      <h1>订单已提交</h1>
+      <p class="muted" style="margin: 1rem 0;">感谢您的购买！我们已收到您的订单。</p>
+      <div id="order-detail" style="margin: 2rem 0; padding: 1.5rem; background: #f9fafb; border-radius: 12px; text-align: left;">
+        <p>正在加载订单详情...</p>
+      </div>
+      <div>
+        <a href="index.html" class="button button-primary">返回首页</a>
+        <a href="index.html#products" class="button button-outline" style="margin-left: 1rem;">继续购物</a>
+      </div>
+      <p class="muted small" style="margin-top: 2rem;">
+        ✉️ 我们会在 1 个工作日内通过邮件确认订单状态。如有疑问，请联系 support@glameye.com
+      </p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p class="footer-copyright">© 2026 GlamEye. 版权所有。</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.search);
+      const orderId = parseInt(params.get('order_id'), 10);
+      const stored = JSON.parse(sessionStorage.getItem('glameye_last_order') || '{}');
+      const email = stored.email;
+      const target = document.getElementById('order-detail');
+
+      if (!orderId || !email) {
+        target.innerHTML = '<p>订单 ID 缺失。如需查询，请联系客服 support@glameye.com 并提供订单号。</p>';
+        return;
+      }
+
+      fetch(`api/order-status.php?order_id=${orderId}&email=${encodeURIComponent(email)}`)
+        .then((r) => r.json())
+        .then((j) => {
+          if (j.error) {
+            target.innerHTML = `<p>无法加载订单详情：${j.error}</p>`;
+            return;
+          }
+          const o = j.order;
+          const items = (o.items || []).map((it) =>
+            `<div style="display:flex; justify-content:space-between; padding:.4rem 0;">
+               <span>${escapeHtml(it.product_name)} × ${it.quantity}</span>
+               <span>¥${Number(it.line_total).toFixed(2)}</span>
+             </div>`
+          ).join('');
+          target.innerHTML = `
+            <h3 style="margin-bottom:1rem;">订单 #${o.id}</h3>
+            <p><strong>顾客：</strong>${escapeHtml(o.customer_name)}</p>
+            <p><strong>支付方式：</strong>${escapeHtml(o.payment_method)}</p>
+            <p><strong>状态：</strong><span class="status-badge">${escapeHtml(o.status)}</span></p>
+            <p><strong>下单时间：</strong>${escapeHtml(o.created_at)}</p>
+            <hr style="border:none; border-top:1px solid #e5e7eb; margin:1rem 0;" />
+            ${items}
+            <hr style="border:none; border-top:1px solid #e5e7eb; margin:1rem 0;" />
+            <div style="display:flex; justify-content:space-between; font-weight:700; font-size:1.1rem;">
+              <span>总计</span>
+              <span>¥${Number(o.amount).toFixed(2)}</span>
+            </div>
+          `;
+        })
+        .catch((err) => {
+          target.innerHTML = `<p>加载失败：${err.message}</p>`;
+        });
+
+      function escapeHtml(s) {
+        return String(s ?? '').replace(/[&<>"']/g, (c) =>
+          ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+        );
+      }
+    })();
+  </script>
+</body>
+</html>

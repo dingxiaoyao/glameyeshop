@@ -9,7 +9,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:   # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -36,17 +36,41 @@ jobs:
           script: |
             set -e
             DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
-            # git 2.35+ 安全机制：声明此目录可信
             git config --global --add safe.directory "$DEPLOY_PATH"
             cd "$DEPLOY_PATH"
             git fetch origin
             git reset --hard origin/main
-            # 同步文件 owner 给 www-data，PHP-FPM 才能读
+
+            # 同步文件 owner
             chown -R www-data:www-data "$DEPLOY_PATH"
-            # 如果 schema 有更新，应用迁移（幂等：列已存在则忽略）
+
+            # 数据库 schema（CREATE IF NOT EXISTS - 幂等）
             if [ -f database/setup.sql ]; then
               mysql --protocol=socket -u root glameyeshop < database/setup.sql 2>/dev/null || true
             fi
-            # PHP opcache 失效，下次请求会重新编译；如有需要可重启 fpm
-            # systemctl reload php8.1-fpm
+
+            # 增量 ALTER 迁移（每条都用 || true，列已存在时忽略）
+            mysql --protocol=socket -u root glameyeshop 2>/dev/null <<'SQL' || true
+            ALTER TABLE orders ADD COLUMN address_line VARCHAR(255) NOT NULL DEFAULT '' AFTER phone;
+            ALTER TABLE orders ADD COLUMN city VARCHAR(100) NOT NULL DEFAULT '' AFTER address_line;
+            ALTER TABLE orders ADD COLUMN postal_code VARCHAR(32) NOT NULL DEFAULT '' AFTER city;
+            ALTER TABLE orders ADD COLUMN country VARCHAR(64) NOT NULL DEFAULT 'CN' AFTER postal_code;
+            ALTER TABLE orders ADD COLUMN payment_session_id VARCHAR(255) NULL AFTER payment_method;
+            ALTER TABLE orders ADD COLUMN notes TEXT NULL AFTER status;
+            ALTER TABLE orders ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+            ALTER TABLE orders ADD INDEX idx_status (status);
+            ALTER TABLE wholesale_leads ADD COLUMN phone VARCHAR(64) DEFAULT NULL AFTER email;
+            ALTER TABLE wholesale_leads ADD COLUMN message TEXT DEFAULT NULL AFTER phone;
+            ALTER TABLE wholesale_leads ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'new' AFTER message;
+            ALTER TABLE wholesale_leads ADD INDEX idx_created_at (created_at);
+            ALTER TABLE wholesale_leads ADD INDEX idx_status (status);
+            SQL
+
+            # 404 页 nginx 配置（仅首次需要，后续重复无害）
+            if ! grep -q 'error_page 404' /etc/nginx/sites-available/glameye 2>/dev/null; then
+              sed -i '/server_name.*;/a\    error_page 404 /404.html;\n    location = /404.html { internal; }' \
+                /etc/nginx/sites-available/glameye 2>/dev/null || true
+              nginx -t && systemctl reload nginx 2>/dev/null || true
+            fi
+
             echo "✅ GLAMEYE deployed at $(date) → $(git rev-parse --short HEAD)"
