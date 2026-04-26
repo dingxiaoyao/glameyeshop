@@ -5,10 +5,22 @@ require __DIR__ . '/_layout.php';
 require_once __DIR__ . '/../api/lib/upload-hints.php';
 ?>
 <h1>⚙️ <?= $lang === 'zh' ? '站点设置' : 'Site Settings' ?></h1>
-<p class="muted" style="margin-bottom:2rem;">
-  <?= $lang === 'zh' ? '配置社交链接、Hero 图片、Amazon 店铺等。改完会立即生效。' : 'Configure social links, hero image, Amazon store etc. Changes apply immediately.' ?>
+<p class="muted" style="margin-bottom:1.5rem;">
+  <?= $lang === 'zh' ? '按类别分组,选 tab 切换。改完点底部"Save"应用。' : 'Grouped by topic — click a tab to switch. Hit "Save" at the bottom when done.' ?>
 </p>
 
+<nav class="settings-tabs" id="settings-tabs">
+  <a href="#branding"  class="settings-tab" data-tab="branding">🪄 <?= $lang === 'zh' ? '品牌 / 社交' : 'Branding' ?></a>
+  <a href="#hero"      class="settings-tab" data-tab="hero">🎬 <?= $lang === 'zh' ? '首页 Hero' : 'Hero' ?></a>
+  <a href="#payments"  class="settings-tab" data-tab="payments">💳 <?= $lang === 'zh' ? '支付' : 'Payments' ?></a>
+  <a href="#signin"    class="settings-tab" data-tab="signin">🔑 <?= $lang === 'zh' ? '第三方登录' : 'Sign-in' ?></a>
+  <a href="#email"     class="settings-tab" data-tab="email">📧 <?= $lang === 'zh' ? '邮件 / 客服' : 'Email & Support' ?></a>
+  <a href="#images"    class="settings-tab" data-tab="images">🖼 <?= $lang === 'zh' ? '图片优化' : 'Images' ?></a>
+  <a href="#seo"       class="settings-tab" data-tab="seo">🔒 <?= $lang === 'zh' ? 'SEO / 隐私' : 'SEO / Privacy' ?></a>
+</nav>
+
+<!-- ───── Branding ───── -->
+<div class="settings-section" data-section="branding">
 <div class="admin-card">
   <h3>Social Media URLs</h3>
   <div class="form-group" id="settings-form">
@@ -38,6 +50,10 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   </div>
 </div>
 
+</div><!-- /branding -->
+
+<!-- ───── SEO / Privacy ───── -->
+<div class="settings-section" data-section="seo">
 <div class="admin-card" style="border-color: var(--warn);">
   <h3 style="color: var(--warn);">🚧 SEO / Search Engines</h3>
   <div class="form-group">
@@ -51,6 +67,10 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   </div>
 </div>
 
+</div><!-- /seo -->
+
+<!-- ───── Hero ───── -->
+<div class="settings-section" data-section="hero">
 <div class="admin-card">
   <h3>🎞️ Homepage Hero Slideshow</h3>
   <p class="muted small" style="margin-bottom:1rem;">
@@ -77,6 +97,10 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   <input type="hidden" data-key="hero_image_url" id="hero-url-input" />
 </div>
 
+</div><!-- /hero -->
+
+<!-- ───── Payments ───── -->
+<div class="settings-section" data-section="payments">
 <div class="admin-card">
   <h3>💳 Payment Gateway · Stripe</h3>
   <p class="muted small" style="margin-bottom:1rem;">
@@ -127,6 +151,10 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   </div>
 </div>
 
+</div><!-- /payments -->
+
+<!-- ───── Sign-in ───── -->
+<div class="settings-section" data-section="signin">
 <div class="admin-card">
   <h3>🔑 OAuth · Google Sign-In</h3>
   <p class="muted small" style="margin-bottom:1rem;">
@@ -159,6 +187,10 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   </div>
 </div>
 
+</div><!-- /signin -->
+
+<!-- ───── Email & Support ───── -->
+<div class="settings-section" data-section="email">
 <div class="admin-card" style="border-color: var(--gold-dark);">
   <h3>📧 <?= $lang === 'zh' ? '邮件 / 客服通知' : 'Email & Customer Support' ?></h3>
   <p class="muted small" style="margin-bottom:1rem;">
@@ -210,6 +242,10 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   </div>
 </div>
 
+</div><!-- /email -->
+
+<!-- ───── Images ───── -->
+<div class="settings-section" data-section="images">
 <div class="admin-card">
   <h3>🖼 <?= $lang === 'zh' ? '图片优化 / 回填' : 'Image Optimization / Backfill' ?></h3>
   <p class="muted small" style="margin-bottom:1rem;">
@@ -250,15 +286,47 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   .img-add-btn:hover { border-color: var(--gold); color: var(--gold); }
 </style>
 
-<div style="display:flex; justify-content:flex-end; gap:.75rem;">
+</div><!-- /images -->
+
+<div class="settings-save-bar">
+  <p class="form-feedback" id="settings-feedback" style="margin: 0; flex: 1;"></p>
   <button id="save-all-btn" class="button button-primary">💾 Save All Settings</button>
 </div>
-<p class="form-feedback" id="settings-feedback" style="margin-top:1rem;"></p>
 
 <script>
 (async () => {
   const fb = document.getElementById('settings-feedback');
   function escape(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // ---------- Tab switching ----------
+  const tabs = document.querySelectorAll('.settings-tab');
+  const sections = document.querySelectorAll('.settings-section');
+  function activate(name) {
+    let found = false;
+    tabs.forEach(t => {
+      const m = t.dataset.tab === name;
+      t.classList.toggle('active', m);
+      if (m) found = true;
+    });
+    sections.forEach(s => s.classList.toggle('active', s.dataset.section === name));
+    if (!found && tabs.length) {
+      // fallback to first
+      tabs[0].classList.add('active');
+      sections[0]?.classList.add('active');
+      return tabs[0].dataset.tab;
+    }
+    return name;
+  }
+  // 默认 tab 来自 URL hash,否则 branding
+  const initial = (location.hash || '#branding').replace(/^#/, '');
+  activate(initial);
+  tabs.forEach(t => t.addEventListener('click', (e) => {
+    e.preventDefault();
+    history.replaceState(null, '', '#' + t.dataset.tab);
+    activate(t.dataset.tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }));
+  window.addEventListener('hashchange', () => activate((location.hash || '#branding').replace(/^#/, '')));
 
   // ---------- Hero slideshow ----------
   let heroImages = [];

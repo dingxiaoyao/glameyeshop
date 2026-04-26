@@ -53,7 +53,7 @@ try {
 <!DOCTYPE html><html><body style="font-family:Inter,Arial,sans-serif;color:#222;max-width:600px;margin:0 auto;padding:24px">
   <h2 style="color:#a8843a;margin:0 0 8px">Hi $safeName 👋</h2>
   <p style="color:#666;margin:0 0 20px">Reply from GlamEye support · Thread #{$thread['id']}</p>
-  <div style="background:#f6f1e8;border-left:3px solid #d4a955;padding:14px 18px;border-radius:4px;line-height:1.6">$safeBody</div>
+  <div style="background:#f8f8f8;border-left:3px solid #d4a955;padding:14px 18px;border-radius:4px;line-height:1.6">$safeBody</div>
   <p style="margin-top:24px"><a href="$continueUrl" style="background:#d4a955;color:#1a1408;padding:10px 22px;text-decoration:none;border-radius:4px;font-weight:600">Continue the conversation →</a></p>
   <p style="color:#888;font-size:.85em;margin-top:30px">直接回复这封邮件也会回到我们的工单系统里。</p>
   <hr style="border:0;border-top:1px solid #eee;margin:30px 0">
