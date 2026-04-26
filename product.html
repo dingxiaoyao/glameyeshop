@@ -107,6 +107,30 @@
 
       <p class="pdp-desc" id="p-desc">…</p>
 
+      <div class="pdp-bullets" id="p-bullets" hidden>
+        <h4>Why You'll Love It</h4>
+        <div class="pdp-bullet" data-key="length">
+          <span class="pdp-bullet-icon">✦</span>
+          <span><strong>Tailored Length —</strong> <span data-text></span></span>
+        </div>
+        <div class="pdp-bullet" data-key="band">
+          <span class="pdp-bullet-icon">✦</span>
+          <span><strong>Featherlight Band —</strong> <span data-text></span></span>
+        </div>
+        <div class="pdp-bullet" data-key="reusable">
+          <span class="pdp-bullet-icon">✦</span>
+          <span><strong>Reusable —</strong> <span data-text></span></span>
+        </div>
+        <div class="pdp-bullet">
+          <span class="pdp-bullet-icon">✦</span>
+          <span><strong>Cruelty-Free —</strong> Vegan options available · Leaping Bunny-aligned · Latex-free adhesive compatible.</span>
+        </div>
+        <div class="pdp-bullet">
+          <span class="pdp-bullet-icon">✦</span>
+          <span><strong>2-Minute Application —</strong> Tapered ends blend seamlessly with your natural lash. Pro-level results, no salon required.</span>
+        </div>
+      </div>
+
       <div class="pdp-specs">
         <div><strong>Style</strong> <span id="p-style">—</span></div>
         <div><strong>Length</strong> <span id="p-length">—</span></div>
@@ -148,6 +172,15 @@
     </div>
     <div class="product-grid" id="related-products"></div>
   </section>
+
+  <!-- Sticky bottom CTA — 主按钮滚出视口后才出现 -->
+  <div class="pdp-sticky-cta" id="pdp-sticky-cta" aria-hidden="true">
+    <div class="pdp-sticky-cta-info">
+      <span class="pdp-sticky-cta-name" id="sticky-name">—</span>
+      <span class="pdp-sticky-cta-price" id="sticky-price">—</span>
+    </div>
+    <button class="button button-primary" id="sticky-add-btn" type="button">Add to Cart</button>
+  </div>
 
   <footer class="site-footer">
     <div class="footer-bottom container">
@@ -291,12 +324,64 @@
         document.getElementById('p-price').textContent = fmt.money(p.price);
         document.getElementById('p-desc').textContent = p.description || p.short_description || '';
         document.getElementById('p-sku').textContent = p.sku;
-        document.getElementById('p-stock').textContent = p.stock > 0 ? `${p.stock} in stock` : 'Out of stock';
+        // 库存 urgency:< 20 显示红色 "Only X left" pulse;0 时灰字
+        const stockEl = document.getElementById('p-stock');
+        if (p.stock > 0) {
+          if (Number(p.stock) < 20) {
+            stockEl.innerHTML = `<span class="pdp-stock-low">Only ${p.stock} left</span>`;
+          } else {
+            stockEl.textContent = `${p.stock} in stock`;
+          }
+        } else {
+          stockEl.textContent = 'Out of stock';
+        }
         document.getElementById('p-style').textContent = p.style || '—';
         document.getElementById('p-length').textContent = p.length_mm ? p.length_mm + 'mm' : '—';
         document.getElementById('p-band').textContent = p.band_type || '—';
         document.getElementById('p-reusable').textContent = p.reusable_count ? 'Up to ' + p.reusable_count + ' wears' : '—';
         document.getElementById('p-reviews').textContent = `(${100 + (p.id * 7)} reviews)`;
+
+        // ============== Bullets (P1) ==============
+        // 工具品类(无 length / reusable)隐藏 bullets,保持详情清爽
+        const bulletsEl = document.getElementById('p-bullets');
+        if (p.length_mm || p.reusable_count) {
+          const lengthDesc = p.length_mm
+            ? `${p.length_mm}mm — ${p.length_mm <= 14 ? 'natural everyday wear' : (p.length_mm <= 18 ? 'noticeable lift without screaming "I am wearing lashes"' : (p.length_mm <= 22 ? 'date night drama with full volume' : 'red-carpet maximalist statement'))}.`
+            : 'Designed to flatter your natural eye shape.';
+          const bandDesc = p.band_type === 'cotton'
+            ? 'Soft cotton band invisible against your lid — all-day comfort, no eye-fatigue.'
+            : p.band_type === 'magnetic'
+              ? 'Magnetic band — no glue, no mess. Apply in seconds.'
+              : 'Ultra-thin clear band that disappears against your skin tone.';
+          const reuseDesc = p.reusable_count
+            ? `Up to ${p.reusable_count} wears with proper care — that's ~$${(Number(p.price) / p.reusable_count).toFixed(2)} per wear.`
+            : 'Premium materials built to last.';
+          bulletsEl.querySelector('[data-key="length"] [data-text]').textContent = lengthDesc;
+          bulletsEl.querySelector('[data-key="band"] [data-text]').textContent = bandDesc;
+          bulletsEl.querySelector('[data-key="reusable"] [data-text]').textContent = reuseDesc;
+          bulletsEl.hidden = false;
+        }
+
+        // ============== Sticky bottom CTA (P1) ==============
+        const sticky = document.getElementById('pdp-sticky-cta');
+        const stickyName = document.getElementById('sticky-name');
+        const stickyPrice = document.getElementById('sticky-price');
+        const stickyAdd = document.getElementById('sticky-add-btn');
+        if (sticky && stickyName && stickyPrice) {
+          stickyName.textContent = p.name;
+          stickyPrice.textContent = fmt.money(p.price);
+          stickyAdd.addEventListener('click', addToCart);
+          // 主 Add-to-Cart 按钮滚出视口后,sticky bar 滑出来。用 IntersectionObserver。
+          const mainBtn = document.getElementById('add-to-cart-btn');
+          if (mainBtn && 'IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries) => {
+              const visible = entries[0].isIntersecting;
+              sticky.classList.toggle('visible', !visible);
+              sticky.setAttribute('aria-hidden', visible ? 'true' : 'false');
+            }, { rootMargin: '-20px 0px 0px 0px' });
+            io.observe(mainBtn);
+          }
+        }
 
         if (p.compare_at_price && Number(p.compare_at_price) > Number(p.price)) {
           document.getElementById('p-price-old').textContent = fmt.money(p.compare_at_price);

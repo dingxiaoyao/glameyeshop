@@ -65,7 +65,7 @@
   </header>
 
   <main>
-    <!-- Hero -->
+    <!-- ============== 1. Hero ============== -->
     <section class="hero" id="hero-section">
       <div class="hero-slides" id="hero-slides">
         <!-- 内联 fallback 用 640.jpg(50KB),JS 加载后会按视口换 640/1024 webp + 自动轮播 -->
@@ -74,19 +74,144 @@
       <div class="container">
         <div class="hero-content">
           <span class="eyebrow">Premium · Cruelty-Free · Made in USA</span>
-          <h1>Lashes that say <em>everything</em>.</h1>
-          <p>Luxury false lashes designed in California — from understated wispy to full glam. Crafted for the woman who knows the power of a stunning eye.</p>
+          <h1>Lashes That Instantly <em>Transform</em> Your Eyes.</h1>
+          <p>Lightweight · Reusable up to 25 wears · 100% cruelty-free. From subtle everyday wisps to full red-carpet drama — designed in California, loved coast to coast.</p>
           <div class="hero-actions">
-            <a href="shop.html" class="button button-primary">Shop the Collection</a>
-            <a href="about.html" class="button button-outline">Our Story</a>
+            <a href="shop.html" class="button button-primary">Shop Best Sellers</a>
+            <a href="shop.html" class="button button-outline">View All Lashes</a>
+          </div>
+          <div class="hero-trust-inline">
+            <span>★★★★★ <strong>4.9</strong> from 2,400+ reviews</span>
+            <span>·</span>
+            <span>50,000+ pairs shipped</span>
           </div>
         </div>
         <div class="hero-dots" id="hero-dots"></div>
       </div>
     </section>
 
-    <!-- Categories -->
+    <!-- ============== 2. Trust Ribbon (slim, immediately under hero) ============== -->
+    <section class="trust-section trust-section-slim">
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="trust-icon">🐰</div>
+          <h4>100% Cruelty-Free</h4>
+          <p>Vegan options · Leaping Bunny certified</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🚚</div>
+          <h4>Free U.S. Shipping</h4>
+          <p>On orders $50+ · Ships in 1-2 days</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">💎</div>
+          <h4>Up to 25 Wears</h4>
+          <p>Premium reusable mink lashes</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">↩️</div>
+          <h4>30-Day Returns</h4>
+          <p>Not in love? Send it back · No questions asked</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== 3. Best Sellers (上提到首屏附近) ============== -->
     <section class="section container">
+      <div class="section-header">
+        <span class="eyebrow">Bestsellers</span>
+        <h2>The Crowd Favorites</h2>
+        <div class="divider-gold"></div>
+        <p>The lashes our community can't stop talking about — over 50,000 pairs shipped.</p>
+      </div>
+      <div class="product-grid" id="featured-products" data-limit="4"></div>
+      <div class="text-center" style="margin-top: 3rem;">
+        <a href="shop.html" class="button button-primary">Shop All Bestsellers →</a>
+      </div>
+    </section>
+
+    <!-- ============== 4. Why GlamEye (产品卖点) ============== -->
+    <section class="section benefit-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">Why GlamEye</span>
+          <h2>Designed for the Way You Actually Live</h2>
+          <div class="divider-gold"></div>
+          <p>Every detail engineered for comfort, longevity, and that "are those real?" reaction.</p>
+        </div>
+        <div class="benefit-grid">
+          <div class="benefit-card">
+            <div class="benefit-num">01</div>
+            <h3>Featherlight Cotton Band</h3>
+            <p>So soft you'll forget you're wearing them. No drooping, no eye-fatigue, no migration through a 12-hour day.</p>
+          </div>
+          <div class="benefit-card">
+            <div class="benefit-num">02</div>
+            <h3>Reusable Up to 25 Wears</h3>
+            <p>Hand-tied premium mink hairs hold their curl wear after wear. Cleaned and cared for, one pair lasts a month of nights out.</p>
+          </div>
+          <div class="benefit-card">
+            <div class="benefit-num">03</div>
+            <h3>Apply in Under 2 Minutes</h3>
+            <p>Tapered ends blend seamlessly with your natural lash. Even first-time wearers get a flawless application — no salon required.</p>
+          </div>
+          <div class="benefit-card">
+            <div class="benefit-num">04</div>
+            <h3>Cruelty-Free, Always</h3>
+            <p>Leaping Bunny certified. Vegan faux-mink alternatives for every style. Latex-free, toxin-free adhesive included.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== 5. Before / After ("Real Results") ============== -->
+    <!-- 占位:等真实素材,先用产品图近距 + 产品图远距 视觉差异充当 placeholder -->
+    <section class="section container ba-section">
+      <div class="section-header">
+        <span class="eyebrow">Real Results</span>
+        <h2>Before &amp; After</h2>
+        <div class="divider-gold"></div>
+        <p>What 18mm of premium mink does to your eyes — no filter, no retouching.</p>
+      </div>
+      <div class="ba-grid">
+        <div class="ba-pair">
+          <div class="ba-card ba-before">
+            <picture>
+              <source type="image/webp" srcset="/images/lash-photos/style-09-feather-eye-640.webp 640w, /images/lash-photos/style-09-feather-eye-1024.webp 1024w" sizes="(max-width: 768px) 100vw, 50vw">
+              <img src="/images/lash-photos/style-09-feather-eye-640.jpg" alt="Natural eye, no lashes" loading="lazy" decoding="async">
+            </picture>
+            <span class="ba-label">Before</span>
+          </div>
+          <div class="ba-card ba-after">
+            <picture>
+              <source type="image/webp" srcset="/images/lash-photos/style-18-velvet-eye-640.webp 640w, /images/lash-photos/style-18-velvet-eye-1024.webp 1024w" sizes="(max-width: 768px) 100vw, 50vw">
+              <img src="/images/lash-photos/style-18-velvet-eye-640.jpg" alt="With Naked 18mm Mink" loading="lazy" decoding="async">
+            </picture>
+            <span class="ba-label ba-label-after">After · Naked 18mm</span>
+          </div>
+        </div>
+        <div class="ba-pair">
+          <div class="ba-card ba-before">
+            <picture>
+              <source type="image/webp" srcset="/images/lash-photos/style-14-frost-eye-640.webp 640w, /images/lash-photos/style-14-frost-eye-1024.webp 1024w" sizes="(max-width: 768px) 100vw, 50vw">
+              <img src="/images/lash-photos/style-14-frost-eye-640.jpg" alt="Daytime eye look" loading="lazy" decoding="async">
+            </picture>
+            <span class="ba-label">Daytime</span>
+          </div>
+          <div class="ba-card ba-after">
+            <picture>
+              <source type="image/webp" srcset="/images/lash-photos/style-18-velvet-split-640.webp 640w, /images/lash-photos/style-18-velvet-split-1024.webp 1024w" sizes="(max-width: 768px) 100vw, 50vw">
+              <img src="/images/lash-photos/style-18-velvet-split-640.jpg" alt="With Diamond 25mm Mink" loading="lazy" decoding="async">
+            </picture>
+            <span class="ba-label ba-label-after">Night Out · Diamond 25mm</span>
+          </div>
+        </div>
+      </div>
+      <p class="ba-disclaimer">More real-customer transformations coming — tag <strong style="color:var(--gold);">@glameye</strong> on Instagram to be featured.</p>
+    </section>
+
+    <!-- ============== 6. Categories (Shop by Style) ============== -->
+    <section class="section container" style="background: var(--bg-soft); border-radius: 12px;">
       <div class="section-header">
         <span class="eyebrow">Shop by Style</span>
         <h2>Three Signature Collections</h2>
@@ -137,21 +262,20 @@
       </div>
     </section>
 
-    <!-- Featured products -->
-    <section class="section container" style="background: var(--bg-soft); border-radius: 12px;">
+    <!-- ============== 7. Bundles (P2 真实数据;P1 占位) ============== -->
+    <section class="section container" id="bundles-section">
       <div class="section-header">
-        <span class="eyebrow">Bestsellers</span>
-        <h2>Crowd Favorites</h2>
+        <span class="eyebrow">Save More · Bundle &amp; Glow</span>
+        <h2>Curated Bundles</h2>
         <div class="divider-gold"></div>
-        <p>The lashes our community can't stop talking about.</p>
+        <p>Three lashes, applicator, glue, and a mirror case — everything you need, $20 less than buying separately.</p>
       </div>
-      <div class="product-grid" id="featured-products" data-limit="4"></div>
-      <div class="text-center" style="margin-top: 3rem;">
-        <a href="shop.html" class="button button-outline">View All Products →</a>
+      <div class="bundle-grid" id="featured-bundles">
+        <p class="muted text-center" style="grid-column:1/-1;">Loading bundles…</p>
       </div>
     </section>
 
-    <!-- TikTok showcase -->
+    <!-- ============== 8. TikTok / UGC ============== -->
     <section class="section container" id="tiktok-section">
       <div class="section-header">
         <span class="eyebrow">As Seen on TikTok</span>
@@ -167,41 +291,15 @@
       </div>
     </section>
 
-    <!-- Trust -->
-    <section class="trust-section">
-      <div class="trust-grid">
-        <div class="trust-item">
-          <div class="trust-icon">🐰</div>
-          <h4>100% Cruelty-Free</h4>
-          <p>Vegan options · Leaping Bunny certified</p>
-        </div>
-        <div class="trust-item">
-          <div class="trust-icon">🚚</div>
-          <h4>Free U.S. Shipping</h4>
-          <p>On orders $50+ · Ships in 1-2 days</p>
-        </div>
-        <div class="trust-item">
-          <div class="trust-icon">💎</div>
-          <h4>Up to 25 Wears</h4>
-          <p>Premium reusable mink lashes</p>
-        </div>
-        <div class="trust-item">
-          <div class="trust-icon">↩️</div>
-          <h4>30-Day Returns</h4>
-          <p>Not in love? Send it back · No questions asked</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Reviews -->
-    <section class="section container">
+    <!-- ============== 9. Reviews ============== -->
+    <section class="section container" style="background: var(--bg-soft); border-radius: 12px;">
       <div class="section-header">
         <span class="eyebrow">From Our Community</span>
         <h2>★★★★★ 4.9 / 5</h2>
         <div class="divider-gold"></div>
         <p>Trusted by 50,000+ beauty enthusiasts across the U.S.</p>
       </div>
-      <div class="reviews-grid">
+      <div class="reviews-grid" id="featured-reviews">
         <div class="review-card">
           <div class="review-stars">★★★★★</div>
           <p class="review-text">"The most comfortable mink lashes I've ever worn. Diamond 25mm is everything for a night out!"</p>
@@ -220,7 +318,20 @@
       </div>
     </section>
 
-    <!-- Newsletter -->
+    <!-- ============== 10. Final CTA ============== -->
+    <section class="final-cta">
+      <div class="container-sm">
+        <span class="eyebrow">Ready When You Are</span>
+        <h2>Your New Favorite Lash<br>Is One Click Away.</h2>
+        <p>Free U.S. shipping over $50. 30-day no-questions returns. Pairs ship in 1-2 business days from California.</p>
+        <div class="final-cta-actions">
+          <a href="shop.html" class="button button-primary button-lg">Shop Best Sellers</a>
+          <a href="shop.html?category=faux" class="button button-outline button-lg">Browse Vegan Options</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== 11. Newsletter ============== -->
     <section class="newsletter-section">
       <div class="container-sm">
         <span class="eyebrow">Join the List</span>

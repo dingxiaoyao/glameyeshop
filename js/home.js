@@ -11,6 +11,8 @@
     const badge = p.is_new == 1 ? 'new' : (sale ? 'sale' : (p.is_bestseller == 1 ? 'bestseller' : ''));
     const badgeText = p.is_new == 1 ? 'New' : (sale ? 'Sale' : (p.is_bestseller == 1 ? 'Bestseller' : ''));
     const picture = Img.picture(p.image_url, 'card', { alt: p.name, loading: 'lazy' });
+    // Stock urgency: 库存 < 20 显示 "Only X left"。P2 接真实 reviews 后,(100 + id*7) 的伪评论数会替换。
+    const stockUrgent = (p.stock != null && p.stock > 0 && Number(p.stock) < 20);
     return `
       <article class="product-card" data-id="${p.id}">
         <div class="product-image">
@@ -21,8 +23,9 @@
         <div class="product-info">
           <span class="product-cat">${escape(p.category)}${p.length_mm ? ' · ' + p.length_mm + 'mm' : ''}</span>
           <h3><a href="product.html?sku=${escape(p.sku)}" style="color:inherit;">${escape(p.name)}</a></h3>
-          <p>${escape(p.short_description || '')}</p>
+          <p class="product-quick-bullet">${escape(p.short_description || '')}</p>
           <div class="product-rating">★★★★★ <span class="reviews">(${100 + (p.id * 7)})</span></div>
+          ${stockUrgent ? `<span class="product-stock-urgency">Only ${p.stock} left</span>` : ''}
           <div class="product-price-row">
             <span class="price">${money(p.price)}</span>
             ${sale ? `<span class="price-old">${money(p.compare_at_price)}</span>` : ''}
@@ -189,8 +192,83 @@
     } catch (e) { /* graceful degrade */ }
   }
 
+  // P1: bundles 占位 — 用真实产品图渲染 3 张 bundle 视觉,链接走 shop.html。
+  // P2 替换为 api/bundles.php 返回 + 真实"Add Bundle to Cart"逻辑。
+  async function loadBundles() {
+    const container = document.getElementById('featured-bundles');
+    if (!container) return;
+    try {
+      const r = await fetch('api/products.php');
+      const j = await r.json();
+      const products = j.products || [];
+      const findBy = (sku) => products.find(p => p.sku === sku);
+
+      const bundles = [
+        {
+          name: 'Starter Kit',
+          tagline: 'Everything you need to get started — lashes, glue, applicator.',
+          products: [
+            findBy('GE-MINK-001'),
+            findBy('GE-TOOL-GLUE'),
+            findBy('GE-TOOL-APPL'),
+          ].filter(Boolean),
+          link: 'shop.html?category=tools',
+          discount: 12,
+        },
+        {
+          name: 'Glam Trio',
+          tagline: 'Three signature mink lashes — day, date night, red carpet.',
+          products: [
+            findBy('GE-MINK-003'),
+            findBy('GE-MINK-005'),
+            findBy('GE-MINK-007'),
+          ].filter(Boolean),
+          link: 'shop.html?category=mink',
+          discount: 25,
+        },
+        {
+          name: 'Daily Wisp Duo',
+          tagline: 'Two everyday wispy faves + travel mirror case.',
+          products: [
+            findBy('GE-FAUX-001'),
+            findBy('GE-FAUX-002'),
+            findBy('GE-TOOL-CASE'),
+          ].filter(Boolean),
+          link: 'shop.html?category=faux',
+          discount: 10,
+        },
+      ];
+
+      container.innerHTML = bundles.map((b) => {
+        if (b.products.length === 0) return '';
+        const total = b.products.reduce((s, p) => s + Number(p.price), 0);
+        const bundlePrice = Math.max(0, total - b.discount);
+        const productsList = b.products.map(p => p.name).join(' · ');
+        const imgs = b.products.slice(0, 3).map(p => `<div>${Img.picture(p.image_url, 'card', { alt: p.name, loading: 'lazy' })}</div>`).join('');
+        return `
+          <a class="bundle-card" href="${escape(b.link)}">
+            <span class="bundle-savings-badge">Save $${b.discount}</span>
+            <div class="bundle-card-imgs">${imgs}</div>
+            <div class="bundle-card-info">
+              <h3>${escape(b.name)}</h3>
+              <p class="bundle-products">${escape(productsList)}</p>
+              <p style="color: var(--text-muted); font-size: .85rem; line-height: 1.5;">${escape(b.tagline)}</p>
+              <div class="bundle-price-row">
+                <span class="price">${money(bundlePrice)}</span>
+                <span class="price-old">${money(total)}</span>
+                <span class="bundle-saved">— save $${b.discount}</span>
+              </div>
+            </div>
+          </a>`;
+      }).join('');
+    } catch (e) {
+      container.innerHTML = '<p class="muted text-center" style="grid-column:1/-1;">Bundles loading soon.</p>';
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     loadFeatured();
+    loadBundles();
     loadFeaturedVideos();
     loadSettings();
 
