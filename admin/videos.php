@@ -29,9 +29,10 @@
           <textarea name="description" rows="2"></textarea>
         </label>
         <label><span class="label-text">Cover Image URL (optional)</span>
+          <?php require_once __DIR__ . '/../api/lib/upload-hints.php'; echo uploadHint('video_cover', $lang); ?>
           <div style="display:flex; gap:.5rem;">
             <input type="text" name="cover_url" id="v-cover-url" style="flex:1;" />
-            <label class="button button-outline button-sm" style="cursor:pointer; white-space:nowrap;">
+            <label class="button button-outline button-sm" style="cursor:pointer; white-space:nowrap;" data-hint="video_cover">
               📤 Upload
               <input type="file" id="v-cover-upload" accept="image/*" hidden />
             </label>

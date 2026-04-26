@@ -1,4 +1,9 @@
-<?php $pageTitle = 'Site Settings'; $activeNav = 'settings'; require __DIR__ . '/_layout.php'; ?>
+<?php
+$pageTitle = 'Site Settings';
+$activeNav = 'settings';
+require __DIR__ . '/_layout.php';
+require_once __DIR__ . '/../api/lib/upload-hints.php';
+?>
 <h1>⚙️ <?= $lang === 'zh' ? '站点设置' : 'Site Settings' ?></h1>
 <p class="muted" style="margin-bottom:2rem;">
   <?= $lang === 'zh' ? '配置社交链接、Hero 图片、Amazon 店铺等。改完会立即生效。' : 'Configure social links, hero image, Amazon store etc. Changes apply immediately.' ?>
@@ -51,14 +56,15 @@
   <p class="muted small" style="margin-bottom:1rem;">
     <?= $lang === 'zh' ? '上传多张图（拖拽排序，第一张优先展示），首页将自动轮播。' : 'Upload multiple images (drag to reorder · first one shows first). They auto-rotate on the homepage.' ?>
   </p>
+  <?= uploadHint('hero', $lang) ?>
   <div class="img-uploader">
     <div class="img-tiles" id="hero-tiles"></div>
-    <label class="img-add-btn">
+    <label class="img-add-btn" data-hint="hero">
       <span style="font-size:1.5rem;">＋</span>
       <span>📤 <?= $lang === 'zh' ? '点击上传多张图' : 'Click to upload (multiple)' ?></span>
       <input type="file" accept="image/*" multiple hidden id="hero-upload" />
     </label>
-    <small id="hero-status" class="muted" style="display:block; margin-top:.5rem;">Tip: 1920×1080+ landscape beauty photos work best.</small>
+    <small id="hero-status" class="muted" style="display:block; margin-top:.5rem;"></small>
   </div>
   <div class="form-row" style="margin-top:1rem;">
     <label><span class="label-text">Slide interval (ms)</span>
@@ -204,6 +210,20 @@
   </div>
 </div>
 
+<div class="admin-card">
+  <h3>🖼 <?= $lang === 'zh' ? '图片优化 / 回填' : 'Image Optimization / Backfill' ?></h3>
+  <p class="muted small" style="margin-bottom:1rem;">
+    <?= $lang === 'zh'
+      ? '把上传的图片(/uploads/)和静态图(/images/)都生成 4 档响应式版本(320/640/1024/1600 × webp+jpg)。新上传的图会自动处理,这个按钮用来一次性补齐旧图。'
+      : 'Generate the 4 responsive variants (320/640/1024/1600 × webp+jpg) for every image in /uploads/ and /images/. New uploads are processed automatically — use this to backfill older images.' ?>
+  </p>
+  <div style="display:flex; gap:.75rem; flex-wrap:wrap; align-items:center;">
+    <button id="backfill-dry-btn" class="button button-outline button-sm">🔍 <?= $lang === 'zh' ? '先看看会处理什么(dry run)' : 'Dry run (preview)' ?></button>
+    <button id="backfill-run-btn" class="button button-primary button-sm">⚙️ <?= $lang === 'zh' ? '开始处理' : 'Process all images' ?></button>
+  </div>
+  <pre id="backfill-output" style="background:var(--bg);border:1px solid var(--border-soft);border-radius:4px;padding:1rem;margin-top:1rem;max-height:300px;overflow:auto;font-size:.78rem;color:var(--text-muted);white-space:pre-wrap;display:none;"></pre>
+</div>
+
 <style>
   .img-uploader { background: var(--bg); padding: 1rem; border: 1px dashed var(--border); border-radius: 6px; }
   .img-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .5rem; margin-bottom: .75rem; }
@@ -334,6 +354,43 @@
       document.querySelector('[data-key="hero_slide_interval"]').value = '5000';
     }
   } catch (e) { fb.textContent = 'Load failed'; fb.className = 'form-feedback error'; }
+
+  // ---------- Backfill images ----------
+  const backOut = document.getElementById('backfill-output');
+  function appendOut(line) {
+    backOut.style.display = 'block';
+    backOut.textContent += line + '\n';
+    backOut.scrollTop = backOut.scrollHeight;
+  }
+  async function runBackfill(dry) {
+    backOut.textContent = ''; backOut.style.display = 'block';
+    appendOut(dry ? '🔍 Dry run starting…' : '⚙️ Processing images (50 per batch, may take a few minutes)…');
+    let offset = 0, total = null, processed = 0, skipped = 0, errors = 0;
+    while (true) {
+      try {
+        const url = '../api/admin-backfill-images.php?limit=50&offset=' + offset + (dry ? '&dry=1' : '');
+        const r = await fetch(url, { credentials: 'include' });
+        const j = await r.json();
+        if (total === null) {
+          total = j.total_local_images || 0;
+          appendOut('Total local images: ' + total);
+        }
+        processed += (j.processed || 0);
+        skipped   += (j.skipped || 0);
+        errors    += (j.errors || []).length;
+        appendOut(`  batch @${offset}: processed ${j.processed}, skipped ${j.skipped}, errors ${(j.errors||[]).length}`);
+        if (j.errors && j.errors.length) j.errors.slice(0, 5).forEach(e => appendOut('   ! ' + e));
+        if (j.next_offset === null || j.next_offset === undefined) break;
+        offset = j.next_offset;
+      } catch (e) { appendOut('  FAIL: ' + e.message); break; }
+    }
+    appendOut(`\n✓ Done. Processed: ${processed}, skipped: ${skipped}, errors: ${errors}.`);
+    if (!dry && processed > 0) appendOut('Tip: refresh your browser cache (Ctrl+Shift+R) to see the new variants.');
+  }
+  const dryBtn = document.getElementById('backfill-dry-btn');
+  const runBtn = document.getElementById('backfill-run-btn');
+  if (dryBtn) dryBtn.addEventListener('click', () => { dryBtn.disabled = runBtn.disabled = true; runBackfill(true).finally(() => { dryBtn.disabled = runBtn.disabled = false; }); });
+  if (runBtn) runBtn.addEventListener('click', () => { dryBtn.disabled = runBtn.disabled = true; runBackfill(false).finally(() => { dryBtn.disabled = runBtn.disabled = false; }); });
 
   // ---------- Test email ----------
   const testBtn = document.getElementById('test-email-btn');

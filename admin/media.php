@@ -1,15 +1,21 @@
-<?php $pageTitle = 'Media Library'; $activeNav = 'media'; require __DIR__ . '/_layout.php'; ?>
+<?php
+$pageTitle = 'Media Library';
+$activeNav = 'media';
+require __DIR__ . '/_layout.php';
+require_once __DIR__ . '/../api/lib/upload-hints.php';
+?>
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
   <h1 style="margin:0;">🖼 <?= $lang === 'zh' ? '媒体库' : 'Media Library' ?></h1>
-  <label class="button button-primary" style="cursor:pointer;">
+  <label class="button button-primary" style="cursor:pointer;" data-hint="media">
     + <?= $lang === 'zh' ? '上传文件' : 'Upload' ?>
     <input type="file" id="upload-input" accept="image/*,video/*" multiple hidden />
   </label>
 </div>
 
-<p class="muted" style="margin-bottom:1.5rem;">
+<p class="muted" style="margin-bottom:.75rem;">
   <?= $lang === 'zh' ? '图片：≤ 10MB（jpg/png/webp/gif）· 视频：≤ 200MB（mp4/webm/mov）· 上传后右键复制 URL，粘贴到产品/设置中。' : 'Images ≤ 10MB · Videos ≤ 200MB · Right-click to copy URL after upload.' ?>
 </p>
+<?= uploadHint('media', $lang) ?>
 
 <div id="upload-progress" style="display:none; padding:1rem; background:var(--bg-card); border-radius:8px; margin-bottom:1rem;">
   <div id="upload-status" class="muted small">Uploading…</div>

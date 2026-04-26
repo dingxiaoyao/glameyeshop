@@ -113,23 +113,35 @@
       const slidesEl = document.getElementById('hero-slides');
       const dotsEl = document.getElementById('hero-dots');
       if (slidesEl && heroImages.length) {
-        // 浏览器 webp 支持探测(2010年后基本都有,但保留兜底)
         const supportsWebp = (() => {
           try { return document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0; }
           catch (e) { return false; }
         })();
-        // hero 是模糊背景 + 文字浮在上面,中等像素密度足够。
-        // 窄屏(<768 css px)无论 dpr 都用 640(~50KB);桌面用 1024(~165KB);超宽 4K 才上 1600。
         const cssW = window.innerWidth;
         const heroSize = cssW < 768 ? 640 : (cssW < 1600 ? 1024 : 1600);
         const ext = supportsWebp ? 'webp' : 'jpg';
-        const heroVariant = (u) => {
+        const variantOf = (u) => {
           if (/^https?:\/\//i.test(u)) return u;
           return Img.variant(u, heroSize, ext);
         };
+
+        // 先用原图渲染所有 slide(任何情况下都能看到图);
+        // 然后逐个 new Image() 预加载 variant,加载成功才替换为更轻的版本;
+        // variant 404/失败时保持原图,不破图。
         slidesEl.innerHTML = heroImages.map((url, i) =>
-          `<div class="hero-slide ${i===0?'active':''}" style="background-image: url('${escape(heroVariant(url))}');"></div>`
+          `<div class="hero-slide ${i===0?'active':''}" data-orig="${escape(url)}" style="background-image: url('${escape(url)}');"></div>`
         ).join('');
+
+        // 后台升级:variant 加载成功后无缝替换
+        slidesEl.querySelectorAll('.hero-slide').forEach((slide) => {
+          const orig = slide.dataset.orig;
+          const v = variantOf(orig);
+          if (v === orig) return; // 远程 URL,不变体
+          const probe = new Image();
+          probe.onload = () => { slide.style.backgroundImage = `url('${v}')`; };
+          probe.onerror = () => {/* 保持原图,啥也不做 */};
+          probe.src = v;
+        });
         if (dotsEl && heroImages.length > 1) {
           dotsEl.innerHTML = heroImages.map((_, i) =>
             `<button class="hero-dot ${i===0?'active':''}" data-idx="${i}" aria-label="Slide ${i+1}"></button>`

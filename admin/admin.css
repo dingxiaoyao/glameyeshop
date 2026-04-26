@@ -188,3 +188,58 @@
   .admin-main { padding: 1.5rem 1rem; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ============== Upload Hint Card ============== */
+.upload-hint {
+  background: linear-gradient(135deg, rgba(212, 169, 85, 0.10), rgba(212, 169, 85, 0.04));
+  border: 1px solid var(--gold-dark);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: .85rem 1rem;
+  margin-bottom: .85rem;
+  font-size: .85rem;
+}
+.upload-hint-head {
+  display: flex; align-items: flex-start; gap: .75rem;
+  margin-bottom: .5rem;
+}
+.upload-hint-icon {
+  font-size: 1.5rem; line-height: 1;
+  flex-shrink: 0; margin-top: .15rem;
+}
+.upload-hint-title {
+  display: block; color: var(--cream);
+  font-family: var(--sans); font-weight: 600;
+  font-size: .92rem; margin-bottom: .15rem;
+}
+.upload-hint-size {
+  color: var(--gold); font-weight: 700;
+  font-family: var(--sans); letter-spacing: .5px;
+}
+.upload-hint-title small { color: var(--text-muted); font-weight: 400; }
+.upload-hint-use {
+  display: block; color: var(--text-muted);
+  font-size: .8rem; line-height: 1.5;
+}
+.upload-hint-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: .25rem;
+  font-size: .78rem; color: var(--text-muted); line-height: 1.6;
+}
+.upload-hint-list strong { color: var(--cream); font-weight: 600; }
+
+/* 上传后的尺寸校验提示(JS 注入) */
+.upload-warn {
+  display: block; margin-top: .5rem;
+  padding: .55rem .75rem;
+  background: rgba(247, 185, 85, 0.1);
+  border-left: 3px solid var(--warn);
+  border-radius: var(--radius);
+  font-size: .8rem; color: var(--warn);
+  line-height: 1.5;
+}
+.upload-warn strong { color: var(--warn); }
+.upload-warn.error { background: rgba(238, 90, 90, 0.1); border-left-color: var(--error); color: var(--error); }
+.upload-warn.error strong { color: var(--error); }
+.upload-warn.ok { background: rgba(95, 207, 128, 0.1); border-left-color: var(--success); color: var(--success); }
+.upload-warn.ok strong { color: var(--success); }

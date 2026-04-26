@@ -2,6 +2,7 @@
 // 公共 layout：所有 admin 页都 include 这个，传入 $pageTitle 与 $activeNav
 require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../api/i18n.php';
+require_once __DIR__ . '/../api/lib/upload-hints.php';
 requireAdminAuth();
 $lang = adminLang();
 $pageTitle  = $pageTitle  ?? 'Admin';

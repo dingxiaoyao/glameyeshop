@@ -55,9 +55,10 @@
           </label>
         </div>
         <label><span class="label-text"><?= $lang === 'zh' ? '商品图片（拖拽排序，第一张作为主图）' : 'Product Images (drag to reorder · first = main)' ?></span></label>
+        <?php require_once __DIR__ . '/../api/lib/upload-hints.php'; echo uploadHint('product', $lang); ?>
         <div class="img-uploader" id="p-img-uploader">
           <div class="img-tiles" id="p-img-tiles"></div>
-          <label class="img-add-btn" id="p-img-add">
+          <label class="img-add-btn" id="p-img-add" data-hint="product">
             <span style="font-size:1.5rem;">＋</span>
             <span>📤 <?= $lang === 'zh' ? '点击上传或拖拽多张图' : 'Click to upload (multiple)' ?></span>
             <input type="file" accept="image/*" multiple hidden id="p-img-input" />
