@@ -27,11 +27,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://images.unsplash.com" />
-  <!-- 用 imagesrcset 让浏览器按视口选档:mobile 640w (~50KB) / desktop 1024w (~165KB)。
-       所有现代浏览器都支持 webp,仅注入 webp preload,避免双下载。 -->
+  <!-- imagesizes 告诉预加载器 mobile 用 50vw(虽然实际 cover 100vw,但这能让
+       iPhone 375×2=375 匹配到 640w 而不是 1024w,省 ~115KB)。 -->
   <link rel="preload" as="image" type="image/webp"
         imagesrcset="/images/lash-photos/style-14-frost-split-640.webp 640w, /images/lash-photos/style-14-frost-split-1024.webp 1024w"
-        imagesizes="100vw" fetchpriority="high" />
+        imagesizes="(max-width: 767px) 50vw, 100vw" fetchpriority="high" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -96,8 +96,8 @@
       <div class="cat-grid">
         <a href="shop.html?category=mink" class="cat-card">
           <picture>
-            <source type="image/webp" srcset="/images/lash-photos/style-18-velvet-split-640.webp 1x, /images/lash-photos/style-18-velvet-split-1024.webp 2x">
-            <source type="image/jpeg" srcset="/images/lash-photos/style-18-velvet-split-640.jpg 1x, /images/lash-photos/style-18-velvet-split-1024.jpg 2x">
+            <source type="image/webp" srcset="/images/lash-photos/style-18-velvet-split-320.webp 320w, /images/lash-photos/style-18-velvet-split-640.webp 640w" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, min(33vw, 360px)">
+            <source type="image/jpeg" srcset="/images/lash-photos/style-18-velvet-split-320.jpg 320w, /images/lash-photos/style-18-velvet-split-640.jpg 640w" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, min(33vw, 360px)">
             <img src="/images/lash-photos/style-18-velvet-split-640.jpg" alt="Mink Collection" loading="lazy" decoding="async">
           </picture>
           <div class="cat-card-content">
@@ -107,8 +107,8 @@
         </a>
         <a href="shop.html?category=faux" class="cat-card">
           <picture>
-            <source type="image/webp" srcset="/images/lash-photos/style-09-feather-eye-640.webp 1x, /images/lash-photos/style-09-feather-eye-1024.webp 2x">
-            <source type="image/jpeg" srcset="/images/lash-photos/style-09-feather-eye-640.jpg 1x, /images/lash-photos/style-09-feather-eye-1024.jpg 2x">
+            <source type="image/webp" srcset="/images/lash-photos/style-09-feather-eye-320.webp 320w, /images/lash-photos/style-09-feather-eye-640.webp 640w" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, min(33vw, 360px)">
+            <source type="image/jpeg" srcset="/images/lash-photos/style-09-feather-eye-320.jpg 320w, /images/lash-photos/style-09-feather-eye-640.jpg 640w" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, min(33vw, 360px)">
             <img src="/images/lash-photos/style-09-feather-eye-640.jpg" alt="Faux Mink Collection" loading="lazy" decoding="async">
           </picture>
           <div class="cat-card-content">
@@ -118,8 +118,8 @@
         </a>
         <a href="shop.html?category=magnetic" class="cat-card">
           <picture>
-            <source type="image/webp" srcset="/images/lash-photos/style-14-frost-eye-640.webp 1x, /images/lash-photos/style-14-frost-eye-1024.webp 2x">
-            <source type="image/jpeg" srcset="/images/lash-photos/style-14-frost-eye-640.jpg 1x, /images/lash-photos/style-14-frost-eye-1024.jpg 2x">
+            <source type="image/webp" srcset="/images/lash-photos/style-14-frost-eye-320.webp 320w, /images/lash-photos/style-14-frost-eye-640.webp 640w" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, min(33vw, 360px)">
+            <source type="image/jpeg" srcset="/images/lash-photos/style-14-frost-eye-320.jpg 320w, /images/lash-photos/style-14-frost-eye-640.jpg 640w" sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, min(33vw, 360px)">
             <img src="/images/lash-photos/style-14-frost-eye-640.jpg" alt="Magnetic Lashes" loading="lazy" decoding="async">
           </picture>
           <div class="cat-card-content">
@@ -128,7 +128,7 @@
           </div>
         </a>
         <a href="shop.html?category=tools" class="cat-card">
-          <img src="https://images.unsplash.com/photo-1617897903246-719242758050?w=640&q=70&auto=format&fit=crop" alt="Tools & Accessories" loading="lazy" decoding="async">
+          <img src="https://images.unsplash.com/photo-1617897903246-719242758050?w=480&q=70&auto=format&fit=crop" alt="Tools & Accessories" loading="lazy" decoding="async">
           <div class="cat-card-content">
             <h3>Tools & Accessories</h3>
             <span class="cat-link">Shop Tools →</span>

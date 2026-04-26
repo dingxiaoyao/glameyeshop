@@ -118,11 +118,10 @@
           try { return document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0; }
           catch (e) { return false; }
         })();
-        // 按视口分档:窄屏 640(~50KB) / 中屏 1024(~165KB) / 宽屏(>1600 设备像素)1600
-        const dpr = window.devicePixelRatio || 1;
-        const cssW = Math.min(window.innerWidth, screen.width || window.innerWidth);
-        const targetPx = cssW * dpr;
-        const heroSize = targetPx <= 700 ? 640 : (targetPx <= 1200 ? 1024 : 1600);
+        // hero 是模糊背景 + 文字浮在上面,中等像素密度足够。
+        // 窄屏(<768 css px)无论 dpr 都用 640(~50KB);桌面用 1024(~165KB);超宽 4K 才上 1600。
+        const cssW = window.innerWidth;
+        const heroSize = cssW < 768 ? 640 : (cssW < 1600 ? 1024 : 1600);
         const ext = supportsWebp ? 'webp' : 'jpg';
         const heroVariant = (u) => {
           if (/^https?:\/\//i.test(u)) return u;

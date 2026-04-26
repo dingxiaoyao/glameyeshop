@@ -133,9 +133,14 @@
       const stem = m[1].replace(/-(\d{2,4})$/, '');
       return `${stem}-${width}.${ext}`;
     },
-    /** 生成 <picture> 字符串:webp 优先,jpg 兜底,默认 src 用最小档,srcset 给 1x/2x。
-     *  context: 'card' (列表卡片,640w 主) | 'thumb' (320w) | 'detail' (1600w) | 'hero' (1600w + fetchpriority)
-     *  attrs: 额外 img 属性,如 alt class loading
+    /** 生成 <picture> 字符串。用 width-descriptor srcset + sizes,让浏览器按
+     *  "卡片实际占多少 css 像素 × dpr"挑最小够用的档,不会再 retina 一律选最大。
+     *  context:
+     *    'thumb'  详情页缩略 / 购物车小图 (~80-120 css px)  → srcset 320,640
+     *    'card'   列表卡片 (~160-280 css px)               → srcset 320,640
+     *    'detail' 详情页主图 (~400-700 css px)             → srcset 640,1024,1600
+     *    'hero'   全屏 hero (~100vw)                       → srcset 640,1024,1600 + eager
+     *  attrs.sizes 可覆盖默认 sizes(给 detail 这种主图特别有用)
      */
     picture(url, context = 'card', attrs = {}) {
       const esc = Fmt.escape;
@@ -145,39 +150,45 @@
       const loading = attrs.loading || 'lazy';
       const fp      = attrs.fetchpriority ? ` fetchpriority="${esc(attrs.fetchpriority)}"` : '';
       const decode  = ` decoding="${esc(attrs.decoding || 'async')}"`;
-      const sizes   = attrs.sizes ? ` sizes="${esc(attrs.sizes)}"` : '';
       // 远程 URL 直接 <img>,不组 srcset
       if (isRemote || !url) {
         return `<img src="${esc(url || '')}" ${altAttr}${cls} loading="${esc(loading)}"${fp}${decode}>`;
       }
-      // 各 context 用什么档
-      // card / shop list:首屏走 640,2x 屏走 1024
-      // thumb:320 (1x) + 640 (2x)
-      // detail:1024 (1x) + 1600 (2x)
-      // hero:1600 (load eager + high priority)
-      let webp1, webp2, jpg1, jpg2, base;
+      // 默认 sizes(可被 attrs.sizes 覆盖)
+      let widths, defaultSizes, baseW;
       if (context === 'thumb') {
-        webp1 = Img.variant(url, 320, 'webp'); webp2 = Img.variant(url, 640, 'webp');
-        jpg1  = Img.variant(url, 320, 'jpg');  jpg2  = Img.variant(url, 640, 'jpg');
-        base = jpg1;
-      } else if (context === 'detail' || context === 'hero') {
-        webp1 = Img.variant(url, 1024, 'webp'); webp2 = Img.variant(url, 1600, 'webp');
-        jpg1  = Img.variant(url, 1024, 'jpg');  jpg2  = Img.variant(url, 1600, 'jpg');
-        base = jpg1;
-      } else { // card 默认
-        webp1 = Img.variant(url, 640, 'webp'); webp2 = Img.variant(url, 1024, 'webp');
-        jpg1  = Img.variant(url, 640, 'jpg');  jpg2  = Img.variant(url, 1024, 'jpg');
-        base = jpg1;
+        widths = [320, 640];
+        // 详情页缩略一行 5 个 ≤ 100px / 购物车 72-120px。retina 就 320 物理 px,几乎都用 320 档。
+        defaultSizes = '(max-width: 640px) 80px, 120px';
+        baseW = 320;
+      } else if (context === 'detail') {
+        widths = [640, 1024, 1600];
+        // 详情页主图 PDP:窄屏 100vw,桌面 ~50vw 但 max 700px(CSS aspect-ratio:1)
+        defaultSizes = '(max-width: 960px) 100vw, min(50vw, 700px)';
+        baseW = 1024;
+      } else if (context === 'hero') {
+        widths = [640, 1024, 1600];
+        defaultSizes = '100vw';
+        baseW = 1024;
+      } else { // card
+        widths = [320, 640];
+        // mobile 2列 50vw;tablet 3列 33vw;desktop 4列 25vw 但 max 320px
+        defaultSizes = '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, min(25vw, 320px)';
+        baseW = 640;
       }
+      const sizesAttr = ` sizes="${esc(attrs.sizes || defaultSizes)}"`;
+      const webpSrcset = widths.map(w => `${Img.variant(url, w, 'webp')} ${w}w`).join(', ');
+      const jpgSrcset  = widths.map(w => `${Img.variant(url, w, 'jpg')}  ${w}w`).join(', ');
+      const base = Img.variant(url, baseW, 'jpg');
+
       const finalLoading = (context === 'hero') ? 'eager' : loading;
       const finalFp      = (context === 'hero' && !attrs.fetchpriority) ? ' fetchpriority="high"' : fp;
-      // onerror:variant 不存在时回退原图(防止部署初期回填还没跑)
       const fallback = esc(url);
       const onerr = ` onerror="this.onerror=null;this.src='${fallback}';"`;
       return `<picture>
-        <source type="image/webp" srcset="${esc(webp1)} 1x, ${esc(webp2)} 2x">
-        <source type="image/jpeg" srcset="${esc(jpg1)} 1x, ${esc(jpg2)} 2x">
-        <img src="${esc(base)}" ${altAttr}${cls} loading="${esc(finalLoading)}"${finalFp}${decode}${sizes}${onerr}>
+        <source type="image/webp" srcset="${esc(webpSrcset)}"${sizesAttr}>
+        <source type="image/jpeg" srcset="${esc(jpgSrcset)}"${sizesAttr}>
+        <img src="${esc(base)}" ${altAttr}${cls} loading="${esc(finalLoading)}"${finalFp}${decode}${sizesAttr}${onerr}>
       </picture>`;
     },
     /** 给已有的 <img> 元素就地升级:换成 picture 包裹(用于不方便整段重写 HTML 的场景) */
