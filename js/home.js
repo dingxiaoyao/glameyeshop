@@ -113,23 +113,21 @@
       const slidesEl = document.getElementById('hero-slides');
       const dotsEl = document.getElementById('hero-dots');
       if (slidesEl && heroImages.length) {
-        // hero 用 1024 webp(若浏览器不支持会失败,onerror 不在 background 上,所以这里两路:第一张 preload,然后用 webp,降级到原图)
+        // 浏览器 webp 支持探测(2010年后基本都有,但保留兜底)
         const supportsWebp = (() => {
           try { return document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0; }
           catch (e) { return false; }
         })();
+        // 按视口分档:窄屏 640(~50KB) / 中屏 1024(~165KB) / 宽屏(>1600 设备像素)1600
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = Math.min(window.innerWidth, screen.width || window.innerWidth);
+        const targetPx = cssW * dpr;
+        const heroSize = targetPx <= 700 ? 640 : (targetPx <= 1200 ? 1024 : 1600);
+        const ext = supportsWebp ? 'webp' : 'jpg';
         const heroVariant = (u) => {
           if (/^https?:\/\//i.test(u)) return u;
-          return supportsWebp ? Img.variant(u, 1024, 'webp') : Img.variant(u, 1024, 'jpg');
+          return Img.variant(u, heroSize, ext);
         };
-        // preload 首张,加快首屏(动态注入 link rel=preload)
-        if (heroImages[0]) {
-          const link = document.createElement('link');
-          link.rel = 'preload'; link.as = 'image';
-          link.href = heroVariant(heroImages[0]);
-          link.fetchPriority = 'high';
-          document.head.appendChild(link);
-        }
         slidesEl.innerHTML = heroImages.map((url, i) =>
           `<div class="hero-slide ${i===0?'active':''}" style="background-image: url('${escape(heroVariant(url))}');"></div>`
         ).join('');

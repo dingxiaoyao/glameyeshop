@@ -41,6 +41,7 @@
       <p class="muted">Cruelty-free luxury lashes — find your signature look</p>
     </div>
 
+    <!-- Category quick-pick(filter chips,移动端下滑可滚动) -->
     <div class="shop-filters" id="shop-filters">
       <button class="filter-chip active" data-cat="">All</button>
       <button class="filter-chip" data-cat="mink">Mink</button>
@@ -49,9 +50,144 @@
       <button class="filter-chip" data-cat="tools">Tools & Accessories</button>
     </div>
 
+    <!-- 商品网格 -->
     <div class="product-grid" id="all-products">
       <p class="muted text-center" style="grid-column: 1/-1;">Loading…</p>
     </div>
+
+    <!-- "找你的风格"指南(商品少时填补空白,新客必读) -->
+    <section class="shop-guide">
+      <div class="section-header" style="margin-top: 4rem;">
+        <span class="eyebrow">Lash 101</span>
+        <h2>Find Your Match</h2>
+        <div class="divider-gold"></div>
+        <p>Pick by occasion — we kept the catalog small so every style earns its place.</p>
+      </div>
+      <div class="guide-grid">
+        <button class="guide-card" data-cat="" data-style="natural">
+          <div class="guide-icon">🌿</div>
+          <h3>Daily Natural</h3>
+          <p>Wispy, 14–18mm, soft band. Perfect for office, brunch, your everyday "but better".</p>
+          <span class="guide-cta">Shop natural →</span>
+        </button>
+        <button class="guide-card" data-cat="" data-style="glam">
+          <div class="guide-icon">✨</div>
+          <h3>Night-Out Glam</h3>
+          <p>Dramatic 22–25mm volume. Cocktail bars, weddings, photographs that get printed.</p>
+          <span class="guide-cta">Shop glam →</span>
+        </button>
+        <button class="guide-card" data-cat="magnetic" data-style="">
+          <div class="guide-icon">🧲</div>
+          <h3>No-Glue Magnetic</h3>
+          <p>Snap on in seconds. Ideal if you've never worn falsies — or you're tired of glue.</p>
+          <span class="guide-cta">Shop magnetic →</span>
+        </button>
+        <button class="guide-card" data-cat="tools" data-style="">
+          <div class="guide-icon">🛠</div>
+          <h3>Pro Tools</h3>
+          <p>Latex-free glue, applicators, lash cases. Everything that makes the lash actually work.</p>
+          <span class="guide-cta">Shop tools →</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 价值主张(Trust grid 复用) -->
+    <section class="trust-section" style="margin-top: 4rem; border-radius: var(--radius-lg);">
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="trust-icon">🐰</div>
+          <h4>100% Cruelty-Free</h4>
+          <p>Vegan options · Leaping Bunny certified</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🚚</div>
+          <h4>Free U.S. Shipping</h4>
+          <p>On orders $50+ · Ships in 1-2 days</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">💎</div>
+          <h4>Up to 25 Wears</h4>
+          <p>Premium reusable mink lashes</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">↩️</div>
+          <h4>30-Day Returns</h4>
+          <p>Not in love? Send it back · No questions asked</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 客户证言 -->
+    <section class="container" style="padding-top: 4rem;">
+      <div class="section-header">
+        <span class="eyebrow">From Our Community</span>
+        <h2>★★★★★ 4.9 / 5</h2>
+        <div class="divider-gold"></div>
+        <p>50,000+ beauty enthusiasts have made GlamEye their go-to.</p>
+      </div>
+      <div class="reviews-grid">
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"Tried 6 brands before — these are the only ones I keep coming back to. Velvet 18mm is unreal."</p>
+          <p class="review-author">— Priya N., San Francisco · Verified Buyer</p>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"Wore the magnetic pair to a 14-hour wedding and didn't have to fix them once. Sold."</p>
+          <p class="review-author">— Liana C., Chicago · Verified Buyer</p>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"My makeup artist switched her whole kit to GlamEye. That's the highest review I can give."</p>
+          <p class="review-author">— Devon M., Atlanta · Verified Buyer</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="container" style="padding: 4rem 1.25rem;">
+      <div class="section-header">
+        <span class="eyebrow">Quick Answers</span>
+        <h2>Before You Buy</h2>
+        <div class="divider-gold"></div>
+      </div>
+      <div class="faq-list">
+        <details>
+          <summary>How do I pick between mink, faux mink, and magnetic?</summary>
+          <p><strong>Mink</strong> is the most natural-looking and reusable up to 25 times — premium feel, premium price. <strong>Faux mink</strong> is the vegan, animal-free version with the same look, slightly less wear life. <strong>Magnetic</strong> needs no glue — easiest to apply if you're new to falsies.</p>
+        </details>
+        <details>
+          <summary>What's your return policy?</summary>
+          <p>30-day returns on unopened items, no questions asked. Opened items can be returned if defective — just email us at support@glameyeshop.com with a photo.</p>
+        </details>
+        <details>
+          <summary>How long does shipping take?</summary>
+          <p>Orders ship within 1–2 business days from Los Angeles. U.S. ground delivery is typically 3–5 business days. Free for orders over $50.</p>
+        </details>
+        <details>
+          <summary>Are your lashes cruelty-free?</summary>
+          <p>100%. Our mink line uses brushed (not pulled) fur, certified by Leaping Bunny. Our faux mink line is fully vegan with synthetic fibers indistinguishable from the real thing.</p>
+        </details>
+        <details>
+          <summary>How many times can I wear them?</summary>
+          <p>Premium mink: up to 25 wears with proper care. Faux mink: 15–20. Magnetic: 30+. Care guide is included with every order.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="newsletter-section" style="margin-top: 0;">
+      <div class="container-sm">
+        <span class="eyebrow">Join the List</span>
+        <h2>Get 10% Off Your First Order</h2>
+        <p>Plus early access to new drops and subscriber-only pricing.</p>
+        <form id="newsletter-form" class="newsletter-form">
+          <input type="email" name="email" placeholder="Your email address" required />
+          <button type="submit" class="button button-primary">Subscribe</button>
+        </form>
+        <p id="newsletter-feedback" class="form-feedback"></p>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">

@@ -36,18 +36,35 @@
       </article>`;
   }
 
+  function applySparseClass(container, n) {
+    container.classList.remove('sparse', 'sparse-1', 'sparse-2');
+    if (n === 1) container.classList.add('sparse-1');
+    else if (n === 2) container.classList.add('sparse-2');
+    else if (n <= 4) container.classList.add('sparse');
+  }
+
   async function loadProducts(category) {
     const container = document.getElementById('all-products');
+    container.classList.remove('sparse','sparse-1','sparse-2');
     container.innerHTML = '<p class="muted text-center" style="grid-column: 1/-1;">Loading…</p>';
     try {
       const url = 'api/products.php' + (category ? '?category=' + category : '');
       const r = await fetch(url);
       const j = await r.json();
-      const products = j.products || [];
+      let products = j.products || [];
+      // 支持按风格筛选:guide-card 设置了 ?style=natural / glam,前端再过滤(API 没字段也能跑)
+      const params = new URLSearchParams(location.search);
+      const style = (params.get('style') || '').toLowerCase();
+      if (style === 'natural') {
+        products = products.filter(p => Number(p.length_mm) > 0 && Number(p.length_mm) <= 18);
+      } else if (style === 'glam') {
+        products = products.filter(p => Number(p.length_mm) >= 20);
+      }
       if (products.length === 0) {
-        container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🔍</div><p>No products in this category.</p></div>';
+        container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🔍</div><p>No products in this filter.</p><p class="muted small">Try clearing filters above.</p></div>';
         return;
       }
+      applySparseClass(container, products.length);
       container.innerHTML = products.map(card).join('');
     } catch (e) {
       container.innerHTML = '<p class="muted text-center" style="grid-column: 1/-1;">Failed to load.</p>';
@@ -77,6 +94,24 @@
       setActiveFilter(cat);
       loadProducts(cat);
     });
+
+    // Lash 101 guide cards:点击跳到对应分类 + 滚回顶部
+    document.querySelectorAll('.guide-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const cat = card.dataset.cat || '';
+        const style = card.dataset.style || '';
+        const sp = new URLSearchParams();
+        if (cat) sp.set('category', cat);
+        if (style) sp.set('style', style);
+        const qs = sp.toString();
+        history.replaceState(null, '', qs ? '?' + qs : location.pathname);
+        setActiveFilter(cat);
+        loadProducts(cat);
+        document.querySelector('.shop-filters').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // Newsletter form(本来在 home 由 app.js 接管,但 app.js 是统一注册的,无需重复)
 
     document.body.addEventListener('click', async (e) => {
       const btn = e.target.closest('.add-btn');

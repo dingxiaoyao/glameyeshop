@@ -238,7 +238,7 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 /* ============== Hero ============== */
 .hero {
   position: relative;
-  min-height: 88vh;
+  min-height: clamp(520px, 72vh, 780px);
   display: flex; align-items: center;
   background: var(--bg);
   overflow: hidden;
@@ -726,11 +726,11 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 .newsletter-form button { white-space: nowrap; }
 
 /* ============== Shop Page ============== */
-.shop-page { padding: 3rem 1.25rem; max-width: 1320px; margin: 0 auto; }
-.shop-header { text-align: center; margin-bottom: 3rem; }
+.shop-page { padding: 3rem 1.25rem; max-width: 1280px; margin: 0 auto; }
+.shop-header { text-align: center; margin-bottom: 2.5rem; }
 .shop-filters {
-  display: flex; gap: .75rem; justify-content: center;
-  margin-bottom: 3rem; flex-wrap: wrap;
+  display: flex; gap: .65rem; justify-content: center;
+  margin-bottom: 2.5rem; flex-wrap: wrap;
 }
 .filter-chip {
   padding: .65rem 1.5rem;
@@ -741,9 +741,106 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   letter-spacing: 1.5px; text-transform: uppercase;
   cursor: pointer; transition: all .2s;
   font-family: var(--sans);
+  white-space: nowrap;
 }
 .filter-chip:hover { border-color: var(--gold); color: var(--gold); }
 .filter-chip.active { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+
+/* shop 商品网格:桌面 4 列上限 + 商品少时(.sparse)放大卡片避免空旷 */
+.shop-page .product-grid {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+.shop-page .product-grid.sparse {
+  /* ≤ 4 件商品:固定 minmax(280px),容器再收一点 max-width */
+  max-width: 1080px; margin-left: auto; margin-right: auto;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+.shop-page .product-grid.sparse-2 {
+  max-width: 720px; margin-left: auto; margin-right: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.shop-page .product-grid.sparse-1 {
+  max-width: 360px; margin-left: auto; margin-right: auto;
+  grid-template-columns: 1fr;
+}
+
+/* ============== Shop Guide Cards (Lash 101) ============== */
+.shop-guide { padding: 0 0 3rem; }
+.guide-grid {
+  display: grid; gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  max-width: 1100px; margin: 0 auto;
+}
+.guide-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 1.85rem 1.5rem 1.5rem;
+  text-align: left; cursor: pointer;
+  font-family: inherit; color: inherit;
+  display: flex; flex-direction: column; gap: .5rem;
+  transition: all .3s cubic-bezier(.2,.6,.3,1);
+  position: relative; overflow: hidden;
+}
+.guide-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--gold-dark); opacity: 0; transition: opacity .25s;
+}
+.guide-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--gold-dark);
+  box-shadow: var(--shadow-md);
+}
+.guide-card:hover::before { opacity: 1; }
+.guide-icon { font-size: 1.85rem; line-height: 1; margin-bottom: .35rem; }
+.guide-card h3 {
+  font-family: var(--serif); font-size: 1.25rem;
+  color: var(--cream); margin: 0;
+}
+.guide-card p {
+  color: var(--text-muted); font-size: .88rem; line-height: 1.55;
+  margin: 0; flex: 1;
+}
+.guide-cta {
+  font-size: .72rem; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gold); font-weight: 600; margin-top: .75rem;
+  font-family: var(--sans);
+}
+.guide-card:hover .guide-cta { color: var(--gold-light); }
+
+/* ============== FAQ ============== */
+.faq-list {
+  max-width: 800px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: .75rem;
+}
+.faq-list details {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  transition: border-color .25s;
+}
+.faq-list details[open] { border-color: var(--gold-dark); }
+.faq-list summary {
+  cursor: pointer; padding: 1.25rem 1.5rem;
+  font-family: var(--serif); font-size: 1.1rem;
+  color: var(--cream); list-style: none;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+}
+.faq-list summary::-webkit-details-marker { display: none; }
+.faq-list summary::after {
+  content: '+'; font-family: var(--sans); font-weight: 300;
+  font-size: 1.4rem; color: var(--gold);
+  transition: transform .25s;
+}
+.faq-list details[open] summary::after { content: '−'; }
+.faq-list details > p {
+  padding: 0 1.5rem 1.25rem;
+  color: var(--text-muted); line-height: 1.7; font-size: .92rem;
+}
+.faq-list details > p strong { color: var(--cream); }
 
 /* ============== Footer ============== */
 .site-footer {
@@ -1051,11 +1148,41 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   .pdp-specs > div { font-size: .85rem; }
   .pdp-trust { font-size: .8rem; }
 
-  /* Shop filter chips */
+  /* Shop filter chips: 窄屏改横滚条,避免换行成两排 */
   .shop-page { padding: 1.5rem 1rem; }
   .shop-header { margin-bottom: 1.75rem; }
-  .shop-filters { gap: .4rem; margin-bottom: 1.75rem; }
-  .filter-chip { padding: .5rem 1rem; font-size: .68rem; letter-spacing: 1px; }
+  .shop-filters {
+    flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    gap: .5rem; margin-bottom: 1.75rem; justify-content: flex-start;
+    padding: .25rem .25rem .5rem; margin-left: -1rem; margin-right: -1rem;
+    padding-left: 1rem; padding-right: 1rem;
+    scrollbar-width: none;
+  }
+  .shop-filters::-webkit-scrollbar { display: none; }
+  .filter-chip { padding: .5rem 1rem; font-size: .68rem; letter-spacing: 1px; flex-shrink: 0; }
+
+  /* Guide cards 在小屏 2 列 */
+  .guide-grid { grid-template-columns: 1fr 1fr; gap: .75rem; }
+  .guide-card { padding: 1.1rem .9rem 1rem; }
+  .guide-icon { font-size: 1.5rem; }
+  .guide-card h3 { font-size: 1rem; }
+  .guide-card p { font-size: .75rem; line-height: 1.45; }
+  .guide-cta { font-size: .62rem; letter-spacing: 1.5px; }
+
+  /* FAQ 紧凑 */
+  .faq-list summary { padding: 1rem 1.1rem; font-size: 1rem; }
+  .faq-list details > p { padding: 0 1.1rem 1rem; font-size: .85rem; }
+
+  /* 商品稀疏时:保留 2 列(移动端不再扩成大单列) */
+  .shop-page .product-grid.sparse,
+  .shop-page .product-grid.sparse-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 100%;
+  }
+  .shop-page .product-grid.sparse-1 {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+  }
 
   /* 通知 */
   .notification-container { bottom: 1rem; right: 1rem; left: 1rem; }

@@ -27,8 +27,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://images.unsplash.com" />
-  <link rel="preload" as="image" href="/images/lash-photos/style-14-frost-split-1024.webp" type="image/webp" fetchpriority="high" />
-  <link rel="preload" as="image" href="/images/lash-photos/style-14-frost-split-1024.jpg" fetchpriority="high" />
+  <!-- 用 imagesrcset 让浏览器按视口选档:mobile 640w (~50KB) / desktop 1024w (~165KB)。
+       所有现代浏览器都支持 webp,仅注入 webp preload,避免双下载。 -->
+  <link rel="preload" as="image" type="image/webp"
+        imagesrcset="/images/lash-photos/style-14-frost-split-640.webp 640w, /images/lash-photos/style-14-frost-split-1024.webp 1024w"
+        imagesizes="100vw" fetchpriority="high" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -65,8 +68,8 @@
     <!-- Hero -->
     <section class="hero" id="hero-section">
       <div class="hero-slides" id="hero-slides">
-        <!-- 内联 fallback 用 1024.jpg(原图 716KB → 122KB),JS 加载后会动态替换为 webp + 自动轮播 -->
-        <div class="hero-slide active" style="background-image: url('/images/lash-photos/style-14-frost-split-1024.jpg');"></div>
+        <!-- 内联 fallback 用 640.jpg(50KB),JS 加载后会按视口换 640/1024 webp + 自动轮播 -->
+        <div class="hero-slide active" style="background-image: url('/images/lash-photos/style-14-frost-split-640.jpg');"></div>
       </div>
       <div class="container">
         <div class="hero-content">
