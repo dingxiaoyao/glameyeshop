@@ -4,36 +4,37 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  color-scheme: dark only;
+  color-scheme: light;
   /* 全局禁用浏览器默认蓝色 */
   accent-color: #d4a955;
   caret-color: #d4a955;
 
-  /* 黑 / 白 / 金 主题 — 中性黑底,纯白文字,金色 accent */
-  --bg:           #0a0a0a;
-  --bg-soft:      #141414;
-  --bg-card:      #1a1a1a;
-  --bg-elevated:  #242424;
+  /* 白 / 金 主题 — 浅色奢华(Tom Ford / Chanel beauty 风) */
+  --bg:           #ffffff;        /* 主底,纯白 */
+  --bg-soft:      #fafaf7;        /* 微暖白,做交替 section */
+  --bg-card:      #ffffff;        /* 卡片白,靠边框区分 */
+  --bg-elevated:  #f6f4ee;        /* 微金米,做强调块 */
 
-  --gold:         #d4a955;
-  --gold-light:   #f5d77b;
-  --gold-bright:  #ffd97a;
-  --gold-dark:    #a8843a;
-  --gold-muted:   #6a6a6a;
+  --gold:         #b8924e;        /* 主金色(略压暗,白底上更优雅) */
+  --gold-light:   #d4a955;
+  --gold-bright:  #e8c878;
+  --gold-dark:    #8a6e3a;
+  --gold-muted:   #c0b896;
 
-  --cream:        #ffffff;     /* 留 cream 别名为兼容,值改纯白 */
-  --white:        #ffffff;
-  --text:         #f4f4f4;
-  --text-muted:   #999999;
-  --text-dim:     #666666;
+  /* 注意:cream / text 在浅色主题下表示"主文字色",用深色;107+ 处引用一次性翻转 */
+  --cream:        #1a1a1a;        /* 之前是浅色文字色,现在反过来:深色主文字 */
+  --white:        #ffffff;        /* 仍是白色,用于反转按钮等 */
+  --text:         #2a2a2a;        /* 正文,接近黑 */
+  --text-muted:   #6a6a6a;        /* 次要文字 */
+  --text-dim:     #999999;        /* 提示/时间戳 */
 
-  --border:       #2a2a2a;
-  --border-soft:  #1c1c1c;
-  --border-gold:  rgba(212, 169, 85, 0.35);
+  --border:       #e8e6e0;        /* 浅灰边框,带微暖 */
+  --border-soft:  #f0eee8;
+  --border-gold:  rgba(184, 146, 78, 0.35);
 
-  --success:      #5fcf80;
-  --error:        #ee5a5a;
-  --warn:         #f7b955;
+  --success:      #4a9a5e;
+  --error:        #c94545;
+  --warn:         #b8862a;
 
   --radius-sm:    2px;
   --radius:       4px;
@@ -42,9 +43,9 @@
   --serif:        'Cormorant Garamond', 'Playfair Display', Georgia, 'Times New Roman', serif;
   --sans:         'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --shadow-md:    0 8px 24px -8px rgba(0,0,0,0.6);
-  --shadow-lg:    0 24px 48px -12px rgba(212, 169, 85, 0.18), 0 12px 24px -8px rgba(0,0,0,0.7);
-  --shadow-gold:  0 0 0 1px rgba(212, 169, 85, 0.4), 0 16px 32px -8px rgba(212, 169, 85, 0.25);
+  --shadow-md:    0 6px 20px -8px rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg:    0 24px 48px -16px rgba(184, 146, 78, 0.18), 0 8px 16px -8px rgba(0,0,0,0.10);
+  --shadow-gold:  0 0 0 1px rgba(184, 146, 78, 0.3), 0 12px 28px -8px rgba(184, 146, 78, 0.18);
 }
 
 ::selection { background: var(--gold); color: var(--bg); }
@@ -82,7 +83,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   outline: 1px solid var(--gold); outline-offset: 1px;
 }
 
-input, select, textarea { color-scheme: dark; }
+input, select, textarea { color-scheme: light; }
 
 .container { width: min(1320px, calc(100% - 2.5rem)); margin: 0 auto; padding: 0 1.25rem; }
 .container-sm { width: min(900px, calc(100% - 2.5rem)); margin: 0 auto; padding: 0 1.25rem; }
@@ -123,7 +124,7 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 /* ============== Header ============== */
 .site-header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(10, 10, 10, 0.92);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px) saturate(120%);
   -webkit-backdrop-filter: blur(16px) saturate(120%);
   border-bottom: 1px solid var(--border-soft);
@@ -204,25 +205,26 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 }
 .button:hover::before { transform: translateX(100%); }
 
-/* :visited 显式覆盖：避免链接 visited 后文字变同底色不可见 */
+/* :visited 显式覆盖:避免链接 visited 后文字变同底色不可见 */
+/* 浅色主题:金底深字(#1a1a1a)对比度更高,luxury 风更优雅 */
 .button-primary, a.button-primary:visited {
-  background: var(--gold); color: var(--bg) !important;
+  background: var(--gold); color: #ffffff !important;
   border-color: var(--gold);
 }
 .button-primary:hover, a.button-primary:hover {
-  background: var(--gold-light); border-color: var(--gold-light);
-  color: var(--bg) !important;
-  box-shadow: 0 12px 28px -8px rgba(212, 169, 85, 0.5);
+  background: var(--gold-dark); border-color: var(--gold-dark);
+  color: #ffffff !important;
+  box-shadow: 0 12px 28px -8px rgba(184, 146, 78, 0.45);
   transform: translateY(-1px);
 }
 .button-secondary, a.button-secondary:visited {
   background: transparent; color: var(--cream) !important; border-color: var(--cream);
 }
-.button-secondary:hover, a.button-secondary:hover { background: var(--cream); color: var(--bg) !important; }
+.button-secondary:hover, a.button-secondary:hover { background: var(--cream); color: #fff !important; }
 .button-outline, a.button-outline:visited {
   background: transparent; color: var(--gold) !important; border-color: var(--gold);
 }
-.button-outline:hover, a.button-outline:hover { background: var(--gold); color: var(--bg) !important; }
+.button-outline:hover, a.button-outline:hover { background: var(--gold); color: #ffffff !important; }
 .button-ghost, a.button-ghost:visited {
   background: transparent; color: var(--cream) !important; border-color: var(--border);
 }
@@ -252,9 +254,10 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 }
 .hero-bg::after, .hero-slides::after {
   content: ''; position: absolute; inset: 0;
+  /* 浅色主题:左白(文字区清晰)→ 中-右透明(图清晰显)→ 远右微白渐隐 */
   background:
-    radial-gradient(ellipse at 30% 50%, transparent 0%, var(--bg) 80%),
-    linear-gradient(90deg, var(--bg) 0%, transparent 50%, var(--bg) 100%);
+    radial-gradient(ellipse at 72% 50%, transparent 0%, var(--bg) 85%),
+    linear-gradient(90deg, var(--bg) 0%, rgba(255,255,255,.55) 35%, transparent 65%, var(--bg) 100%);
 }
 /* 多图轮播 */
 .hero-slide {
@@ -274,15 +277,21 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 }
 .hero-dot.active { background: var(--gold); border-color: var(--gold); width: 24px; border-radius: 4px; }
 .hero .container { position: relative; z-index: 1; padding: 5rem 1.25rem; }
-.hero-content { max-width: 620px; }
+.hero-content {
+  max-width: 620px;
+  /* 浅色主题:hero 文字浮在淡化的图上,加个微卡片背景保证最佳可读 */
+  padding: 2rem 0;
+}
 .hero h1 {
   margin: 1.5rem 0 1.5rem;
   color: var(--cream);
+  text-shadow: 0 1px 16px rgba(255,255,255,.85), 0 1px 2px rgba(255,255,255,.6);
 }
 .hero h1 em { color: var(--gold); font-style: italic; font-weight: 400; }
 .hero p {
-  color: var(--text-muted); font-size: 1.1rem; line-height: 1.7;
+  color: var(--text); font-size: 1.1rem; line-height: 1.7;
   margin-bottom: 2.5rem; max-width: 480px;
+  text-shadow: 0 1px 12px rgba(255,255,255,.75);
 }
 .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
 
@@ -358,15 +367,16 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 .wishlist-btn {
   position: absolute; top: 1rem; left: 1rem;
   width: 38px; height: 38px; border-radius: 50%;
-  background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: var(--cream); cursor: pointer; font-size: 1rem;
+  background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(6px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: var(--text-muted); cursor: pointer; font-size: 1rem;
   display: flex; align-items: center; justify-content: center;
   transition: all .25s;
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,.12);
 }
 .wishlist-btn:hover, .wishlist-btn.active {
   color: var(--gold); border-color: var(--gold);
-  background: rgba(10,10,10,.85);
+  background: #fff;
 }
 
 .product-info { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; gap: .35rem; }
@@ -424,10 +434,11 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   object-fit: cover; transition: transform .8s ease;
 }
 .cat-card:hover img { transform: scale(1.08); }
-.cat-card-content { position: relative; z-index: 2; color: var(--cream); width: 100%; }
+/* cat-card 内容浮在图 + 底部黑色蒙版上,文字必须是白色(独立于 light/dark theme) */
+.cat-card-content { position: relative; z-index: 2; color: #fff; width: 100%; }
 .cat-card h3 {
   font-family: var(--serif); font-size: 1.85rem;
-  margin-bottom: .35rem; color: var(--cream);
+  margin-bottom: .35rem; color: #fff;
 }
 .cat-card .cat-link {
   font-size: .75rem; letter-spacing: 3px; text-transform: uppercase;
@@ -923,10 +934,10 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   z-index: 1000; pointer-events: none;
 }
 .notification {
-  background: var(--gold); color: var(--bg);
+  background: var(--gold); color: #fff;
   padding: .95rem 1.5rem;
   border-radius: var(--radius);
-  box-shadow: 0 16px 40px -8px rgba(0,0,0,0.7);
+  box-shadow: 0 12px 32px -8px rgba(0,0,0,0.18);
   opacity: 0; transform: translateX(20px);
   transition: opacity .3s, transform .3s;
   max-width: 360px; font-size: .88rem; font-weight: 600;
@@ -1026,7 +1037,7 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   .hero-bg, .hero-slides { opacity: .85; }
   .hero-bg::after, .hero-slides::after {
     background:
-      linear-gradient(180deg, rgba(10,10,10,0.15) 0%, rgba(10,10,10,0.55) 55%, var(--bg) 100%);
+      linear-gradient(180deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.55) 60%, var(--bg) 100%);
   }
   .hero .container { padding: 2.5rem 1rem 3rem; }
   .hero-content { max-width: 100%; }
