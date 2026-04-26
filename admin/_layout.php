@@ -24,6 +24,8 @@ $activeNav  = $activeNav  ?? 'dashboard';
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="../css/styles.css" />
   <link rel="stylesheet" href="admin.css" />
+  <!-- T (i18n) 必须在所有 inline IIFE 之前定义,否则 const TDZ 会让页面 JS 整段挂掉 -->
+  <script>const T = <?= tjs() ?>;</script>
 </head>
 <body>
   <header class="admin-header">
