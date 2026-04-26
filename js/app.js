@@ -340,4 +340,13 @@
   });
 
   window.GlamEye = { Cart, Notification, Auth, Fmt, Img };
+
+  // ============== 自动加载在线客服浮窗 ==============
+  // 后台不加载;其他页面 defer 加载,避免阻塞首屏
+  if (location.pathname.indexOf('/admin') !== 0) {
+    const s = document.createElement('script');
+    s.src = '/js/support-widget.js';
+    s.defer = true;
+    document.head.appendChild(s);
+  }
 })();

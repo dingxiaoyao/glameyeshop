@@ -153,6 +153,57 @@
   </div>
 </div>
 
+<div class="admin-card" style="border-color: var(--gold-dark);">
+  <h3>📧 <?= $lang === 'zh' ? '邮件 / 客服通知' : 'Email & Customer Support' ?></h3>
+  <p class="muted small" style="margin-bottom:1rem;">
+    <?= $lang === 'zh'
+      ? '客户在网站浮窗发的留言会发到“管理员邮箱”。你的回复会从“发件人”邮箱发给客户。如果服务器没装 mail()，请配置 SMTP 中转(推荐 Gmail SMTP / SendGrid / Resend)。'
+      : 'Chat-widget messages from customers are forwarded to the admin email. Your replies are sent from the "from" email to the customer. If your server lacks mail(), configure an SMTP relay (Gmail SMTP / SendGrid / Resend recommended).' ?>
+  </p>
+  <div class="form-group">
+    <div class="form-row">
+      <label><span class="label-text">Admin email <small class="muted">— 接收新留言提醒</small></span>
+        <input type="email" data-key="admin_email" placeholder="you@example.com" />
+      </label>
+      <label><span class="label-text">From name</span>
+        <input type="text" data-key="email_from_name" placeholder="GlamEye Support" />
+      </label>
+    </div>
+    <label><span class="label-text">From email <small class="muted">— 自己域名 + DKIM 不会进垃圾箱</small></span>
+      <input type="email" data-key="email_from_address" placeholder="support@glameyeshop.com" />
+    </label>
+    <hr style="border:0; border-top:1px solid var(--border-soft); margin:.5rem 0;">
+    <p class="muted small">SMTP relay (留空则用本机 mail()):</p>
+    <div class="form-row">
+      <label><span class="label-text">SMTP host</span>
+        <input type="text" data-key="smtp_host" placeholder="smtp.gmail.com / smtp.sendgrid.net" />
+      </label>
+      <label><span class="label-text">Port</span>
+        <input type="number" data-key="smtp_port" placeholder="587" min="1" max="65535" />
+      </label>
+    </div>
+    <div class="form-row">
+      <label><span class="label-text">SMTP user</span>
+        <input type="text" data-key="smtp_user" autocomplete="off" placeholder="apikey / your@gmail.com" />
+      </label>
+      <label><span class="label-text">SMTP password</span>
+        <input type="password" data-key="smtp_pass" autocomplete="new-password" placeholder="留空表示不修改" />
+      </label>
+    </div>
+    <label><span class="label-text">Encryption</span>
+      <select data-key="smtp_secure">
+        <option value="tls">STARTTLS (port 587, 推荐)</option>
+        <option value="ssl">Implicit TLS (port 465)</option>
+        <option value="">None (port 25, 仅内网)</option>
+      </select>
+    </label>
+  </div>
+  <div style="margin-top:1rem;">
+    <button id="test-email-btn" class="button button-outline button-sm">📤 Send test email to admin</button>
+    <span id="test-email-fb" class="muted small" style="margin-left:.75rem;"></span>
+  </div>
+</div>
+
 <style>
   .img-uploader { background: var(--bg); padding: 1rem; border: 1px dashed var(--border); border-radius: 6px; }
   .img-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .5rem; margin-bottom: .75rem; }
@@ -283,6 +334,21 @@
       document.querySelector('[data-key="hero_slide_interval"]').value = '5000';
     }
   } catch (e) { fb.textContent = 'Load failed'; fb.className = 'form-feedback error'; }
+
+  // ---------- Test email ----------
+  const testBtn = document.getElementById('test-email-btn');
+  if (testBtn) {
+    testBtn.addEventListener('click', async () => {
+      const tfb = document.getElementById('test-email-fb');
+      tfb.textContent = 'Sending…'; tfb.style.color = 'var(--text-muted)';
+      try {
+        const r = await fetch('../api/admin-test-email.php', { credentials: 'include' });
+        const j = await r.json();
+        if (j.ok) { tfb.textContent = `✓ Sent to ${j.sent_to} via ${j.mode}`; tfb.style.color = 'var(--success)'; }
+        else      { tfb.textContent = `✗ ${j.error || 'Failed'}`; tfb.style.color = 'var(--error)'; }
+      } catch (e) { tfb.textContent = '✗ ' + e.message; tfb.style.color = 'var(--error)'; }
+    });
+  }
 
   document.getElementById('save-all-btn').addEventListener('click', async () => {
     fb.textContent = 'Saving…'; fb.className = 'form-feedback';
