@@ -69,50 +69,6 @@
         </div>
         <input type="hidden" name="image_url" id="p-image-url" />
         <input type="hidden" name="gallery_urls" id="p-gallery" />
-
-<style>
-  .img-uploader { background: var(--bg); padding: 1rem; border: 1px dashed var(--border); border-radius: 6px; }
-  .img-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .5rem; margin-bottom: .75rem; }
-  .img-tiles:empty { display: none; }
-  .img-tile {
-    position: relative; aspect-ratio: 1; border-radius: 4px; overflow: hidden;
-    background: var(--bg-card); border: 2px solid transparent; cursor: grab;
-    transition: border-color .2s;
-  }
-  .img-tile:hover { border-color: var(--gold); }
-  .img-tile.dragging { opacity: .4; }
-  .img-tile.drag-over { border-color: var(--gold); border-style: dashed; }
-  .img-tile.is-main { border-color: var(--gold); }
-  .img-tile img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-  .img-tile .badge {
-    position: absolute; top: 4px; left: 4px;
-    background: var(--gold); color: var(--bg); font-size: 9px; font-weight: 700;
-    padding: 2px 6px; border-radius: 2px; letter-spacing: 1px;
-  }
-  .img-tile .order-num {
-    position: absolute; bottom: 4px; left: 4px;
-    background: rgba(0,0,0,0.7); color: var(--cream); font-size: 11px; font-weight: 600;
-    padding: 1px 5px; border-radius: 2px;
-  }
-  .img-tile .del-x {
-    position: absolute; top: 4px; right: 4px;
-    width: 20px; height: 20px;
-    background: rgba(0,0,0,0.7); color: var(--cream);
-    border: none; border-radius: 50%; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; line-height: 1;
-  }
-  .img-tile .del-x:hover { background: var(--error); }
-  .img-add-btn {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: .25rem; padding: 1rem;
-    background: var(--bg-card); border: 1px dashed var(--border);
-    border-radius: 4px; cursor: pointer; color: var(--text-muted);
-    font-size: .82rem; text-align: center;
-    transition: all .2s;
-  }
-  .img-add-btn:hover { border-color: var(--gold); color: var(--gold); }
-</style>
         <div class="form-row">
           <label><span class="label-text"><?= htmlspecialchars(t('stock')) ?></span>
             <input type="number" name="stock" min="0" value="100" />
@@ -154,9 +110,17 @@
       <th></th><th>${T.sku}</th><th>${T.name}</th><th>${T.category}</th>
       <th>${T.price}</th><th>${T.stock}</th><th>${T.status}</th><th></th>
     </tr></thead>`;
+    function thumbCell(url) {
+      if (!url) {
+        return `<td><div style="width:48px;height:36px;background:var(--bg-soft);border:1px dashed var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-muted);">no img</div></td>`;
+      }
+      // url 是 /uploads/... 或 /images/... 的绝对路径,从 admin/ 目录看要加 ".."
+      const src = url.startsWith('http') ? url : '..' + url;
+      return `<td><img src="${escape(src)}" title="${escape(url)}" style="width:48px;height:36px;object-fit:cover;border-radius:4px;background:var(--bg-soft);" onerror="this.outerHTML='<div title=&quot;404: ${escape(url)}&quot; style=&quot;width:48px;height:36px;background:rgba(238,90,90,.08);border:1px solid var(--error);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--error);&quot;>404</div>';" /></td>`;
+    }
     const rows = list.map((p) => `
       <tr style="opacity: ${p.is_active == 1 ? 1 : 0.5}">
-        <td><img src="..${escape(p.image_url)}" style="width:48px; height:36px; object-fit:cover; border-radius:4px;" /></td>
+        ${thumbCell(p.image_url)}
         <td><small style="color:var(--gold);">${escape(p.sku)}</small></td>
         <td><strong>${escape(p.name)}</strong><br><small class="muted">${escape(p.short_description || '')}</small></td>
         <td>${escape(p.category)}</td>
@@ -213,13 +177,29 @@
     galleryField.value = imageList.length > 1 ? JSON.stringify(imageList.slice(1)) : '';
   }
   function renderTiles() {
-    tilesEl.innerHTML = imageList.map((url, i) => `
-      <div class="img-tile ${i===0?'is-main':''}" draggable="true" data-idx="${i}">
-        <img src="${escape(url.startsWith('http') ? url : '..'+url)}" alt="" />
+    tilesEl.innerHTML = imageList.map((url, i) => {
+      const src = url.startsWith('http') ? url : '..' + url;
+      const safeUrl = escape(url);
+      // 加 onerror 显示路径,让用户能看到为啥不显示(404 的 URL 全文)
+      return `<div class="img-tile ${i===0?'is-main':''}" draggable="true" data-idx="${i}">
+        <img src="${escape(src)}" alt="" title="${safeUrl}"
+             onerror="this.style.display='none';this.nextElementSibling?.classList.remove('hidden');" />
+        <div class="img-broken hidden" style="display:none">
+          <div class="icon">⚠</div>
+          <div>not found</div>
+          <code>${safeUrl}</code>
+        </div>
         ${i===0 ? '<span class="badge">MAIN</span>' : `<span class="order-num">${i+1}</span>`}
         <button type="button" class="del-x" data-idx="${i}" title="Remove">×</button>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
+    // onerror 把 img display:none 时,让 .img-broken 显示
+    tilesEl.querySelectorAll('.img-tile').forEach(t => {
+      const img = t.querySelector('img');
+      const broken = t.querySelector('.img-broken');
+      if (!img || !broken) return;
+      img.addEventListener('error', () => { img.style.display = 'none'; broken.style.display = 'flex'; });
+    });
     syncFields();
   }
   // delete tile
