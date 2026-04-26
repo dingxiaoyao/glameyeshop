@@ -10,8 +10,10 @@ try {
 
     if ($method === 'GET') {
         $stmt = $db->prepare(
-            'SELECT id, sku, category, name, short_description, description,
-                    price, compare_at_price, image_url, stock, is_active, sort_order, created_at, updated_at
+            'SELECT id, sku, category, style, name, short_description, description,
+                    length_mm, band_type, reusable_count,
+                    price, compare_at_price, image_url, gallery_urls, stock,
+                    is_active, is_bestseller, is_new, sort_order, created_at, updated_at
              FROM products ORDER BY sort_order ASC, id ASC'
         );
         $stmt->execute();
@@ -34,8 +36,22 @@ try {
         $isActive  = !empty($in['is_active']) ? 1 : 0;
         $sortOrder = intval($in['sort_order'] ?? 0);
 
+        // gallery_urls: 前端可能传 JSON string 或数组
+        $galleryRaw = $in['gallery_urls'] ?? '';
+        if (is_array($galleryRaw)) {
+            $galleryJson = json_encode(array_values(array_filter($galleryRaw, 'is_string')));
+        } else {
+            $galleryJson = trim((string)$galleryRaw);
+            // 验证是合法 JSON 数组
+            if ($galleryJson !== '') {
+                $decoded = json_decode($galleryJson, true);
+                if (!is_array($decoded)) $galleryJson = '';
+            }
+        }
+        if ($galleryJson === '') $galleryJson = null;
+
         if (!$sku || mb_strlen($sku) > 64)              sendJson(['error' => 'Invalid SKU'], 422);
-        if (!in_array($category, ['mink','faux','tools'], true)) sendJson(['error' => 'Invalid category'], 422);
+        if (!in_array($category, ['mink','faux','magnetic','tools'], true)) sendJson(['error' => 'Invalid category'], 422);
         if (!$name || mb_strlen($name) > 200)            sendJson(['error' => 'Invalid name'], 422);
         if ($price <= 0)                                 sendJson(['error' => 'Invalid price'], 422);
         if ($stock < 0)                                  sendJson(['error' => 'Invalid stock'], 422);
@@ -45,14 +61,16 @@ try {
             $stmt = $db->prepare(
                 'UPDATE products SET sku=:sku, category=:cat, name=:name, short_description=:short,
                                      description=:desc, price=:price, compare_at_price=:cmp,
-                                     image_url=:img, stock=:stock, is_active=:active, sort_order=:sort
+                                     image_url=:img, gallery_urls=:gallery,
+                                     stock=:stock, is_active=:active, sort_order=:sort
                  WHERE id=:id'
             );
             $stmt->execute([
                 ':sku' => $sku, ':cat' => $category, ':name' => $name,
                 ':short' => $shortDesc, ':desc' => $desc,
                 ':price' => $price, ':cmp' => $cmpPrice,
-                ':img' => $imageUrl, ':stock' => $stock,
+                ':img' => $imageUrl, ':gallery' => $galleryJson,
+                ':stock' => $stock,
                 ':active' => $isActive, ':sort' => $sortOrder, ':id' => $id,
             ]);
             sendJson(['success' => true, 'id' => $id]);
@@ -60,15 +78,18 @@ try {
             // INSERT
             $stmt = $db->prepare(
                 'INSERT INTO products (sku, category, name, short_description, description,
-                                       price, compare_at_price, image_url, stock, is_active, sort_order)
-                 VALUES (:sku, :cat, :name, :short, :desc, :price, :cmp, :img, :stock, :active, :sort)'
+                                       price, compare_at_price, image_url, gallery_urls,
+                                       stock, is_active, sort_order)
+                 VALUES (:sku, :cat, :name, :short, :desc, :price, :cmp, :img, :gallery,
+                         :stock, :active, :sort)'
             );
             try {
                 $stmt->execute([
                     ':sku' => $sku, ':cat' => $category, ':name' => $name,
                     ':short' => $shortDesc, ':desc' => $desc,
                     ':price' => $price, ':cmp' => $cmpPrice,
-                    ':img' => $imageUrl, ':stock' => $stock,
+                    ':img' => $imageUrl, ':gallery' => $galleryJson,
+                    ':stock' => $stock,
                     ':active' => $isActive, ':sort' => $sortOrder,
                 ]);
             } catch (PDOException $e) {

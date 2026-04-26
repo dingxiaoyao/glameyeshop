@@ -12,7 +12,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate PHP files
         run: |
-          for f in api/*.php admin/*.php; do
+          # 递归 lint api/ 和 admin/ 下所有 .php(包括 api/lib/, api/oauth/ 等子目录)
+          find api admin -type f -name '*.php' | while read f; do
             php -l "$f" || exit 1
           done
 

@@ -8,6 +8,7 @@
   <button class="filter-btn active" data-cat=""><?= htmlspecialchars(t('all')) ?></button>
   <button class="filter-btn" data-cat="mink">Mink</button>
   <button class="filter-btn" data-cat="faux">Faux Mink</button>
+  <button class="filter-btn" data-cat="magnetic">Magnetic</button>
   <button class="filter-btn" data-cat="tools">Tools</button>
 </div>
 
@@ -33,6 +34,7 @@
             <select name="category" required>
               <option value="mink">Mink</option>
               <option value="faux">Faux Mink</option>
+              <option value="magnetic">Magnetic</option>
               <option value="tools">Tools</option>
             </select>
           </label>
@@ -173,10 +175,27 @@
     container.innerHTML = '<p class="muted">' + T.loading + '</p>';
     try {
       const r = await fetch('../api/admin-products.php', { credentials: 'include' });
-      const j = await r.json();
-      allProducts = j.products || []; render();
+      const text = await r.text();
+      let j;
+      try { j = JSON.parse(text); }
+      catch (parseErr) {
+        // 服务器返回非 JSON(PHP fatal HTML / 500 错误页等)— 显示前 400 字符方便排查
+        container.innerHTML = `<div style="padding:1rem;background:var(--bg-soft);border-radius:6px;color:var(--error)">
+          <strong>Load failed (HTTP ${r.status})</strong>
+          <p class="muted small" style="margin:.5rem 0 0">Server returned non-JSON. First 400 chars of response:</p>
+          <pre style="background:var(--bg);padding:.75rem;border-radius:4px;font-size:.75rem;overflow:auto;max-height:200px;margin:.5rem 0 0;white-space:pre-wrap;">${escape(text.slice(0, 400))}</pre>
+          <button class="filter-btn" onclick="location.reload()" style="margin-top:.5rem;">Retry</button>
+        </div>`;
+        return;
+      }
+      if (!r.ok) {
+        container.innerHTML = `<p style="color:var(--error)">HTTP ${r.status}: ${escape(j.error || 'Unknown')}</p>`;
+        return;
+      }
+      allProducts = j.products || [];
+      render();
     } catch (e) {
-      container.innerHTML = '<p style="color:var(--error)">' + T.load_failed + '</p>';
+      container.innerHTML = `<p style="color:var(--error)">Network error: ${escape(e.message || String(e))}</p>`;
     }
   }
 
