@@ -35,6 +35,13 @@ jobs:
             cd "$DEPLOY_PATH"
             git fetch origin
             git reset --hard origin/main
+
+            # Cache busting: 把 HTML 里的 ?v=DEPLOYHASH 替换成 git short hash
+            # 用户浏览器看到 url 变化会拉新版,旧 css/js 不再被缓存复用
+            DEPLOY_HASH=$(git rev-parse --short HEAD)
+            find . -maxdepth 2 -name "*.html" -type f -exec sed -i "s/?v=DEPLOYHASH/?v=${DEPLOY_HASH}/g" {} \;
+            echo "Cache busting: ?v=${DEPLOY_HASH}"
+
             chown -R www-data:www-data "$DEPLOY_PATH"
 
             # Uploads 目录（用户文件持久化，git 不管）

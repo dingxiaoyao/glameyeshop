@@ -9,13 +9,8 @@ try {
     $db = getDb();
 
     if ($method === 'GET') {
-        $stmt = $db->prepare(
-            'SELECT id, sku, category, style, name, short_description, description,
-                    length_mm, band_type, reusable_count,
-                    price, compare_at_price, image_url, gallery_urls, stock,
-                    is_active, is_bestseller, is_new, sort_order, created_at, updated_at
-             FROM products ORDER BY sort_order ASC, id ASC'
-        );
+        // SELECT * 防止某条 ALTER 漏跑导致整体 500;新加列自动出现,旧 schema 也不会报错
+        $stmt = $db->prepare('SELECT * FROM products ORDER BY sort_order ASC, id ASC');
         $stmt->execute();
         sendJson(['products' => $stmt->fetchAll()]);
     }

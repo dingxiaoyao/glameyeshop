@@ -133,4 +133,64 @@
   }
 })();
 </script>
+<!-- ============== System self-check (debug panel) ============== -->
+<details class="admin-card" style="margin-top:2rem;">
+  <summary style="cursor:pointer; font-family:var(--serif); font-size:1.1rem; color:var(--cream);">
+    🔧 <?= $lang === 'zh' ? '系统自检 (出问题时点开)' : 'System Self-Check (open this when something is broken)' ?>
+  </summary>
+  <p class="muted small" style="margin-top:.75rem;">
+    <?= $lang === 'zh'
+      ? '调以下 API 检查响应。出问题时把结果截图发给开发者,能直接看到 HTTP 状态码 + 服务器返回的实际内容。'
+      : 'Pings each API and shows the raw response. If something is broken, screenshot this so the developer sees the exact HTTP status + payload.' ?>
+  </p>
+  <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0;">
+    <button class="filter-btn" data-check="../api/admin-products.php">admin-products</button>
+    <button class="filter-btn" data-check="../api/products.php">products (public)</button>
+    <button class="filter-btn" data-check="../api/admin-settings.php">admin-settings</button>
+    <button class="filter-btn" data-check="../api/admin-stats.php">admin-stats</button>
+    <button class="filter-btn" data-check="../api/admin-customers.php">admin-customers</button>
+    <button class="filter-btn" data-check="../api/admin-leads.php">admin-leads</button>
+    <button class="filter-btn" data-check="../api/admin-test-email.php">admin-test-email</button>
+    <button class="filter-btn" data-check="all" style="border-color:var(--gold); color:var(--gold);">▶ Run all</button>
+  </div>
+  <div id="diag-output" style="background:var(--bg); border:1px solid var(--border-soft); border-radius:6px; padding:1rem; font-family:ui-monospace,Menlo,monospace; font-size:.78rem; color:var(--text); max-height:480px; overflow:auto; white-space:pre-wrap;">Click a button above to test an endpoint.</div>
+</details>
+
+<script>
+(() => {
+  const out = document.getElementById('diag-output');
+  function append(line) { out.textContent += line + '\n'; out.scrollTop = out.scrollHeight; }
+  async function ping(url) {
+    append('▶ GET ' + url);
+    const t0 = Date.now();
+    try {
+      const r = await fetch(url, { credentials: 'include' });
+      const dt = Date.now() - t0;
+      const text = await r.text();
+      const isJson = text.trim().startsWith('{') || text.trim().startsWith('[');
+      append(`  HTTP ${r.status} (${dt}ms, ${text.length}B) ${isJson ? 'JSON ✓' : 'NON-JSON ⚠'}`);
+      if (text.length > 500) append('  ' + text.slice(0, 500).replace(/\n/g, '\n  ') + '\n  ... [truncated]');
+      else append('  ' + text.replace(/\n/g, '\n  '));
+      append('');
+    } catch (e) {
+      append('  NETWORK ERROR: ' + (e.message || String(e)));
+      append('');
+    }
+  }
+  document.querySelectorAll('[data-check]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.check;
+      out.textContent = `[${new Date().toISOString()}]\n\n`;
+      if (url === 'all') {
+        for (const b of document.querySelectorAll('[data-check]:not([data-check="all"])')) {
+          await ping(b.dataset.check);
+        }
+      } else {
+        await ping(url);
+      }
+    });
+  });
+})();
+</script>
+
 <?php require __DIR__ . '/_footer.php'; ?>

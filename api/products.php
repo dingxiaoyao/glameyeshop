@@ -7,12 +7,9 @@ $sku = trim((string)($_GET['sku'] ?? ''));
 
 try {
     $db = getDb();
+    // SELECT * 防止 schema 缺列导致 SQL 整体报错。前端只用它需要的字段。
     if ($id > 0 || $sku) {
-        $sql = 'SELECT id, sku, category, style, name, short_description, description,
-                       length_mm, band_type, reusable_count,
-                       price, compare_at_price, image_url, gallery_urls, stock,
-                       is_bestseller, is_new
-                FROM products WHERE is_active = 1 AND ';
+        $sql = 'SELECT * FROM products WHERE is_active = 1 AND ';
         if ($id > 0) { $sql .= 'id = :v'; $params = [':v' => $id]; }
         else         { $sql .= 'sku = :v'; $params = [':v' => $sku]; }
         $stmt = $db->prepare($sql);
@@ -27,11 +24,7 @@ try {
         }
         sendJson(['product' => $p]);
     }
-    $sql = 'SELECT id, sku, category, style, name, short_description,
-                   length_mm, band_type, reusable_count,
-                   price, compare_at_price, image_url, stock,
-                   is_bestseller, is_new
-            FROM products WHERE is_active = 1';
+    $sql = 'SELECT * FROM products WHERE is_active = 1';
     $params = [];
     if ($category && in_array($category, ['mink', 'faux', 'magnetic', 'tools'], true)) {
         $sql .= ' AND category = :cat';
