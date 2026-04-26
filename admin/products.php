@@ -10,6 +10,7 @@
   <button class="filter-btn" data-cat="faux">Faux Mink</button>
   <button class="filter-btn" data-cat="magnetic">Magnetic</button>
   <button class="filter-btn" data-cat="tools">Tools</button>
+  <button class="filter-btn" data-cat="bundle">📦 Bundles</button>
 </div>
 
 <div class="admin-card" style="overflow-x: auto;">
@@ -31,11 +32,12 @@
             <input type="text" name="sku" required maxlength="64" />
           </label>
           <label><span class="label-text"><?= htmlspecialchars(t('category')) ?> *</span>
-            <select name="category" required>
+            <select name="category" required id="p-category">
               <option value="mink">Mink</option>
               <option value="faux">Faux Mink</option>
               <option value="magnetic">Magnetic</option>
               <option value="tools">Tools</option>
+              <option value="bundle">📦 Bundle (set)</option>
             </select>
           </label>
         </div>
@@ -85,6 +87,20 @@
         <div class="checkbox-row">
           <input type="checkbox" name="is_active" id="p-active" value="1" checked />
           <label for="p-active"><?= htmlspecialchars(t('active')) ?> (<?= $lang === 'zh' ? '上架' : 'visible on shop' ?>)</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" name="is_bundle" id="p-is-bundle" value="1" />
+          <label for="p-is-bundle"><?= $lang === 'zh' ? '这是一个套装(组合多件单品)' : 'This is a bundle (set of multiple items)' ?></label>
+        </div>
+        <div id="p-bundle-fieldset" style="display:none; padding: 1rem; border: 1px solid var(--border-soft); border-radius: 4px; background: var(--bg-soft);">
+          <label><span class="label-text"><?= $lang === 'zh' ? 'Bundle 组件 (JSON 数组)' : 'Bundle Items (JSON array)' ?></span>
+            <textarea name="bundle_items" rows="4" id="p-bundle-items" placeholder='[{"sku":"GE-MINK-001","qty":1},{"sku":"GE-TOOL-GLUE","qty":1}]' style="font-family: monospace; font-size: .85rem;"></textarea>
+          </label>
+          <p class="muted small" style="margin-top: .35rem;">
+            <?= $lang === 'zh'
+              ? '每行一个 SKU + qty。Bundle 的 price 字段就是套装价(已减折扣),原价用 compare_at_price 显示。'
+              : 'Each entry: { sku, qty }. The Bundle\'s price field IS the bundle price (already discounted). Use compare_at_price for the strike-through list price.' ?>
+          </p>
         </div>
         <p class="form-feedback" id="p-feedback"></p>
       </form>
@@ -302,6 +318,19 @@
       form.stock.value = p.stock;
       form.sort_order.value = p.sort_order;
       form.is_active.checked = p.is_active == 1;
+      // bundle 字段
+      const isBundleEl = document.getElementById('p-is-bundle');
+      const biEl = document.getElementById('p-bundle-items');
+      const biSet = document.getElementById('p-bundle-fieldset');
+      isBundleEl.checked = p.is_bundle == 1;
+      biEl.value = '';
+      if (p.bundle_items) {
+        try {
+          const arr = (typeof p.bundle_items === 'string') ? JSON.parse(p.bundle_items) : p.bundle_items;
+          if (Array.isArray(arr)) biEl.value = JSON.stringify(arr, null, 2);
+        } catch { biEl.value = String(p.bundle_items); }
+      }
+      biSet.style.display = isBundleEl.checked ? 'block' : 'none';
       // populate tiles
       if (p.image_url) imageList.push(p.image_url);
       let extras = [];
@@ -346,10 +375,25 @@
     }
   });
 
+  // Bundle checkbox 切换 fieldset 显示;切换 category 也同步(兼容性)
+  document.getElementById('p-is-bundle').addEventListener('change', (e) => {
+    document.getElementById('p-bundle-fieldset').style.display = e.target.checked ? 'block' : 'none';
+    if (e.target.checked) {
+      document.getElementById('p-category').value = 'bundle';
+    }
+  });
+  document.getElementById('p-category').addEventListener('change', (e) => {
+    if (e.target.value === 'bundle') {
+      document.getElementById('p-is-bundle').checked = true;
+      document.getElementById('p-bundle-fieldset').style.display = 'block';
+    }
+  });
+
   document.getElementById('save-btn').addEventListener('click', async () => {
     const id = document.getElementById('p-id').value;
     const data = Object.fromEntries(new FormData(form).entries());
     data.is_active = data.is_active ? 1 : 0;
+    data.is_bundle = data.is_bundle ? 1 : 0;
     fb.textContent = 'Saving...'; fb.className = 'form-feedback';
     try {
       const url = '../api/admin-products.php' + (id ? '?id=' + id : '');

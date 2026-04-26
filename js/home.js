@@ -192,83 +192,120 @@
     } catch (e) { /* graceful degrade */ }
   }
 
-  // P1: bundles 占位 — 用真实产品图渲染 3 张 bundle 视觉,链接走 shop.html。
-  // P2 替换为 api/bundles.php 返回 + 真实"Add Bundle to Cart"逻辑。
+  // P2: 真实 bundles —— 从 DB 拿 is_bundle=1 的产品,bundle_items JSON 内含组件 SKU
+  // 加车走标准流程:bundle 本身是一行 product,price 已经是套装价,组件仅作展示
   async function loadBundles() {
     const container = document.getElementById('featured-bundles');
     if (!container) return;
     try {
-      const r = await fetch('api/products.php');
-      const j = await r.json();
-      const products = j.products || [];
-      const findBy = (sku) => products.find(p => p.sku === sku);
+      const [bundlesRes, allRes] = await Promise.all([
+        fetch('api/products.php?bundles_only=1').then(r => r.json()),
+        fetch('api/products.php?include_bundles=1').then(r => r.json()),
+      ]);
+      const bundles = (bundlesRes.products || []).slice(0, 3);
+      const allProducts = allRes.products || [];
+      const bySku = Object.fromEntries(allProducts.map(p => [p.sku, p]));
 
-      const bundles = [
-        {
-          name: 'Starter Kit',
-          tagline: 'Everything you need to get started — lashes, glue, applicator.',
-          products: [
-            findBy('GE-MINK-001'),
-            findBy('GE-TOOL-GLUE'),
-            findBy('GE-TOOL-APPL'),
-          ].filter(Boolean),
-          link: 'shop.html?category=tools',
-          discount: 12,
-        },
-        {
-          name: 'Glam Trio',
-          tagline: 'Three signature mink lashes — day, date night, red carpet.',
-          products: [
-            findBy('GE-MINK-003'),
-            findBy('GE-MINK-005'),
-            findBy('GE-MINK-007'),
-          ].filter(Boolean),
-          link: 'shop.html?category=mink',
-          discount: 25,
-        },
-        {
-          name: 'Daily Wisp Duo',
-          tagline: 'Two everyday wispy faves + travel mirror case.',
-          products: [
-            findBy('GE-FAUX-001'),
-            findBy('GE-FAUX-002'),
-            findBy('GE-TOOL-CASE'),
-          ].filter(Boolean),
-          link: 'shop.html?category=faux',
-          discount: 10,
-        },
-      ];
+      if (!bundles.length) {
+        container.innerHTML = '<p class="muted text-center" style="grid-column:1/-1;">Curated bundles coming soon.</p>';
+        return;
+      }
 
       container.innerHTML = bundles.map((b) => {
-        if (b.products.length === 0) return '';
-        const total = b.products.reduce((s, p) => s + Number(p.price), 0);
-        const bundlePrice = Math.max(0, total - b.discount);
-        const productsList = b.products.map(p => p.name).join(' · ');
-        const imgs = b.products.slice(0, 3).map(p => `<div>${Img.picture(p.image_url, 'card', { alt: p.name, loading: 'lazy' })}</div>`).join('');
+        let items = [];
+        try { items = JSON.parse(b.bundle_items || '[]'); } catch { items = []; }
+        const components = items.map(it => bySku[it.sku]).filter(Boolean);
+        // 计算原价 & 节省
+        const listTotal = items.reduce((s, it) => {
+          const p = bySku[it.sku];
+          return p ? s + Number(p.price) * (Number(it.qty) || 1) : s;
+        }, 0);
+        const bundlePrice = Number(b.price);
+        const savings = Math.max(0, listTotal - bundlePrice);
+
+        const productsList = components.map(p => p.name).join(' · ');
+        const imgs = components.slice(0, 3).map(p =>
+          `<div>${Img.picture(p.image_url, 'card', { alt: p.name, loading: 'lazy' })}</div>`
+        ).join('');
+
         return `
-          <a class="bundle-card" href="${escape(b.link)}">
-            <span class="bundle-savings-badge">Save $${b.discount}</span>
+          <a class="bundle-card" href="product.html?sku=${escape(b.sku)}">
+            ${savings > 0 ? `<span class="bundle-savings-badge">Save $${savings.toFixed(0)}</span>` : ''}
             <div class="bundle-card-imgs">${imgs}</div>
             <div class="bundle-card-info">
               <h3>${escape(b.name)}</h3>
               <p class="bundle-products">${escape(productsList)}</p>
-              <p style="color: var(--text-muted); font-size: .85rem; line-height: 1.5;">${escape(b.tagline)}</p>
+              <p style="color: var(--text-muted); font-size: .85rem; line-height: 1.5;">${escape(b.short_description || '')}</p>
               <div class="bundle-price-row">
                 <span class="price">${money(bundlePrice)}</span>
-                <span class="price-old">${money(total)}</span>
-                <span class="bundle-saved">— save $${b.discount}</span>
+                ${listTotal > bundlePrice ? `<span class="price-old">${money(listTotal)}</span>` : ''}
+                ${savings > 0 ? `<span class="bundle-saved">— save $${savings.toFixed(0)}</span>` : ''}
               </div>
             </div>
           </a>`;
       }).join('');
     } catch (e) {
-      container.innerHTML = '<p class="muted text-center" style="grid-column:1/-1;">Bundles loading soon.</p>';
+      container.innerHTML = '<p class="muted text-center" style="grid-column:1/-1;">Curated bundles coming soon.</p>';
+    }
+  }
+
+  // P2: 真实 featured reviews 替换硬编码 3 卡(管理员在 admin/reviews.php 标记 is_featured)
+  async function loadFeaturedReviews() {
+    const container = document.getElementById('featured-reviews');
+    if (!container) return;
+    try {
+      const r = await fetch('api/reviews.php?featured=1&limit=3');
+      const j = await r.json();
+      const reviews = j.reviews || [];
+      // 没 featured 评论时,保留 HTML 里的 fallback 静态内容(已 SSR 在 index.html)。
+      if (!reviews.length) return;
+      container.innerHTML = reviews.map(rv => {
+        const stars = '★'.repeat(rv.rating) + '☆'.repeat(5 - rv.rating);
+        const author = `${rv.reviewer_name}${rv.reviewer_location ? ', ' + rv.reviewer_location : ''}${rv.is_verified_buyer == 1 ? ' · Verified Buyer' : ''}`;
+        return `
+          <div class="review-card">
+            <div class="review-stars">${stars}</div>
+            <p class="review-text">"${escape(rv.body)}"</p>
+            <p class="review-author">— ${escape(author)}</p>
+          </div>`;
+      }).join('');
+    } catch (e) { /* graceful — keep SSR fallback */ }
+  }
+
+  // P2: UGC 墙 — 客户晒图,管理员审核后展示
+  async function loadUGC() {
+    const container = document.getElementById('ugc-grid');
+    if (!container) return;
+    try {
+      const r = await fetch('api/ugc.php?limit=12');
+      const j = await r.json();
+      const items = j.items || [];
+      if (!items.length) {
+        container.innerHTML = `<p class="muted text-center" style="grid-column:1/-1; padding: 2rem 0;">
+          Be the first to be featured — tag <strong style="color:var(--gold);">@glameye</strong> on Instagram!
+        </p>`;
+        return;
+      }
+      container.innerHTML = items.map(u => {
+        const link = u.product_sku ? `product.html?sku=${escape(u.product_sku)}` : (u.instagram_handle ? `https://instagram.com/${escape(u.instagram_handle)}` : '#');
+        const target = u.product_sku ? '' : ' target="_blank" rel="noopener"';
+        return `
+          <a class="ugc-tile" href="${link}"${target}>
+            <img src="${escape(u.image_url)}" alt="${escape(u.caption || '')}" loading="lazy">
+            ${u.instagram_handle ? `<span class="ugc-tile-handle">@${escape(u.instagram_handle)}</span>` : ''}
+            ${u.caption ? `<div class="ugc-tile-overlay">${escape(u.caption)}</div>` : ''}
+          </a>`;
+      }).join('');
+    } catch (e) {
+      container.innerHTML = '<p class="muted text-center" style="grid-column:1/-1;">Photos coming soon.</p>';
     }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     loadFeatured();
     loadBundles();
+    loadFeaturedReviews();
+    loadUGC();
     loadFeaturedVideos();
     loadSettings();
 

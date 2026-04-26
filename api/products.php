@@ -26,9 +26,20 @@ try {
     }
     $sql = 'SELECT * FROM products WHERE is_active = 1';
     $params = [];
-    if ($category && in_array($category, ['mink', 'faux', 'magnetic', 'tools'], true)) {
+    if ($category && in_array($category, ['mink', 'faux', 'magnetic', 'tools', 'bundle'], true)) {
         $sql .= ' AND category = :cat';
         $params[':cat'] = $category;
+    }
+    // bundle 过滤逻辑:
+    //   ?bundles_only=1   只返回套装
+    //   ?include_bundles=1 同时返回单品+套装
+    //   默认               只返回单品(避免套装出现在常规 listing/shop)
+    $bundlesOnly = !empty($_GET['bundles_only']);
+    $includeBundles = !empty($_GET['include_bundles']);
+    if ($bundlesOnly) {
+        $sql .= ' AND is_bundle = 1';
+    } elseif (!$includeBundles) {
+        $sql .= ' AND (is_bundle IS NULL OR is_bundle = 0)';
     }
     $sql .= ' ORDER BY sort_order ASC, id ASC';
     $stmt = $db->prepare($sql);

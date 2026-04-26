@@ -113,7 +113,17 @@
             </div>
             ${timeline(o)}
             ${trackingBlock(o)}
-            ${(o.items || []).map((i) => `<div class="summary-row"><span>${esc(i.product_name)} × ${i.quantity}</span><span>${m(i.line_total)}</span></div>`).join('')}
+            ${(o.items || []).map((i) => {
+              // 仅在订单已付款及之后状态显示"Leave a Review"
+              const canReview = ['paid','processing','shipped','delivered'].includes(o.status) && i.product_id && i.sku;
+              return `<div class="summary-row" style="align-items:center;">
+                <span>${esc(i.product_name)} × ${i.quantity}</span>
+                <span style="display:flex; gap:.75rem; align-items:center;">
+                  ${canReview ? `<a href="product.html?sku=${esc(i.sku)}#reviews-section" class="muted small" style="text-decoration:underline; color:var(--gold);">Leave a review →</a>` : ''}
+                  <span>${m(i.line_total)}</span>
+                </span>
+              </div>`;
+            }).join('')}
             <div class="summary-row total"><span>Total</span><span>${m(o.amount)} ${esc(o.currency)}</span></div>
           </div>
         `).join('');

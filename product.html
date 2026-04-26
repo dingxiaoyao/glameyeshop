@@ -107,6 +107,12 @@
 
       <p class="pdp-desc" id="p-desc">…</p>
 
+      <div class="pdp-bundle-includes" id="p-bundle-includes" hidden>
+        <h4>What's Included</h4>
+        <div class="pdp-bundle-list" id="p-bundle-list"></div>
+        <p class="pdp-bundle-savings" id="p-bundle-savings"></p>
+      </div>
+
       <div class="pdp-bullets" id="p-bullets" hidden>
         <h4>Why You'll Love It</h4>
         <div class="pdp-bullet" data-key="length">
@@ -163,6 +169,50 @@
       </div>
     </div>
   </article>
+
+  <!-- ============== Reviews ============== -->
+  <section class="section container" id="reviews-section">
+    <div class="section-header">
+      <span class="eyebrow">From Verified Buyers</span>
+      <h2 id="reviews-h2">Customer Reviews</h2>
+      <div class="divider-gold"></div>
+      <p id="reviews-summary" class="muted">Loading reviews…</p>
+    </div>
+    <div class="rv-summary-grid" id="rv-summary-grid" hidden>
+      <div class="rv-avg-block">
+        <div class="rv-avg-num" id="rv-avg-num">—</div>
+        <div class="rv-avg-stars" id="rv-avg-stars">★★★★★</div>
+        <div class="rv-avg-count" id="rv-avg-count">based on 0 reviews</div>
+      </div>
+      <div class="rv-dist" id="rv-dist"></div>
+    </div>
+    <div class="rv-list" id="rv-list"></div>
+    <div class="rv-write-cta" id="rv-write-cta">
+      <button class="button button-outline" id="rv-write-btn">Write a Review</button>
+    </div>
+    <form class="rv-form" id="rv-form" hidden>
+      <h3>Share Your Experience</h3>
+      <p class="muted small" id="rv-form-status"></p>
+      <label class="form-row" style="grid-template-columns:auto;">
+        <span class="label-text">Your Rating</span>
+        <div class="rv-stars-input" id="rv-stars-input" data-value="0">
+          <span data-r="1">★</span><span data-r="2">★</span><span data-r="3">★</span><span data-r="4">★</span><span data-r="5">★</span>
+        </div>
+      </label>
+      <label class="form-row" style="grid-template-columns:auto;">
+        <span class="label-text">Title <span class="muted small">(optional)</span></span>
+        <input type="text" name="title" maxlength="200" placeholder="e.g. Best lashes I've ever bought">
+      </label>
+      <label class="form-row" style="grid-template-columns:auto;">
+        <span class="label-text">Your Review</span>
+        <textarea name="body" rows="5" minlength="10" maxlength="4000" required placeholder="What did you love? How did they fit, feel, last? Would you recommend?"></textarea>
+      </label>
+      <div style="display:flex; gap:.75rem; margin-top: 1rem;">
+        <button type="submit" class="button button-primary">Submit Review</button>
+        <button type="button" class="button button-ghost" id="rv-form-cancel">Cancel</button>
+      </div>
+    </form>
+  </section>
 
   <section class="section container">
     <div class="section-header">
@@ -341,6 +391,36 @@
         document.getElementById('p-reusable').textContent = p.reusable_count ? 'Up to ' + p.reusable_count + ' wears' : '—';
         document.getElementById('p-reviews').textContent = `(${100 + (p.id * 7)} reviews)`;
 
+        // ============== Bundle "What's Included" (P2) ==============
+        if (p.is_bundle == 1 && p.bundle_items) {
+          let items = [];
+          try { items = JSON.parse(p.bundle_items); } catch {}
+          if (items.length) {
+            const allRes = await fetch('api/products.php?include_bundles=1').then(r => r.json());
+            const bySku = Object.fromEntries((allRes.products || []).map(x => [x.sku, x]));
+            const components = items.map(it => ({ ...bySku[it.sku], qty: it.qty || 1 })).filter(c => c.id);
+            const listTotal = components.reduce((s, c) => s + Number(c.price) * c.qty, 0);
+            const savings = Math.max(0, listTotal - Number(p.price));
+
+            const includesEl = document.getElementById('p-bundle-includes');
+            const listEl = document.getElementById('p-bundle-list');
+            const savEl = document.getElementById('p-bundle-savings');
+            listEl.innerHTML = components.map(c => `
+              <a class="pdp-bundle-item" href="product.html?sku=${fmt.escape(c.sku)}">
+                <div class="pdp-bundle-img">${window.GlamEye.Img.picture(c.image_url, 'thumb', { alt: c.name, loading: 'lazy' })}</div>
+                <div>
+                  <div class="pdp-bundle-name">${fmt.escape(c.name)}${c.qty > 1 ? ' × ' + c.qty : ''}</div>
+                  <div class="pdp-bundle-price">${fmt.money(c.price)}</div>
+                </div>
+              </a>
+            `).join('');
+            if (savings > 0) {
+              savEl.innerHTML = `Bundle saves you <strong>$${savings.toFixed(2)}</strong> vs. buying separately (${fmt.money(listTotal)} list value).`;
+            }
+            includesEl.hidden = false;
+          }
+        }
+
         // ============== Bullets (P1) ==============
         // 工具品类(无 length / reusable)隐藏 bullets,保持详情清爽
         const bulletsEl = document.getElementById('p-bullets');
@@ -420,6 +500,153 @@
             });
             window.GlamEye.Notification.show('Saved to wishlist ♥');
           } catch (e) { window.GlamEye.Notification.show('Failed', 'error'); }
+        });
+
+        // ============== Reviews (P2) ==============
+        loadReviews(p.id);
+        async function loadReviews(productId) {
+          try {
+            const r = await fetch('api/reviews.php?product_id=' + productId);
+            const j = await r.json();
+            const stats = j.stats || { count: 0, avg: 0, distribution: {1:0,2:0,3:0,4:0,5:0} };
+            const reviews = j.reviews || [];
+
+            // 同步详情顶部的 (X reviews) 计数 + 星级显示
+            const ratingCountEl = document.getElementById('p-reviews');
+            ratingCountEl.textContent = stats.count > 0 ? `(${stats.count} reviews)` : '(no reviews yet)';
+            if (stats.count > 0) {
+              const stars = document.getElementById('p-stars');
+              const full = Math.round(stats.avg);
+              stars.textContent = '★'.repeat(full) + '☆'.repeat(5 - full);
+            }
+
+            const summary = document.getElementById('reviews-summary');
+            summary.textContent = stats.count > 0
+              ? `${stats.count} verified reviews · ${stats.avg.toFixed(2)} / 5 average rating`
+              : `Be the first to review this product.`;
+
+            // 摘要网格(平均分 + 分布)
+            if (stats.count > 0) {
+              document.getElementById('rv-summary-grid').hidden = false;
+              document.getElementById('rv-avg-num').textContent = stats.avg.toFixed(1);
+              const full = Math.round(stats.avg);
+              document.getElementById('rv-avg-stars').textContent = '★'.repeat(full) + '☆'.repeat(5 - full);
+              document.getElementById('rv-avg-count').textContent = `based on ${stats.count} review${stats.count === 1 ? '' : 's'}`;
+              const distEl = document.getElementById('rv-dist');
+              distEl.innerHTML = [5,4,3,2,1].map(n => {
+                const c = stats.distribution[n] || 0;
+                const pct = stats.count ? Math.round(c * 100 / stats.count) : 0;
+                return `
+                  <div class="rv-dist-row">
+                    <span class="rv-dist-label">${n}★</span>
+                    <span class="rv-dist-bar"><span style="width:${pct}%"></span></span>
+                    <span class="rv-dist-count">${c}</span>
+                  </div>`;
+              }).join('');
+            }
+
+            // 评论列表
+            const list = document.getElementById('rv-list');
+            if (reviews.length) {
+              list.innerHTML = reviews.map(rev => {
+                const rs = '★'.repeat(rev.rating) + '☆'.repeat(5 - rev.rating);
+                const verified = rev.is_verified_buyer == 1
+                  ? '<span class="rv-verified-pill">✓ Verified Buyer</span>' : '';
+                const photos = (rev.photo_urls && rev.photo_urls.length)
+                  ? `<div class="rv-photo-row">${rev.photo_urls.map(u => `<img src="${fmt.escape(u)}" alt="">`).join('')}</div>`
+                  : '';
+                const dt = rev.created_at ? new Date(rev.created_at).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) : '';
+                return `
+                  <div class="rv-item">
+                    <div class="rv-item-head">
+                      <span class="rv-item-stars">${rs}</span>
+                      ${verified}
+                      <span class="rv-item-date">${fmt.escape(dt)}</span>
+                    </div>
+                    ${rev.title ? `<h4 class="rv-item-title">${fmt.escape(rev.title)}</h4>` : ''}
+                    <p class="rv-item-body">${fmt.escape(rev.body)}</p>
+                    ${photos}
+                    <p class="rv-item-author">— <strong>${fmt.escape(rev.reviewer_name)}</strong>${rev.reviewer_location ? ', ' + fmt.escape(rev.reviewer_location) : ''}</p>
+                  </div>`;
+              }).join('');
+            } else {
+              list.innerHTML = '';
+            }
+          } catch (e) {
+            document.getElementById('reviews-summary').textContent = 'Unable to load reviews right now.';
+          }
+        }
+
+        // Write-a-review 表单交互
+        const writeBtn  = document.getElementById('rv-write-btn');
+        const writeCta  = document.getElementById('rv-write-cta');
+        const form      = document.getElementById('rv-form');
+        const formStat  = document.getElementById('rv-form-status');
+        const cancelBtn = document.getElementById('rv-form-cancel');
+        const starsIn   = document.getElementById('rv-stars-input');
+
+        writeBtn.addEventListener('click', () => {
+          if (!window.GlamEye.Auth.isLoggedIn()) {
+            window.location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
+            return;
+          }
+          form.hidden = false; writeCta.style.display = 'none';
+          form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        cancelBtn.addEventListener('click', () => {
+          form.hidden = true; writeCta.style.display = '';
+        });
+
+        starsIn.addEventListener('click', (e) => {
+          const t = e.target.closest('[data-r]');
+          if (!t) return;
+          const r = parseInt(t.dataset.r, 10);
+          starsIn.dataset.value = r;
+          starsIn.querySelectorAll('span').forEach((s, i) => {
+            s.classList.toggle('active', i < r);
+          });
+        });
+        starsIn.addEventListener('mouseover', (e) => {
+          const t = e.target.closest('[data-r]');
+          if (!t) return;
+          const r = parseInt(t.dataset.r, 10);
+          starsIn.querySelectorAll('span').forEach((s, i) => {
+            s.classList.toggle('hover', i < r);
+          });
+        });
+        starsIn.addEventListener('mouseleave', () => {
+          starsIn.querySelectorAll('span').forEach(s => s.classList.remove('hover'));
+        });
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const rating = parseInt(starsIn.dataset.value, 10) || 0;
+          const title  = form.elements['title'].value.trim();
+          const body   = form.elements['body'].value.trim();
+          if (rating < 1) { formStat.textContent = 'Please pick a rating.'; formStat.style.color = 'var(--error)'; return; }
+          if (body.length < 10) { formStat.textContent = 'Review needs at least 10 characters.'; formStat.style.color = 'var(--error)'; return; }
+          const submitBtn = form.querySelector('button[type="submit"]');
+          submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
+          formStat.style.color = 'var(--text-muted)'; formStat.textContent = '';
+          try {
+            const r = await fetch('api/reviews.php', {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ product_id: p.id, rating, title, body }),
+            });
+            const j = await r.json();
+            if (!r.ok || j.error) throw new Error(j.error || 'Submit failed');
+            form.hidden = true; writeCta.style.display = '';
+            form.reset(); starsIn.dataset.value = 0;
+            starsIn.querySelectorAll('span').forEach(s => s.classList.remove('active', 'hover'));
+            window.GlamEye.Notification.show('Review submitted! It will appear after admin approval.');
+            loadReviews(p.id);
+          } catch (err) {
+            formStat.textContent = 'Failed: ' + err.message;
+            formStat.style.color = 'var(--error)';
+          } finally {
+            submitBtn.disabled = false; submitBtn.textContent = 'Submit Review';
+          }
         });
 
         // Related products

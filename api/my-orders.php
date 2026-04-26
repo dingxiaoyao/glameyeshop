@@ -16,7 +16,7 @@ try {
     if (!empty($orders)) {
         $ids = array_column($orders, 'id');
         $ph = implode(',', array_fill(0, count($ids), '?'));
-        $itemStmt = $db->prepare("SELECT order_id, product_name, quantity, line_total FROM order_items WHERE order_id IN ($ph)");
+        $itemStmt = $db->prepare("SELECT order_id, product_id, sku, product_name, quantity, line_total FROM order_items WHERE order_id IN ($ph)");
         $itemStmt->execute($ids);
         $byOrder = [];
         foreach ($itemStmt->fetchAll() as $r) $byOrder[$r['order_id']][] = $r;

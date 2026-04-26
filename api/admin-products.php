@@ -30,6 +30,21 @@ try {
         $stock     = intval($in['stock'] ?? 0);
         $isActive  = !empty($in['is_active']) ? 1 : 0;
         $sortOrder = intval($in['sort_order'] ?? 0);
+        $isBundle  = !empty($in['is_bundle']) ? 1 : 0;
+        // bundle_items 接受 JSON 字符串 或 数组 [{sku, qty}, ...]
+        $biRaw = $in['bundle_items'] ?? '';
+        if (is_array($biRaw)) {
+            $biJson = json_encode(array_values($biRaw), JSON_UNESCAPED_UNICODE);
+        } else {
+            $biJson = trim((string)$biRaw);
+            if ($biJson !== '') {
+                $decoded = json_decode($biJson, true);
+                if (!is_array($decoded)) sendJson(['error' => 'bundle_items must be a JSON array'], 422);
+                $biJson = json_encode(array_values($decoded), JSON_UNESCAPED_UNICODE);
+            }
+        }
+        if ($biJson === '') $biJson = null;
+        if ($isBundle && !$biJson) sendJson(['error' => 'Bundle requires bundle_items'], 422);
 
         // gallery_urls: 前端可能传 JSON string 或数组
         $galleryRaw = $in['gallery_urls'] ?? '';
@@ -46,7 +61,7 @@ try {
         if ($galleryJson === '') $galleryJson = null;
 
         if (!$sku || mb_strlen($sku) > 64)              sendJson(['error' => 'Invalid SKU'], 422);
-        if (!in_array($category, ['mink','faux','magnetic','tools'], true)) sendJson(['error' => 'Invalid category'], 422);
+        if (!in_array($category, ['mink','faux','magnetic','tools','bundle'], true)) sendJson(['error' => 'Invalid category'], 422);
         if (!$name || mb_strlen($name) > 200)            sendJson(['error' => 'Invalid name'], 422);
         if ($price <= 0)                                 sendJson(['error' => 'Invalid price'], 422);
         if ($stock < 0)                                  sendJson(['error' => 'Invalid stock'], 422);
@@ -57,7 +72,8 @@ try {
                 'UPDATE products SET sku=:sku, category=:cat, name=:name, short_description=:short,
                                      description=:desc, price=:price, compare_at_price=:cmp,
                                      image_url=:img, gallery_urls=:gallery,
-                                     stock=:stock, is_active=:active, sort_order=:sort
+                                     stock=:stock, is_active=:active, sort_order=:sort,
+                                     is_bundle=:isb, bundle_items=:bi
                  WHERE id=:id'
             );
             $stmt->execute([
@@ -66,7 +82,8 @@ try {
                 ':price' => $price, ':cmp' => $cmpPrice,
                 ':img' => $imageUrl, ':gallery' => $galleryJson,
                 ':stock' => $stock,
-                ':active' => $isActive, ':sort' => $sortOrder, ':id' => $id,
+                ':active' => $isActive, ':sort' => $sortOrder,
+                ':isb' => $isBundle, ':bi' => $biJson, ':id' => $id,
             ]);
             sendJson(['success' => true, 'id' => $id]);
         } else {
@@ -74,9 +91,9 @@ try {
             $stmt = $db->prepare(
                 'INSERT INTO products (sku, category, name, short_description, description,
                                        price, compare_at_price, image_url, gallery_urls,
-                                       stock, is_active, sort_order)
+                                       stock, is_active, sort_order, is_bundle, bundle_items)
                  VALUES (:sku, :cat, :name, :short, :desc, :price, :cmp, :img, :gallery,
-                         :stock, :active, :sort)'
+                         :stock, :active, :sort, :isb, :bi)'
             );
             try {
                 $stmt->execute([
@@ -86,6 +103,7 @@ try {
                     ':img' => $imageUrl, ':gallery' => $galleryJson,
                     ':stock' => $stock,
                     ':active' => $isActive, ':sort' => $sortOrder,
+                    ':isb' => $isBundle, ':bi' => $biJson,
                 ]);
             } catch (PDOException $e) {
                 if (str_contains($e->getMessage(), 'Duplicate')) sendJson(['error' => 'SKU already exists'], 409);
