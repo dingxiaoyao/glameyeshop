@@ -168,9 +168,26 @@
       });
     });
 
-    // Hamburger
-    const toggle = document.querySelector('.nav-toggle');
+    // Hamburger — 没有 .nav-toggle 的页面自动注入一个，避免移动端导航消失
     const nav = document.querySelector('.site-nav');
+    let toggle = document.querySelector('.nav-toggle');
+    if (!toggle && nav) {
+      const headerInner = document.querySelector('.site-header .container');
+      if (headerInner) {
+        toggle = document.createElement('button');
+        toggle.className = 'nav-toggle';
+        toggle.setAttribute('aria-label', 'Open menu');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.innerHTML = '<span></span><span></span><span></span>';
+        // 插到 brand 之后、nav 之前
+        const brand = headerInner.querySelector('.brand');
+        if (brand && brand.nextSibling) {
+          headerInner.insertBefore(toggle, brand.nextSibling);
+        } else {
+          headerInner.appendChild(toggle);
+        }
+      }
+    }
     if (toggle && nav) {
       toggle.addEventListener('click', () => {
         const open = nav.classList.toggle('open');
@@ -181,6 +198,13 @@
           nav.classList.remove('open');
           toggle.setAttribute('aria-expanded', 'false');
         });
+      });
+      // 点击外部关闭
+      document.addEventListener('click', (e) => {
+        if (!nav.classList.contains('open')) return;
+        if (e.target.closest('.site-nav') || e.target.closest('.nav-toggle')) return;
+        nav.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
       });
     }
 
