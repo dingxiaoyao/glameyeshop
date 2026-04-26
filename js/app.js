@@ -11,8 +11,20 @@
     load() {
       try {
         const raw = localStorage.getItem(this.storageKey);
-        this.items = raw ? JSON.parse(raw) : [];
-        if (!Array.isArray(this.items)) this.items = [];
+        const arr = raw ? JSON.parse(raw) : [];
+        // 清洗:剔除 sku/price/quantity 不合法的脏条目(防止旧版 bug 残留导致 subtotal=0)
+        this.items = (Array.isArray(arr) ? arr : []).filter((i) =>
+          i && typeof i === 'object'
+          && typeof i.sku === 'string' && i.sku.length > 0
+          && Number(i.price) > 0
+          && Number(i.quantity) > 0
+        ).map((i) => ({
+          sku: String(i.sku),
+          name: String(i.name || ''),
+          price: Number(i.price),
+          image: String(i.image || ''),
+          quantity: Math.max(1, Math.min(50, parseInt(i.quantity, 10) || 1)),
+        }));
       } catch (e) { this.items = []; }
     },
     save() {
@@ -22,16 +34,28 @@
       window.dispatchEvent(new CustomEvent('cart:update', { detail: this.items }));
     },
     add(item) {
+      const price = Number(item.price);
+      // 拒绝 price <=0 / NaN / 缺 sku 的非法条目,避免脏数据进 cart 导致 subtotal=0
+      if (!item || !item.sku || !(price > 0)) {
+        console.error('Cart.add: invalid item, refused', item);
+        Notification.show('Add to cart failed — please refresh and try again', 'error');
+        return;
+      }
+      const qty = Math.max(1, Math.min(50, parseInt(item.quantity, 10) || 1));
       const existing = this.items.find((i) => i.sku === item.sku);
       if (existing) {
-        existing.quantity = Math.min(50, existing.quantity + (item.quantity || 1));
+        // 同时刷新 price/name/image,修上线初期老 cart 残留的脏数据 + 价格变更
+        existing.quantity = Math.min(50, existing.quantity + qty);
+        existing.price    = price;
+        existing.name     = String(item.name || existing.name);
+        existing.image    = String(item.image || existing.image || '');
       } else {
         this.items.push({
-          sku: item.sku,
-          name: item.name,
-          price: Number(item.price) || 0,
-          image: item.image || '',
-          quantity: item.quantity || 1,
+          sku:      String(item.sku),
+          name:     String(item.name || ''),
+          price:    price,
+          image:    String(item.image || ''),
+          quantity: qty,
         });
       }
       this.save();

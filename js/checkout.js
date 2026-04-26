@@ -108,6 +108,18 @@
         fb.className = 'form-feedback error';
         return;
       }
+      // 防御:cart 数据有任何 price/quantity 异常时阻止下单,避免 0 元订单
+      const bad = cart.items.find((i) => !(Number(i.price) > 0) || !(Number(i.quantity) > 0));
+      if (bad) {
+        fb.textContent = 'Cart contains an invalid item — please remove it or refresh the page.';
+        fb.className = 'form-feedback error';
+        return;
+      }
+      if (!(cart.subtotal() > 0)) {
+        fb.textContent = 'Cart total is $0 — please re-add the item.';
+        fb.className = 'form-feedback error';
+        return;
+      }
       if (!form.checkValidity()) { form.reportValidity(); return; }
 
       btn.disabled = true;
