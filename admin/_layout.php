@@ -4,6 +4,11 @@ require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../api/i18n.php';
 require_once __DIR__ . '/../api/lib/upload-hints.php';
 requireAdminAuth();
+
+// 杜绝浏览器/CDN 缓存 admin 页面输出 — admin 总是要看最新数据
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 $lang = adminLang();
 $pageTitle  = $pageTitle  ?? 'Admin';
 $activeNav  = $activeNav  ?? 'dashboard';
