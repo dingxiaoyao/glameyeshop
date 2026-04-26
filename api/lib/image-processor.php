@@ -125,7 +125,8 @@ class ImageProcessor
         $name = $info['filename'] ?? '';
         if ($dir === '' || $name === '') return $url;
         // 已经是 variant 形式 abc-640.jpg 时去掉后缀
-        $name = preg_replace('/-(\d{2,4})$/', '', $name);
+        // 只识别精确 variant 尺寸,避免误吃商品名里的数字(lash-bold-22 的 -22 不是 variant 标记)
+        $name = preg_replace('/-(?:320|640|1024|1600)$/', '', $name);
         return rtrim($dir, '/') . '/' . $name . '-' . $width . '.' . $ext;
     }
 

@@ -123,14 +123,16 @@
   // 远程 URL(unsplash 等)直接返回原值,不组装 variant。
   const Img = {
     SIZES: [320, 640, 1024, 1600],
-    /** 取一个 variant URL。url 是数据库里存的原图路径。 */
+    /** 取一个 variant URL。url 是数据库里存的原图路径。
+     *  注意:只识别精确的 variant 尺寸 (320/640/1024/1600) 作后缀去除,
+     *  避免误把商品名里的尺寸(如 lash-bold-22.jpg 的 -22)当成 variant 标记。
+     */
     variant(url, width, ext = 'webp') {
       if (!url || typeof url !== 'string') return url;
       if (/^https?:\/\//i.test(url)) return url; // 远程不动
       const m = url.match(/^(.*)\.(jpe?g|png|webp)$/i);
       if (!m) return url;
-      // 已经是 variant 形式 abc-640.jpg → 去掉后缀再换
-      const stem = m[1].replace(/-(\d{2,4})$/, '');
+      const stem = m[1].replace(/-(?:320|640|1024|1600)$/, '');
       return `${stem}-${width}.${ext}`;
     },
     /** 生成 <picture> 字符串。用 width-descriptor srcset + sizes,让浏览器按
@@ -177,19 +179,18 @@
         baseW = 640;
       }
       const sizesAttr = ` sizes="${esc(attrs.sizes || defaultSizes)}"`;
-      const webpSrcset = widths.map(w => `${Img.variant(url, w, 'webp')} ${w}w`).join(', ');
+      // 设计原则:<img> 的 src 用 *原图*,srcset 提供小档加速。
+      //   - variant 存在 → 浏览器从 srcset 选最匹配的小档(快)
+      //   - variant 不存在 → onerror 把 srcset 清空,浏览器回退到 src(原图)
+      //   不用 <picture>:source 加载失败时 spec 不自动 fall through,反而易破图。
+      //   webp 优化让位给可靠性 — 上传成功的图前台一定能看到。
       const jpgSrcset  = widths.map(w => `${Img.variant(url, w, 'jpg')}  ${w}w`).join(', ');
-      const base = Img.variant(url, baseW, 'jpg');
 
       const finalLoading = (context === 'hero') ? 'eager' : loading;
       const finalFp      = (context === 'hero' && !attrs.fetchpriority) ? ' fetchpriority="high"' : fp;
-      const fallback = esc(url);
-      const onerr = ` onerror="this.onerror=null;this.src='${fallback}';"`;
-      return `<picture>
-        <source type="image/webp" srcset="${esc(webpSrcset)}"${sizesAttr}>
-        <source type="image/jpeg" srcset="${esc(jpgSrcset)}"${sizesAttr}>
-        <img src="${esc(base)}" ${altAttr}${cls} loading="${esc(finalLoading)}"${finalFp}${decode}${sizesAttr}${onerr}>
-      </picture>`;
+      // 兜底:srcset 选中的 variant 加载失败 → 清掉 srcset 并重新触发 src 加载;再失败才 fade 表示
+      const onerr = ` onerror="if(this.hasAttribute('srcset')){this.removeAttribute('srcset');this.removeAttribute('sizes');var s=this.src;this.src='';this.src=s;return;}this.onerror=null;this.style.opacity='.4';"`;
+      return `<img src="${esc(url)}" srcset="${esc(jpgSrcset)}"${sizesAttr} ${altAttr}${cls} loading="${esc(finalLoading)}"${finalFp}${decode}${onerr}>`;
     },
     /** 给已有的 <img> 元素就地升级:换成 picture 包裹(用于不方便整段重写 HTML 的场景) */
     upgrade(imgEl, context = 'card') {
