@@ -56,14 +56,19 @@
             <input type="number" name="compare_at_price" step="0.01" min="0" />
           </label>
         </div>
-        <label><span class="label-text"><?= $lang === 'zh' ? '商品图片（拖拽排序，第一张作为主图）' : 'Product Images (drag to reorder · first = main)' ?></span></label>
+        <label><span class="label-text"><?= $lang === 'zh' ? '商品图片 + 视频（拖拽排序，第一张作为主图）' : 'Product Images + Videos (drag to reorder · first = main)' ?></span></label>
         <?php require_once __DIR__ . '/../api/lib/upload-hints.php'; echo uploadHint('product', $lang); ?>
+        <p class="muted small" style="margin:-.4rem 0 .65rem;">
+          <?= $lang === 'zh'
+            ? '✓ 支持图片(jpg/png/webp,≤10MB)和视频(mp4/webm/mov,≤200MB)。视频会跟图片混排展示在详情页。'
+            : '✓ Accepts images (jpg/png/webp ≤10MB) and videos (mp4/webm/mov ≤200MB). Videos will be mixed inline with photos on the detail page.' ?>
+        </p>
         <div class="img-uploader" id="p-img-uploader">
           <div class="img-tiles" id="p-img-tiles"></div>
           <label class="img-add-btn" id="p-img-add" data-hint="product">
             <span style="font-size:1.5rem;">＋</span>
-            <span>📤 <?= $lang === 'zh' ? '点击上传或拖拽多张图' : 'Click to upload (multiple)' ?></span>
-            <input type="file" accept="image/*" multiple hidden id="p-img-input" />
+            <span>📤 <?= $lang === 'zh' ? '点击上传图片或视频(多选)' : 'Click to upload images or videos (multiple)' ?></span>
+            <input type="file" accept="image/*,video/*" multiple hidden id="p-img-input" />
           </label>
           <small id="p-img-status" class="muted" style="display:block; margin-top:.5rem;"></small>
         </div>
@@ -176,14 +181,21 @@
     imgUrlField.value  = imageList[0] || '';
     galleryField.value = imageList.length > 1 ? JSON.stringify(imageList.slice(1)) : '';
   }
+  function isVideoUrl(u) { return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(u || ''); }
   function renderTiles() {
     tilesEl.innerHTML = imageList.map((url, i) => {
       const src = url.startsWith('http') ? url : '..' + url;
       const safeUrl = escape(url);
-      // 加 onerror 显示路径,让用户能看到为啥不显示(404 的 URL 全文)
+      const safeSrc = escape(src);
+      const mediaTag = isVideoUrl(url)
+        ? `<video src="${safeSrc}" muted playsinline preload="metadata" title="${safeUrl}" style="width:100%;height:100%;object-fit:cover;pointer-events:none;"></video>
+           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18);pointer-events:none;">
+             <div style="width:28px;height:28px;background:rgba(0,0,0,.6);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;backdrop-filter:blur(4px);">▶</div>
+           </div>`
+        : `<img src="${safeSrc}" alt="" title="${safeUrl}"
+                onerror="this.style.display='none';this.nextElementSibling?.classList.remove('hidden');" />`;
       return `<div class="img-tile ${i===0?'is-main':''}" draggable="true" data-idx="${i}">
-        <img src="${escape(src)}" alt="" title="${safeUrl}"
-             onerror="this.style.display='none';this.nextElementSibling?.classList.remove('hidden');" />
+        ${mediaTag}
         <div class="img-broken hidden" style="display:none">
           <div class="icon">⚠</div>
           <div>not found</div>
@@ -193,12 +205,13 @@
         <button type="button" class="del-x" data-idx="${i}" title="Remove">×</button>
       </div>`;
     }).join('');
-    // onerror 把 img display:none 时,让 .img-broken 显示
+    // 图片 onerror 时显示 .img-broken
     tilesEl.querySelectorAll('.img-tile').forEach(t => {
       const img = t.querySelector('img');
       const broken = t.querySelector('.img-broken');
-      if (!img || !broken) return;
-      img.addEventListener('error', () => { img.style.display = 'none'; broken.style.display = 'flex'; });
+      if (img && broken) {
+        img.addEventListener('error', () => { img.style.display = 'none'; broken.style.display = 'flex'; });
+      }
     });
     syncFields();
   }

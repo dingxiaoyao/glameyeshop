@@ -173,34 +173,117 @@
         document.getElementById('breadcrumb-cat').textContent = p.category;
         document.getElementById('breadcrumb-product').textContent = p.name;
 
-        // Gallery: main + thumbs (use main image first, then gallery_urls)
+        // Gallery: 图 + 视频混排(用后缀检测)
         const Img = window.GlamEye.Img;
-        const allImages = [p.image_url].concat(p.gallery_urls || []).filter(Boolean);
-        // 主图替换为 <picture> + detail 档位(1024 / 1600)
-        const mainWrap = document.getElementById('p-main-img-wrap');
-        if (mainWrap && allImages[0]) {
-          mainWrap.innerHTML = Img.picture(allImages[0], 'detail', {
-            alt: p.name, loading: 'eager', fetchpriority: 'high'
-          });
+        const isVideo = (url) => /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url || '');
+        const allMedia = [p.image_url].concat(p.gallery_urls || []).filter(Boolean);
+
+        function renderMain(url) {
+          const mainWrap = document.getElementById('p-main-img-wrap');
+          if (!mainWrap || !url) return;
+          if (isVideo(url)) {
+            mainWrap.classList.add('is-video');
+            mainWrap.innerHTML = `<video src="${fmt.escape(url)}" controls playsinline preload="metadata" style="width:100%;height:100%;"></video>`;
+          } else {
+            mainWrap.classList.remove('is-video');
+            mainWrap.innerHTML = Img.picture(url, 'detail', {
+              alt: p.name, loading: 'eager', fetchpriority: 'high'
+            });
+          }
         }
+        renderMain(allMedia[0]);
+
         const thumbsEl = document.getElementById('p-thumbs');
-        thumbsEl.innerHTML = allImages.map((url, i) => `
-          <div class="pdp-thumb ${i === 0 ? 'active' : ''}" data-img="${fmt.escape(url)}">
+        thumbsEl.innerHTML = allMedia.map((url, i) => {
+          const safe = fmt.escape(url);
+          if (isVideo(url)) {
+            return `<div class="pdp-thumb ${i === 0 ? 'active' : ''}" data-media="${safe}">
+              <video src="${safe}" muted playsinline preload="metadata"></video>
+              <div class="pdp-thumb-play"><span>▶</span></div>
+            </div>`;
+          }
+          return `<div class="pdp-thumb ${i === 0 ? 'active' : ''}" data-media="${safe}">
             ${Img.picture(url, 'thumb', { alt: p.name + ' ' + (i+1), loading: 'lazy' })}
-          </div>
-        `).join('');
+          </div>`;
+        }).join('');
         thumbsEl.addEventListener('click', (e) => {
           const t = e.target.closest('.pdp-thumb');
           if (!t) return;
           document.querySelectorAll('.pdp-thumb').forEach(x => x.classList.remove('active'));
           t.classList.add('active');
-          // 切主图:重新生成 picture
-          const url = t.dataset.img;
-          if (mainWrap && url) {
-            mainWrap.innerHTML = Img.picture(url, 'detail', {
-              alt: p.name, loading: 'eager', fetchpriority: 'high'
-            });
+          renderMain(t.dataset.media);
+        });
+
+        // ============== Lightbox ==============
+        // 点击主图打开全屏 overlay,左右切换 + ESC 关闭 + mobile swipe
+        let lbIdx = 0;
+        const lb = document.createElement('div');
+        lb.className = 'lightbox';
+        lb.innerHTML = `
+          <span class="lightbox-counter"></span>
+          <button class="lightbox-close" aria-label="Close">×</button>
+          <button class="lightbox-nav prev" aria-label="Previous">‹</button>
+          <div class="lightbox-stage"></div>
+          <button class="lightbox-nav next" aria-label="Next">›</button>
+        `;
+        document.body.appendChild(lb);
+        const lbStage   = lb.querySelector('.lightbox-stage');
+        const lbCounter = lb.querySelector('.lightbox-counter');
+        const lbPrev    = lb.querySelector('.lightbox-nav.prev');
+        const lbNext    = lb.querySelector('.lightbox-nav.next');
+
+        function lbRender() {
+          const url = allMedia[lbIdx];
+          if (!url) return;
+          lbCounter.textContent = `${lbIdx + 1} / ${allMedia.length}`;
+          if (isVideo(url)) {
+            lbStage.innerHTML = `<video src="${fmt.escape(url)}" controls autoplay playsinline></video>`;
+          } else {
+            // 大图用 detail 档位 1600w max
+            lbStage.innerHTML = Img.picture(url, 'detail', { alt: p.name, loading: 'eager' });
           }
+          lbPrev.classList.toggle('hidden', allMedia.length < 2);
+          lbNext.classList.toggle('hidden', allMedia.length < 2);
+        }
+        function lbOpen(i) {
+          lbIdx = ((i ?? 0) % allMedia.length + allMedia.length) % allMedia.length;
+          lbRender();
+          lb.classList.add('open');
+          document.body.style.overflow = 'hidden';
+        }
+        function lbClose() {
+          lb.classList.remove('open');
+          document.body.style.overflow = '';
+          // 停止所有视频(避免后台还在播)
+          lbStage.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });
+        }
+        function lbStep(d) { lbIdx = ((lbIdx + d) % allMedia.length + allMedia.length) % allMedia.length; lbRender(); }
+        lbPrev.addEventListener('click', () => lbStep(-1));
+        lbNext.addEventListener('click', () => lbStep(1));
+        lb.querySelector('.lightbox-close').addEventListener('click', lbClose);
+        lb.addEventListener('click', (e) => { if (e.target === lb) lbClose(); });
+        document.addEventListener('keydown', (e) => {
+          if (!lb.classList.contains('open')) return;
+          if (e.key === 'Escape') lbClose();
+          if (e.key === 'ArrowLeft')  lbStep(-1);
+          if (e.key === 'ArrowRight') lbStep(1);
+        });
+        // 触屏 swipe
+        let touchX = null;
+        lb.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+        lb.addEventListener('touchend', (e) => {
+          if (touchX === null) return;
+          const dx = e.changedTouches[0].clientX - touchX;
+          if (Math.abs(dx) > 50) lbStep(dx > 0 ? -1 : 1);
+          touchX = null;
+        });
+        // 主图点击打开
+        document.getElementById('p-main-img-wrap').addEventListener('click', (e) => {
+          // 如果点的是 video controls(全屏/暂停按钮)就不打开 lightbox
+          if (e.target.tagName === 'VIDEO') return;
+          const activeUrl = document.querySelector('.pdp-thumb.active')?.dataset.media || allMedia[0];
+          const i = allMedia.indexOf(activeUrl);
+          lbOpen(i >= 0 ? i : 0);
         });
 
         document.getElementById('p-cat').textContent = p.category + (p.style ? ' · ' + p.style : '');
