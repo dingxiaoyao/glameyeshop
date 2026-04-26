@@ -118,6 +118,85 @@
     }
   };
 
+  // ============== Responsive Images ==============
+  // 命名约定:abc.jpg 同目录有 abc-320.webp / abc-320.jpg / abc-640.{webp,jpg} / abc-1024.{webp,jpg} / abc-1600.{webp,jpg}
+  // 远程 URL(unsplash 等)直接返回原值,不组装 variant。
+  const Img = {
+    SIZES: [320, 640, 1024, 1600],
+    /** 取一个 variant URL。url 是数据库里存的原图路径。 */
+    variant(url, width, ext = 'webp') {
+      if (!url || typeof url !== 'string') return url;
+      if (/^https?:\/\//i.test(url)) return url; // 远程不动
+      const m = url.match(/^(.*)\.(jpe?g|png|webp)$/i);
+      if (!m) return url;
+      // 已经是 variant 形式 abc-640.jpg → 去掉后缀再换
+      const stem = m[1].replace(/-(\d{2,4})$/, '');
+      return `${stem}-${width}.${ext}`;
+    },
+    /** 生成 <picture> 字符串:webp 优先,jpg 兜底,默认 src 用最小档,srcset 给 1x/2x。
+     *  context: 'card' (列表卡片,640w 主) | 'thumb' (320w) | 'detail' (1600w) | 'hero' (1600w + fetchpriority)
+     *  attrs: 额外 img 属性,如 alt class loading
+     */
+    picture(url, context = 'card', attrs = {}) {
+      const esc = Fmt.escape;
+      const isRemote = /^https?:\/\//i.test(url || '');
+      const altAttr = `alt="${esc(attrs.alt || '')}"`;
+      const cls     = attrs.class ? ` class="${esc(attrs.class)}"` : '';
+      const loading = attrs.loading || 'lazy';
+      const fp      = attrs.fetchpriority ? ` fetchpriority="${esc(attrs.fetchpriority)}"` : '';
+      const decode  = ` decoding="${esc(attrs.decoding || 'async')}"`;
+      const sizes   = attrs.sizes ? ` sizes="${esc(attrs.sizes)}"` : '';
+      // 远程 URL 直接 <img>,不组 srcset
+      if (isRemote || !url) {
+        return `<img src="${esc(url || '')}" ${altAttr}${cls} loading="${esc(loading)}"${fp}${decode}>`;
+      }
+      // 各 context 用什么档
+      // card / shop list:首屏走 640,2x 屏走 1024
+      // thumb:320 (1x) + 640 (2x)
+      // detail:1024 (1x) + 1600 (2x)
+      // hero:1600 (load eager + high priority)
+      let webp1, webp2, jpg1, jpg2, base;
+      if (context === 'thumb') {
+        webp1 = Img.variant(url, 320, 'webp'); webp2 = Img.variant(url, 640, 'webp');
+        jpg1  = Img.variant(url, 320, 'jpg');  jpg2  = Img.variant(url, 640, 'jpg');
+        base = jpg1;
+      } else if (context === 'detail' || context === 'hero') {
+        webp1 = Img.variant(url, 1024, 'webp'); webp2 = Img.variant(url, 1600, 'webp');
+        jpg1  = Img.variant(url, 1024, 'jpg');  jpg2  = Img.variant(url, 1600, 'jpg');
+        base = jpg1;
+      } else { // card 默认
+        webp1 = Img.variant(url, 640, 'webp'); webp2 = Img.variant(url, 1024, 'webp');
+        jpg1  = Img.variant(url, 640, 'jpg');  jpg2  = Img.variant(url, 1024, 'jpg');
+        base = jpg1;
+      }
+      const finalLoading = (context === 'hero') ? 'eager' : loading;
+      const finalFp      = (context === 'hero' && !attrs.fetchpriority) ? ' fetchpriority="high"' : fp;
+      // onerror:variant 不存在时回退原图(防止部署初期回填还没跑)
+      const fallback = esc(url);
+      const onerr = ` onerror="this.onerror=null;this.src='${fallback}';"`;
+      return `<picture>
+        <source type="image/webp" srcset="${esc(webp1)} 1x, ${esc(webp2)} 2x">
+        <source type="image/jpeg" srcset="${esc(jpg1)} 1x, ${esc(jpg2)} 2x">
+        <img src="${esc(base)}" ${altAttr}${cls} loading="${esc(finalLoading)}"${finalFp}${decode}${sizes}${onerr}>
+      </picture>`;
+    },
+    /** 给已有的 <img> 元素就地升级:换成 picture 包裹(用于不方便整段重写 HTML 的场景) */
+    upgrade(imgEl, context = 'card') {
+      if (!imgEl || imgEl.dataset.upgraded) return;
+      const url = imgEl.getAttribute('src');
+      if (!url) return;
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = Img.picture(url, context, {
+        alt: imgEl.getAttribute('alt') || '',
+        class: imgEl.getAttribute('class') || '',
+        loading: imgEl.getAttribute('loading') || 'lazy',
+      });
+      const pic = wrapper.firstElementChild;
+      imgEl.parentNode.replaceChild(pic, imgEl);
+      pic.querySelector('img').dataset.upgraded = '1';
+    },
+  };
+
   // ============== Init ==============
   // ============== Page Tracking ==============
   function trackPageView() {
@@ -249,5 +328,5 @@
     document.body.classList.add('loaded');
   });
 
-  window.GlamEye = { Cart, Notification, Auth, Fmt };
+  window.GlamEye = { Cart, Notification, Auth, Fmt, Img };
 })();

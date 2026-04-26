@@ -7,6 +7,7 @@
 // 返回 { url: '/uploads/2026/04/abc.jpg', size: 12345 }
 // ============================================================
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/image-processor.php';
 requireAdminAuth();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -75,11 +76,30 @@ if (!move_uploaded_file($file['tmp_name'], $destPath)) {
 
 $publicUrl = '/uploads/' . $year . '/' . $month . '/' . $filename;
 
+// 图片自动生成 4 档响应式版本(thumb/card/medium/large × webp+jpg)
+$variants = [];
+$processError = null;
+if (!$isVideo) {
+    try {
+        $r = ImageProcessor::process($destPath);
+        $variants = $r['generated'];
+        if (!empty($r['errors'])) {
+            $processError = implode('; ', $r['errors']);
+            error_log('[admin-upload] image-processor errors: ' . $processError);
+        }
+    } catch (Throwable $e) {
+        $processError = $e->getMessage();
+        error_log('[admin-upload] image-processor exception: ' . $processError);
+    }
+}
+
 sendJson([
-    'success'   => true,
-    'url'       => $publicUrl,
-    'size'      => filesize($destPath),
-    'mime'      => $mime,
-    'is_video'  => $isVideo,
-    'filename'  => $filename,
+    'success'        => true,
+    'url'            => $publicUrl,
+    'size'           => filesize($destPath),
+    'mime'           => $mime,
+    'is_video'       => $isVideo,
+    'filename'       => $filename,
+    'variants'       => $variants,        // { thumb_webp:'abc-320.webp', card_webp:'abc-640.webp', ... }
+    'process_error'  => $processError,    // null 表示正常
 ]);

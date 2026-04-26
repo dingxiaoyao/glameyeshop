@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   const fmt = window.GlamEye.Fmt;
+  const Img = window.GlamEye.Img;
   const escape = (s) => fmt.escape(s);
   const money  = (n) => fmt.money(n);
 
@@ -9,12 +10,11 @@
     const sale = p.compare_at_price && Number(p.compare_at_price) > Number(p.price);
     const badge = p.is_new == 1 ? 'new' : (sale ? 'sale' : (p.is_bestseller == 1 ? 'bestseller' : ''));
     const badgeText = p.is_new == 1 ? 'New' : (sale ? 'Sale' : (p.is_bestseller == 1 ? 'Bestseller' : ''));
+    const picture = Img.picture(p.image_url, 'card', { alt: p.name, loading: 'lazy' });
     return `
       <article class="product-card" data-id="${p.id}">
         <div class="product-image">
-          <a href="product.html?sku=${escape(p.sku)}">
-            <img src="${escape(p.image_url)}" alt="${escape(p.name)}" loading="lazy" />
-          </a>
+          <a href="product.html?sku=${escape(p.sku)}">${picture}</a>
           ${badge ? `<span class="product-badge ${badge}">${badgeText}</span>` : ''}
           <button class="wishlist-btn" data-product="${p.id}">♡</button>
         </div>

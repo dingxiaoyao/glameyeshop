@@ -1,6 +1,9 @@
 # GlamEye - Apache 配置（nginx 用 sites-available/glameye 配置）
-# 安全 + 缓存 + 错误页
+# 安全 + 缓存 + 压缩 + 错误页
 
+# ============================================================
+# 安全:禁止访问敏感文件
+# ============================================================
 <FilesMatch "^(\.env|\.git|composer\.json|composer\.lock|\.htaccess|README\.md|setup-deploy\.sh)$">
     Require all denied
 </FilesMatch>
@@ -9,29 +12,72 @@
     Require all denied
 </FilesMatch>
 
+# ============================================================
+# 安全 / 性能 头
+# ============================================================
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
     Header set X-Frame-Options "SAMEORIGIN"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
     Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    # 浏览器对支持 webp 的请求会发 Accept: image/webp，让代理/CDN 按 Accept 区分缓存
+    <FilesMatch "\.(jpe?g|png|gif|webp|avif)$">
+        Header append Vary "Accept"
+    </FilesMatch>
+
+    # immutable:文件名带 -320/-640/-1024/-1600 的图片是内容寻址的（永远不变）
+    <FilesMatch "-(320|640|1024|1600)\.(webp|jpe?g|png)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
 </IfModule>
 
+# ============================================================
+# 浏览器缓存:静态资源长缓存,HTML 不缓存
+# ============================================================
 <IfModule mod_expires.c>
     ExpiresActive On
-    ExpiresByType text/css                "access plus 7 days"
-    ExpiresByType application/javascript  "access plus 7 days"
-    ExpiresByType image/jpeg              "access plus 30 days"
-    ExpiresByType image/png               "access plus 30 days"
-    ExpiresByType image/webp              "access plus 30 days"
-    ExpiresByType image/svg+xml           "access plus 30 days"
-    ExpiresByType image/x-icon            "access plus 30 days"
-    ExpiresByType video/mp4               "access plus 30 days"
+
+    # 1 年:图片、字体（变体图通过 Header immutable 又加强一道）
+    ExpiresByType image/webp              "access plus 1 year"
+    ExpiresByType image/avif              "access plus 1 year"
+    ExpiresByType image/jpeg              "access plus 1 year"
+    ExpiresByType image/png               "access plus 1 year"
+    ExpiresByType image/svg+xml           "access plus 1 year"
+    ExpiresByType image/x-icon            "access plus 1 year"
+    ExpiresByType image/gif               "access plus 1 year"
+    ExpiresByType video/mp4               "access plus 6 months"
+    ExpiresByType font/woff               "access plus 1 year"
+    ExpiresByType font/woff2              "access plus 1 year"
+    ExpiresByType application/font-woff   "access plus 1 year"
+    ExpiresByType application/font-woff2  "access plus 1 year"
+
+    # CSS / JS:1 个月（部署频率不高时够用）
+    ExpiresByType text/css                "access plus 1 month"
+    ExpiresByType application/javascript  "access plus 1 month"
+    ExpiresByType text/javascript         "access plus 1 month"
+
+    # JSON / HTML 不长缓存
+    ExpiresByType application/json        "access plus 0 seconds"
+    ExpiresByType text/html               "access plus 0 seconds"
+</IfModule>
+
+# ============================================================
+# 压缩:Brotli 优先,Gzip 兜底
+# ============================================================
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/plain text/xml text/javascript application/javascript application/json application/xml application/rss+xml image/svg+xml
 </IfModule>
 
 <IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json text/xml
+    AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml text/javascript application/javascript application/json application/xml application/rss+xml image/svg+xml
+    # 已经压缩的格式不再二次压缩
+    SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png|webp|avif|woff2?|mp4|webm)$ no-gzip dont-vary
 </IfModule>
 
+# ============================================================
+# 路由 / 错误页
+# ============================================================
 DirectoryIndex index.html index.php
 
 ErrorDocument 404 /404.html

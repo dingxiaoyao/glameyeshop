@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   const fmt = window.GlamEye.Fmt;
+  const Img = window.GlamEye.Img;
   const escape = (s) => fmt.escape(s);
   const money  = (n) => fmt.money(n);
 
@@ -9,12 +10,11 @@
     const sale = p.compare_at_price && Number(p.compare_at_price) > Number(p.price);
     const badge = p.is_new == 1 ? 'new' : (sale ? 'sale' : (p.is_bestseller == 1 ? 'bestseller' : ''));
     const badgeText = p.is_new == 1 ? 'New' : (sale ? 'Sale' : (p.is_bestseller == 1 ? 'Bestseller' : ''));
+    const picture = Img.picture(p.image_url, 'card', { alt: p.name, loading: 'lazy' });
     return `
       <article class="product-card" data-id="${p.id}">
         <div class="product-image">
-          <a href="product.html?sku=${escape(p.sku)}">
-            <img src="${escape(p.image_url)}" alt="${escape(p.name)}" loading="lazy" />
-          </a>
+          <a href="product.html?sku=${escape(p.sku)}">${picture}</a>
           ${badge ? `<span class="product-badge ${badge}">${badgeText}</span>` : ''}
           <button class="wishlist-btn" data-product="${p.id}" aria-label="Save">♡</button>
         </div>
@@ -113,8 +113,25 @@
       const slidesEl = document.getElementById('hero-slides');
       const dotsEl = document.getElementById('hero-dots');
       if (slidesEl && heroImages.length) {
+        // hero 用 1024 webp(若浏览器不支持会失败,onerror 不在 background 上,所以这里两路:第一张 preload,然后用 webp,降级到原图)
+        const supportsWebp = (() => {
+          try { return document.createElement('canvas').toDataURL('image/webp').indexOf('data:image/webp') === 0; }
+          catch (e) { return false; }
+        })();
+        const heroVariant = (u) => {
+          if (/^https?:\/\//i.test(u)) return u;
+          return supportsWebp ? Img.variant(u, 1024, 'webp') : Img.variant(u, 1024, 'jpg');
+        };
+        // preload 首张,加快首屏(动态注入 link rel=preload)
+        if (heroImages[0]) {
+          const link = document.createElement('link');
+          link.rel = 'preload'; link.as = 'image';
+          link.href = heroVariant(heroImages[0]);
+          link.fetchPriority = 'high';
+          document.head.appendChild(link);
+        }
         slidesEl.innerHTML = heroImages.map((url, i) =>
-          `<div class="hero-slide ${i===0?'active':''}" style="background-image: url('${escape(url)}');"></div>`
+          `<div class="hero-slide ${i===0?'active':''}" style="background-image: url('${escape(heroVariant(url))}');"></div>`
         ).join('');
         if (dotsEl && heroImages.length > 1) {
           dotsEl.innerHTML = heroImages.map((_, i) =>

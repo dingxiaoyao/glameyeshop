@@ -86,7 +86,7 @@
 
   <article class="pdp">
     <div class="pdp-gallery">
-      <div class="pdp-main-img"><img id="p-main-img" src="" alt="" /></div>
+      <div class="pdp-main-img" id="p-main-img-wrap"><img id="p-main-img" src="" alt="" decoding="async" fetchpriority="high" /></div>
       <div class="pdp-thumbs" id="p-thumbs"></div>
     </div>
 
@@ -174,13 +174,19 @@
         document.getElementById('breadcrumb-product').textContent = p.name;
 
         // Gallery: main + thumbs (use main image first, then gallery_urls)
+        const Img = window.GlamEye.Img;
         const allImages = [p.image_url].concat(p.gallery_urls || []).filter(Boolean);
-        document.getElementById('p-main-img').src = allImages[0] || '';
-        document.getElementById('p-main-img').alt = p.name;
+        // 主图替换为 <picture> + detail 档位(1024 / 1600)
+        const mainWrap = document.getElementById('p-main-img-wrap');
+        if (mainWrap && allImages[0]) {
+          mainWrap.innerHTML = Img.picture(allImages[0], 'detail', {
+            alt: p.name, loading: 'eager', fetchpriority: 'high'
+          });
+        }
         const thumbsEl = document.getElementById('p-thumbs');
         thumbsEl.innerHTML = allImages.map((url, i) => `
           <div class="pdp-thumb ${i === 0 ? 'active' : ''}" data-img="${fmt.escape(url)}">
-            <img src="${fmt.escape(url)}" alt="${fmt.escape(p.name)} ${i+1}" loading="lazy" />
+            ${Img.picture(url, 'thumb', { alt: p.name + ' ' + (i+1), loading: 'lazy' })}
           </div>
         `).join('');
         thumbsEl.addEventListener('click', (e) => {
@@ -188,7 +194,13 @@
           if (!t) return;
           document.querySelectorAll('.pdp-thumb').forEach(x => x.classList.remove('active'));
           t.classList.add('active');
-          document.getElementById('p-main-img').src = t.dataset.img;
+          // 切主图:重新生成 picture
+          const url = t.dataset.img;
+          if (mainWrap && url) {
+            mainWrap.innerHTML = Img.picture(url, 'detail', {
+              alt: p.name, loading: 'eager', fetchpriority: 'high'
+            });
+          }
         });
 
         document.getElementById('p-cat').textContent = p.category + (p.style ? ' · ' + p.style : '');
@@ -249,7 +261,7 @@
         document.getElementById('related-products').innerHTML = related.map((rp) => `
           <article class="product-card">
             <div class="product-image">
-              <a href="product.html?sku=${escape(rp.sku)}"><img src="${escape(rp.image_url)}" alt="${escape(rp.name)}" loading="lazy" /></a>
+              <a href="product.html?sku=${escape(rp.sku)}">${Img.picture(rp.image_url, 'card', { alt: rp.name, loading: 'lazy' })}</a>
             </div>
             <div class="product-info">
               <span class="product-cat">${escape(rp.category)}${rp.length_mm ? ' · ' + rp.length_mm + 'mm' : ''}</span>

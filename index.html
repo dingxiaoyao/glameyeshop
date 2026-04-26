@@ -27,6 +27,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://images.unsplash.com" />
+  <link rel="preload" as="image" href="/images/lash-photos/style-14-frost-split-1024.webp" type="image/webp" fetchpriority="high" />
+  <link rel="preload" as="image" href="/images/lash-photos/style-14-frost-split-1024.jpg" fetchpriority="high" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -63,7 +65,8 @@
     <!-- Hero -->
     <section class="hero" id="hero-section">
       <div class="hero-slides" id="hero-slides">
-        <div class="hero-slide active" style="background-image: url('/images/lash-photos/style-14-frost-split.jpg');"></div>
+        <!-- 内联 fallback 用 1024.jpg(原图 716KB → 122KB),JS 加载后会动态替换为 webp + 自动轮播 -->
+        <div class="hero-slide active" style="background-image: url('/images/lash-photos/style-14-frost-split-1024.jpg');"></div>
       </div>
       <div class="container">
         <div class="hero-content">
@@ -89,28 +92,40 @@
       </div>
       <div class="cat-grid">
         <a href="shop.html?category=mink" class="cat-card">
-          <img src="/images/lash-photos/style-18-velvet-split.jpg" alt="Mink Collection" loading="lazy" />
+          <picture>
+            <source type="image/webp" srcset="/images/lash-photos/style-18-velvet-split-640.webp 1x, /images/lash-photos/style-18-velvet-split-1024.webp 2x">
+            <source type="image/jpeg" srcset="/images/lash-photos/style-18-velvet-split-640.jpg 1x, /images/lash-photos/style-18-velvet-split-1024.jpg 2x">
+            <img src="/images/lash-photos/style-18-velvet-split-640.jpg" alt="Mink Collection" loading="lazy" decoding="async">
+          </picture>
           <div class="cat-card-content">
             <h3>Mink Collection</h3>
             <span class="cat-link">Shop Mink →</span>
           </div>
         </a>
         <a href="shop.html?category=faux" class="cat-card">
-          <img src="/images/lash-photos/style-09-feather-eye.jpg" alt="Faux Mink Collection" loading="lazy" />
+          <picture>
+            <source type="image/webp" srcset="/images/lash-photos/style-09-feather-eye-640.webp 1x, /images/lash-photos/style-09-feather-eye-1024.webp 2x">
+            <source type="image/jpeg" srcset="/images/lash-photos/style-09-feather-eye-640.jpg 1x, /images/lash-photos/style-09-feather-eye-1024.jpg 2x">
+            <img src="/images/lash-photos/style-09-feather-eye-640.jpg" alt="Faux Mink Collection" loading="lazy" decoding="async">
+          </picture>
           <div class="cat-card-content">
             <h3>Vegan Faux Mink</h3>
             <span class="cat-link">Shop Faux →</span>
           </div>
         </a>
         <a href="shop.html?category=magnetic" class="cat-card">
-          <img src="/images/lash-photos/style-14-frost-eye.jpg" alt="Magnetic Lashes" loading="lazy" />
+          <picture>
+            <source type="image/webp" srcset="/images/lash-photos/style-14-frost-eye-640.webp 1x, /images/lash-photos/style-14-frost-eye-1024.webp 2x">
+            <source type="image/jpeg" srcset="/images/lash-photos/style-14-frost-eye-640.jpg 1x, /images/lash-photos/style-14-frost-eye-1024.jpg 2x">
+            <img src="/images/lash-photos/style-14-frost-eye-640.jpg" alt="Magnetic Lashes" loading="lazy" decoding="async">
+          </picture>
           <div class="cat-card-content">
             <h3>Magnetic Lashes</h3>
             <span class="cat-link">Shop Magnetic →</span>
           </div>
         </a>
         <a href="shop.html?category=tools" class="cat-card">
-          <img src="https://images.unsplash.com/photo-1617897903246-719242758050?w=800&q=80&auto=format&fit=crop" alt="Tools & Accessories" loading="lazy" />
+          <img src="https://images.unsplash.com/photo-1617897903246-719242758050?w=640&q=70&auto=format&fit=crop" alt="Tools & Accessories" loading="lazy" decoding="async">
           <div class="cat-card-content">
             <h3>Tools & Accessories</h3>
             <span class="cat-link">Shop Tools →</span>

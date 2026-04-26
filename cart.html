@@ -62,7 +62,11 @@
   <script>
     (function () {
       const fmt = window.GlamEye.Fmt;
+      const Img = window.GlamEye.Img;
       const escape = fmt.escape, money = fmt.money;
+      // 购物车缩略图用 thumb 档(320),足够显示 72x72
+      const thumb = (u) => Img && u && !/^https?:\/\//i.test(u)
+        ? Img.variant(u, 320, 'jpg') : u;
 
       function render() {
         const cart = window.GlamEye.Cart;
@@ -81,7 +85,7 @@
         summary.hidden = false;
         list.innerHTML = cart.items.map((it) => `
           <div class="cart-row" data-sku="${escape(it.sku)}">
-            <img src="${escape(it.image)}" alt="${escape(it.name)}" />
+            <img src="${escape(thumb(it.image) || it.image)}" alt="${escape(it.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${escape(it.image)}';" />
             <div class="cart-row-name">
               <strong>${escape(it.name)}</strong>
               <span class="muted small">${money(it.price)} each</span>
