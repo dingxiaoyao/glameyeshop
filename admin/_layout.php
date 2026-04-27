@@ -31,7 +31,7 @@ $activeNav  = $activeNav  ?? 'dashboard';
   <header class="admin-header">
     <div class="admin-header-inner">
       <a href="index.php" class="brand" style="font-size:1.2rem;">
-        <img src="../images/logo.png" alt="GlamEye" class="brand-logo" />
+        <img src="../images/logo.png?v=DEPLOYHASH" alt="GlamEye" class="brand-logo" />
         <span style="margin-left:.5rem; color:var(--gold); letter-spacing:3px; text-transform:uppercase; font-size:.7rem; font-family:var(--sans);">Admin</span>
       </a>
       <div style="display:flex; gap: 1rem; align-items: center;">
