@@ -11,12 +11,20 @@
     const badge = p.is_new == 1 ? 'new' : (sale ? 'sale' : (p.is_bestseller == 1 ? 'bestseller' : ''));
     const badgeText = p.is_new == 1 ? 'New' : (sale ? 'Sale' : (p.is_bestseller == 1 ? 'Bestseller' : ''));
     const picture = Img.picture(p.image_url, 'card', { alt: p.name, loading: 'lazy' });
+    // hover 第二张图(gallery_urls 第 1 张)— API 列表返回的是 JSON 字符串,兼容数组形式
+    let gal = p.gallery_urls;
+    if (typeof gal === 'string' && gal.trim()) { try { gal = JSON.parse(gal); } catch { gal = []; } }
+    const hoverUrl = (Array.isArray(gal) && gal[0]) || '';
+    const hoverPic = hoverUrl ? Img.picture(hoverUrl, 'card', { alt: p.name + ' alternate', loading: 'lazy' }) : '';
     // Stock urgency: 库存 < 20 显示 "Only X left"。P2 接真实 reviews 后,(100 + id*7) 的伪评论数会替换。
     const stockUrgent = (p.stock != null && p.stock > 0 && Number(p.stock) < 20);
     return `
       <article class="product-card" data-id="${p.id}">
-        <div class="product-image">
-          <a href="product.html?sku=${escape(p.sku)}">${picture}</a>
+        <div class="product-image${hoverPic ? ' has-hover' : ''}">
+          <a href="product.html?sku=${escape(p.sku)}">
+            <span class="product-image-main">${picture}</span>
+            ${hoverPic ? `<span class="product-image-hover">${hoverPic}</span>` : ''}
+          </a>
           ${badge ? `<span class="product-badge ${badge}">${badgeText}</span>` : ''}
           <button class="wishlist-btn" data-product="${p.id}" aria-label="Save">♡</button>
         </div>

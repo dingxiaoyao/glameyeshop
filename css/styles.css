@@ -349,9 +349,24 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   overflow: hidden;
   background: var(--bg);
 }
-.product-image > a { display: block; height: 100%; }
+.product-image > a { display: block; height: 100%; position: relative; }
 .product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; }
 .product-card:hover .product-image img { transform: scale(1.06); }
+
+/* hover 切换第二张图(gallery_urls[0])— 仅当 has-hover 时启用 */
+.product-image-main,
+.product-image-hover {
+  position: absolute; inset: 0; display: block;
+  transition: opacity .4s ease;
+}
+.product-image-main { opacity: 1; z-index: 1; }
+.product-image-hover { opacity: 0; z-index: 2; }
+.product-image.has-hover:hover .product-image-main { opacity: 0; }
+.product-image.has-hover:hover .product-image-hover { opacity: 1; }
+/* 触屏设备不要 hover 状态卡住,改成首次 tap 切到 hover 图、再 tap 跳详情页 */
+@media (hover: none) {
+  .product-image-hover { display: none; }
+}
 
 .product-badge {
   position: absolute; top: 1rem; right: 1rem;

@@ -11,10 +11,18 @@
     const badge = p.is_new == 1 ? 'new' : (sale ? 'sale' : (p.is_bestseller == 1 ? 'bestseller' : ''));
     const badgeText = p.is_new == 1 ? 'New' : (sale ? 'Sale' : (p.is_bestseller == 1 ? 'Bestseller' : ''));
     const picture = Img.picture(p.image_url, 'card', { alt: p.name, loading: 'lazy' });
+    // hover 第二张图(gallery_urls 第 1 张)
+    let gal = p.gallery_urls;
+    if (typeof gal === 'string' && gal.trim()) { try { gal = JSON.parse(gal); } catch { gal = []; } }
+    const hoverUrl = (Array.isArray(gal) && gal[0]) || '';
+    const hoverPic = hoverUrl ? Img.picture(hoverUrl, 'card', { alt: p.name + ' alternate', loading: 'lazy' }) : '';
     return `
       <article class="product-card" data-id="${p.id}">
-        <div class="product-image">
-          <a href="product.html?sku=${escape(p.sku)}">${picture}</a>
+        <div class="product-image${hoverPic ? ' has-hover' : ''}">
+          <a href="product.html?sku=${escape(p.sku)}">
+            <span class="product-image-main">${picture}</span>
+            ${hoverPic ? `<span class="product-image-hover">${hoverPic}</span>` : ''}
+          </a>
           ${badge ? `<span class="product-badge ${badge}">${badgeText}</span>` : ''}
           <button class="wishlist-btn" data-product="${p.id}">♡</button>
         </div>
