@@ -424,18 +424,26 @@
         // ============== Bullets (P1) ==============
         // 工具品类(无 length / reusable)隐藏 bullets,保持详情清爽
         const bulletsEl = document.getElementById('p-bullets');
-        if (p.length_mm || p.reusable_count) {
-          const lengthDesc = p.length_mm
-            ? `${p.length_mm}mm — ${p.length_mm <= 14 ? 'natural everyday wear' : (p.length_mm <= 18 ? 'noticeable lift without screaming "I am wearing lashes"' : (p.length_mm <= 22 ? 'date night drama with full volume' : 'red-carpet maximalist statement'))}.`
-            : 'Designed to flatter your natural eye shape.';
-          const bandDesc = p.band_type === 'cotton'
-            ? 'Soft cotton band invisible against your lid — all-day comfort, no eye-fatigue.'
-            : p.band_type === 'magnetic'
-              ? 'Magnetic band — no glue, no mess. Apply in seconds.'
-              : 'Ultra-thin clear band that disappears against your skin tone.';
-          const reuseDesc = p.reusable_count
-            ? `Up to ${p.reusable_count} wears with proper care — that's ~$${(Number(p.price) / p.reusable_count).toFixed(2)} per wear.`
-            : 'Premium materials built to last.';
+        const isCluster = (p.category === 'cluster-kit' || p.band_type === 'cluster');
+        if (p.length_mm || p.reusable_count || isCluster) {
+          // Cluster kit:固定卖点(graduated / DIY / kit 内容),不被 length_mm=14 误导成单一长度
+          const lengthDesc = isCluster
+            ? 'Graduated 8/10/12/14mm clusters — buildable from natural to dramatic in the same kit.'
+            : (p.length_mm
+              ? `${p.length_mm}mm — ${p.length_mm <= 14 ? 'natural everyday wear' : (p.length_mm <= 18 ? 'noticeable lift without screaming "I am wearing lashes"' : (p.length_mm <= 22 ? 'date night drama with full volume' : 'red-carpet maximalist statement'))}.`
+              : 'Designed to flatter your natural eye shape.');
+          const bandDesc = isCluster
+            ? 'DIY clusters sit under your natural lashes — invisible band, never on the lid. Snaps into place with Underneath Lash Technology.'
+            : (p.band_type === 'cotton'
+              ? 'Soft cotton band invisible against your lid — all-day comfort, no eye-fatigue.'
+              : p.band_type === 'magnetic'
+                ? 'Magnetic band — no glue, no mess. Apply in seconds.'
+                : 'Ultra-thin clear band that disappears against your skin tone.');
+          const reuseDesc = isCluster
+            ? 'All-day hold · waterproof · sweat-proof. Each kit gives 5–7 full applications + BOND/SEAL/REMOVER 5ml pens + applicator tweezer.'
+            : (p.reusable_count
+              ? `Up to ${p.reusable_count} wears with proper care — that's ~$${(Number(p.price) / p.reusable_count).toFixed(2)} per wear.`
+              : 'Premium materials built to last.');
           bulletsEl.querySelector('[data-key="length"] [data-text]').textContent = lengthDesc;
           bulletsEl.querySelector('[data-key="band"] [data-text]').textContent = bandDesc;
           bulletsEl.querySelector('[data-key="reusable"] [data-text]').textContent = reuseDesc;

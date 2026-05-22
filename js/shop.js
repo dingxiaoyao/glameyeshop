@@ -52,13 +52,21 @@
       const r = await fetch(url);
       const j = await r.json();
       let products = j.products || [];
-      // 支持按风格筛选:guide-card 设置了 ?style=natural / glam,前端再过滤(API 没字段也能跑)
+      // 支持按风格筛选 — 优先按 p.style 字段(natural / wispy / dramatic / volume / cat-eye / glamour),
+      // 兼容旧 ?style=glam(按 length_mm 兜底,给老链接续命)
       const params = new URLSearchParams(location.search);
       const style = (params.get('style') || '').toLowerCase();
-      if (style === 'natural') {
-        products = products.filter(p => Number(p.length_mm) > 0 && Number(p.length_mm) <= 18);
-      } else if (style === 'glam') {
-        products = products.filter(p => Number(p.length_mm) >= 20);
+      if (style) {
+        const styleMatch = products.filter(p => (p.style || '').toLowerCase() === style);
+        if (styleMatch.length > 0) {
+          products = styleMatch;
+        } else if (style === 'natural') {
+          products = products.filter(p => Number(p.length_mm) > 0 && Number(p.length_mm) <= 18);
+        } else if (style === 'glam') {
+          products = products.filter(p => Number(p.length_mm) >= 20);
+        } else {
+          products = []; // 未知 style 显示空
+        }
       }
       if (products.length === 0) {
         container.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">🔍</div><p>No products in this filter.</p><p class="muted small">Try clearing filters above.</p></div>';
@@ -75,23 +83,51 @@
     document.querySelectorAll('.filter-chip').forEach((c) => c.classList.remove('active'));
     const target = document.querySelector(`.filter-chip[data-cat="${cat}"]`);
     if (target) target.classList.add('active');
-    const titles = { mink: 'Mink Lashes', faux: 'Faux Mink (Vegan)', magnetic: 'Magnetic Lashes', tools: 'Tools & Accessories', '': 'Shop the Collection' };
-    document.getElementById('shop-title').textContent = titles[cat] || titles[''];
+    // 标题随 category 或 style 切换 — style 优先(更精准)
+    const params = new URLSearchParams(location.search);
+    const style = (params.get('style') || '').toLowerCase();
+    const titles = {
+      'cluster-kit': 'All Cluster Kits',
+      mink: 'Mink Lashes', faux: 'Faux Mink (Vegan)', magnetic: 'Magnetic Lashes',
+      tools: 'Tools & Accessories', '': 'Shop the Collection',
+    };
+    const styleTitles = {
+      natural: 'Natural Everyday Kits',
+      wispy:   'Wispy & Fluffy Kits',
+      dramatic:'Drama & Fox Eye Kits',
+    };
+    document.getElementById('shop-title').textContent = styleTitles[style] || titles[cat] || titles[''];
+  }
+
+  function setActiveStyle(style) {
+    document.querySelectorAll('.filter-chip').forEach((c) => c.classList.remove('active'));
+    const target = style
+      ? document.querySelector(`.filter-chip[data-style="${style}"]`)
+      : document.querySelector('.filter-chip[data-cat=""]');
+    if (target) target.classList.add('active');
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(location.search);
-    const initial = params.get('category') || '';
-    setActiveFilter(initial);
-    loadProducts(initial);
+    const initialCat   = params.get('category') || '';
+    const initialStyle = (params.get('style') || '').toLowerCase();
+    if (initialStyle) setActiveStyle(initialStyle);
+    else setActiveFilter(initialCat);
+    loadProducts(initialCat);
 
     document.getElementById('shop-filters').addEventListener('click', (e) => {
       const btn = e.target.closest('.filter-chip');
       if (!btn) return;
-      const cat = btn.dataset.cat;
-      const newUrl = cat ? `?category=${cat}` : location.pathname;
-      history.replaceState(null, '', newUrl);
-      setActiveFilter(cat);
+      const cat   = btn.dataset.cat   || '';
+      const style = btn.dataset.style || '';
+      // 按 style 筛选(纯前端,不传给 API)
+      const sp = new URLSearchParams();
+      if (cat) sp.set('category', cat);
+      if (style) sp.set('style', style);
+      const qs = sp.toString();
+      history.replaceState(null, '', qs ? '?' + qs : location.pathname);
+      if (style) setActiveStyle(style);
+      else setActiveFilter(cat);
       loadProducts(cat);
     });
 

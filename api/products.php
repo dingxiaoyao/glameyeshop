@@ -26,7 +26,7 @@ try {
     }
     $sql = 'SELECT * FROM products WHERE is_active = 1';
     $params = [];
-    if ($category && in_array($category, ['mink', 'faux', 'magnetic', 'tools', 'bundle'], true)) {
+    if ($category && in_array($category, ['mink', 'faux', 'magnetic', 'tools', 'bundle', 'cluster-kit'], true)) {
         $sql .= ' AND category = :cat';
         $params[':cat'] = $category;
     }

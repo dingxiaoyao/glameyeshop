@@ -652,3 +652,392 @@ INSERT IGNORE INTO reviews
 SELECT id, 'Hannah W.', 'Minneapolis, MN', 5, 'Gold applicator is gorgeous',
   'Looks like jewelry. Grippy enough that I don''t fumble and drop my lash mid-application like I used to with cheap plastic ones.',
   'approved', 1, 0, 8, 'seed:016' FROM products WHERE sku = 'GE-TOOL-APPL';
+
+-- ============================================================
+-- DIY Lash Cluster Kit migration (2026-05-22)
+-- 将旧 strip lash + magnetic 18 SKU 下架(保留数据);
+-- 上架 10 个真实 cluster kit SKU,使用真实产品图。
+-- 全部幂等,setup.sql 重复跑无副作用。
+-- ============================================================
+
+-- 下架旧 strip lash + magnetic(保留 GE-TOOL-* 工具 SKU,后续可能继续单卖)
+UPDATE products SET is_active = 0
+  WHERE sku LIKE 'GE-MINK-%' OR sku LIKE 'GE-FAUX-%' OR sku LIKE 'GE-MAG-%';
+
+-- 插入 10 个 cluster kit SKU(category='cluster-kit', band_type='cluster')
+INSERT IGNORE INTO products
+  (sku, category, style, name, short_description, description, length_mm, band_type, reusable_count,
+   price, compare_at_price, image_url, gallery_urls, stock, is_bestseller, is_new, sort_order)
+VALUES
+('GE-CK-NATURAL', 'cluster-kit', 'natural', 'Natural Bloom Cluster Kit',
+ 'Short dense clusters, naturally full', 'Soft, buildable everyday volume. Short densely-packed clusters disappear into your natural lashes for that barely-there look — perfect for office, school, or no-makeup days.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+ 14, 'cluster', NULL, 29.00, 39.00, '/images/products/GE-CK-NATURAL/main-1024.jpg',
+ '["/images/products/GE-CK-NATURAL/gallery-1-1024.jpg", "/images/products/GE-CK-NATURAL/gallery-2-1024.jpg", "/images/products/GE-CK-NATURAL/gallery-3-1024.jpg", "/images/products/GE-CK-NATURAL/gallery-4-1024.jpg", "/images/products/GE-CK-NATURAL/gallery-5-1024.jpg"]', 200, 1, 0, 101),
+
+('GE-CK-FLUFFY', 'cluster-kit', 'wispy', 'Fluffy Volume Cluster Kit',
+ 'Mid-length fluffy fan clusters', 'Open, airy fans that lift the eye. Mid-length clusters with a feathered taper for fluffy volume without weight. Pairs with brown or black mascara.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+ 14, 'cluster', NULL, 29.00, 39.00, '/images/products/GE-CK-FLUFFY/main-1024.jpg',
+ '["/images/products/GE-CK-FLUFFY/gallery-1-1024.jpg", "/images/products/GE-CK-FLUFFY/gallery-2-1024.jpg", "/images/products/GE-CK-FLUFFY/gallery-3-1024.jpg", "/images/products/GE-CK-FLUFFY/gallery-4-1024.jpg", "/images/products/GE-CK-FLUFFY/gallery-5-1024.jpg"]', 200, 1, 0, 102),
+
+('GE-CK-DRAMA', 'cluster-kit', 'dramatic', 'Drama Spike Cluster Kit',
+ 'Long spiky clusters, bold drama', 'Spiky long clusters that punch up your look. Designed for evenings, dates, content days. Builds high drama in 3 minutes flat.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+ 14, 'cluster', NULL, 32.00, 42.00, '/images/products/GE-CK-DRAMA/main-1024.jpg',
+ '["/images/products/GE-CK-DRAMA/gallery-1-1024.jpg", "/images/products/GE-CK-DRAMA/gallery-2-1024.jpg", "/images/products/GE-CK-DRAMA/gallery-3-1024.jpg", "/images/products/GE-CK-DRAMA/gallery-4-1024.jpg", "/images/products/GE-CK-DRAMA/gallery-5-1024.jpg"]', 200, 0, 1, 103),
+
+('GE-CK-WISPY', 'cluster-kit', 'wispy', 'Wispy Long Cluster Kit',
+ 'Long crisscross wispy clusters', 'Soft long wisps with subtle curl. The "crying-pretty" K-beauty look. Comfortable for long wear, blends seamlessly under top liner.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+ 14, 'cluster', NULL, 32.00, 42.00, '/images/products/GE-CK-WISPY/main-1024.jpg',
+ '["/images/products/GE-CK-WISPY/gallery-1-1024.jpg", "/images/products/GE-CK-WISPY/gallery-2-1024.jpg", "/images/products/GE-CK-WISPY/gallery-3-1024.jpg", "/images/products/GE-CK-WISPY/gallery-4-1024.jpg", "/images/products/GE-CK-WISPY/gallery-5-1024.jpg"]', 200, 1, 0, 104),
+
+('GE-CK-SOFT', 'cluster-kit', 'natural', 'Soft Whisper Cluster Kit',
+ 'Mid-length tapered tips, soft tone', 'Tapered clusters with whisper-thin ends. Adds quiet length without screaming "lashes". Most-loved by first-time cluster users.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+ 14, 'cluster', NULL, 29.00, 39.00, '/images/products/GE-CK-SOFT/main-1024.jpg',
+ '["/images/products/GE-CK-SOFT/gallery-1-1024.jpg", "/images/products/GE-CK-SOFT/gallery-2-1024.jpg", "/images/products/GE-CK-SOFT/gallery-3-1024.jpg", "/images/products/GE-CK-SOFT/gallery-4-1024.jpg", "/images/products/GE-CK-SOFT/gallery-5-1024.jpg", "/images/products/GE-CK-SOFT/gallery-6-1024.jpg", "/images/products/GE-CK-SOFT/gallery-7-1024.jpg", "/images/products/GE-CK-SOFT/gallery-8-1024.jpg", "/images/products/GE-CK-SOFT/gallery-9-1024.jpg"]', 200, 0, 1, 105),
+
+('GE-CK-DENSE', 'cluster-kit', 'wispy', 'Dense Glamour Cluster Kit',
+ 'Mid-density precision clusters', 'Refined density for that "lash extension" finish. Mid-length, mid-volume — the universal flatter that works for any eye shape.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+ 14, 'cluster', NULL, 29.00, 39.00, '/images/products/GE-CK-DENSE/main-1024.jpg',
+ '["/images/products/GE-CK-DENSE/gallery-1-1024.jpg", "/images/products/GE-CK-DENSE/gallery-2-1024.jpg", "/images/products/GE-CK-DENSE/gallery-3-1024.jpg", "/images/products/GE-CK-DENSE/gallery-4-1024.jpg", "/images/products/GE-CK-DENSE/gallery-5-1024.jpg", "/images/products/GE-CK-DENSE/gallery-6-1024.jpg", "/images/products/GE-CK-DENSE/gallery-7-1024.jpg", "/images/products/GE-CK-DENSE/gallery-8-1024.jpg", "/images/products/GE-CK-DENSE/gallery-9-1024.jpg"]', 200, 1, 0, 106),
+
+('GE-CK-FOXEYE', 'cluster-kit', 'dramatic', 'Fox Eye Cluster Kit',
+ 'Extra-long spikes, lifted outer corner', 'Long graduated spikes for the snatched fox-eye look. Concentrate longer clusters on outer corners for instant lift. TikTok-famous shape.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+ 14, 'cluster', NULL, 34.00, 44.00, '/images/products/GE-CK-FOXEYE/main-1024.jpg',
+ '["/images/products/GE-CK-FOXEYE/gallery-1-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-2-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-3-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-4-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-5-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-6-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-7-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-8-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-9-1024.jpg"]', 200, 0, 1, 107),
+
+('GE-CK-DAILY', 'cluster-kit', 'natural', 'Daily Bare Cluster Kit',
+ 'Shortest, sparsest, totally invisible', 'Almost-bare cluster kit for the most natural finish. Adds definition without volume. Perfect for clients who say "I just want my own lashes — better".
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+ 14, 'cluster', NULL, 25.00, 35.00, '/images/products/GE-CK-DAILY/main-1024.jpg',
+ '["/images/products/GE-CK-DAILY/gallery-1-1024.jpg", "/images/products/GE-CK-DAILY/gallery-2-1024.jpg", "/images/products/GE-CK-DAILY/gallery-3-1024.jpg", "/images/products/GE-CK-DAILY/gallery-4-1024.jpg", "/images/products/GE-CK-DAILY/gallery-5-1024.jpg"]', 200, 0, 1, 108),
+
+('GE-CK-INVISIBLE', 'cluster-kit', 'natural', 'Invisible Lite Cluster Kit',
+ 'Ultra-fine bare-band clusters', 'Our lightest weight cluster. Ultra-thin band, ultra-fine fibers. You will forget you are wearing them.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+ 14, 'cluster', NULL, 25.00, 35.00, '/images/products/GE-CK-INVISIBLE/main-1024.jpg',
+ '["/images/products/GE-CK-INVISIBLE/gallery-1-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-2-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-3-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-4-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-5-1024.jpg"]', 200, 0, 1, 109),
+
+('GE-CK-FEATHER', 'cluster-kit', 'wispy', 'Feather Flutter Cluster Kit',
+ 'Feathery wispy clusters, all-day flutter', 'Feather-weight clusters with a wispy flutter on every blink. The crowd-favorite for weddings and content days.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+ 14, 'cluster', NULL, 32.00, 42.00, '/images/products/GE-CK-FEATHER/main-1024.jpg',
+ '["/images/products/GE-CK-FEATHER/gallery-1-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-2-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-3-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-4-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-5-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-6-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-7-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-8-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-9-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-10-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-11-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-12-1024.jpg"]', 200, 1, 0, 110);
+
+-- 幂等 UPDATE:重置 image_url / gallery_urls / description / price 等代码管字段
+-- (stock / is_bestseller / is_new 等运营管字段不动 — 上线后 admin 可改)
+UPDATE products SET
+  category='cluster-kit', style='natural', name='Natural Bloom Cluster Kit',
+  short_description='Short dense clusters, naturally full',
+  description='Soft, buildable everyday volume. Short densely-packed clusters disappear into your natural lashes for that barely-there look — perfect for office, school, or no-makeup days.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+  length_mm=14, band_type='cluster',
+  price=29.00, compare_at_price=39.00,
+  image_url='/images/products/GE-CK-NATURAL/main-1024.jpg',
+  gallery_urls='["/images/products/GE-CK-NATURAL/gallery-1-1024.jpg", "/images/products/GE-CK-NATURAL/gallery-2-1024.jpg", "/images/products/GE-CK-NATURAL/gallery-3-1024.jpg", "/images/products/GE-CK-NATURAL/gallery-4-1024.jpg", "/images/products/GE-CK-NATURAL/gallery-5-1024.jpg"]',
+  is_active=1
+  WHERE sku='GE-CK-NATURAL';
+UPDATE products SET
+  category='cluster-kit', style='wispy', name='Fluffy Volume Cluster Kit',
+  short_description='Mid-length fluffy fan clusters',
+  description='Open, airy fans that lift the eye. Mid-length clusters with a feathered taper for fluffy volume without weight. Pairs with brown or black mascara.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+  length_mm=14, band_type='cluster',
+  price=29.00, compare_at_price=39.00,
+  image_url='/images/products/GE-CK-FLUFFY/main-1024.jpg',
+  gallery_urls='["/images/products/GE-CK-FLUFFY/gallery-1-1024.jpg", "/images/products/GE-CK-FLUFFY/gallery-2-1024.jpg", "/images/products/GE-CK-FLUFFY/gallery-3-1024.jpg", "/images/products/GE-CK-FLUFFY/gallery-4-1024.jpg", "/images/products/GE-CK-FLUFFY/gallery-5-1024.jpg"]',
+  is_active=1
+  WHERE sku='GE-CK-FLUFFY';
+UPDATE products SET
+  category='cluster-kit', style='dramatic', name='Drama Spike Cluster Kit',
+  short_description='Long spiky clusters, bold drama',
+  description='Spiky long clusters that punch up your look. Designed for evenings, dates, content days. Builds high drama in 3 minutes flat.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+  length_mm=14, band_type='cluster',
+  price=32.00, compare_at_price=42.00,
+  image_url='/images/products/GE-CK-DRAMA/main-1024.jpg',
+  gallery_urls='["/images/products/GE-CK-DRAMA/gallery-1-1024.jpg", "/images/products/GE-CK-DRAMA/gallery-2-1024.jpg", "/images/products/GE-CK-DRAMA/gallery-3-1024.jpg", "/images/products/GE-CK-DRAMA/gallery-4-1024.jpg", "/images/products/GE-CK-DRAMA/gallery-5-1024.jpg"]',
+  is_active=1
+  WHERE sku='GE-CK-DRAMA';
+UPDATE products SET
+  category='cluster-kit', style='wispy', name='Wispy Long Cluster Kit',
+  short_description='Long crisscross wispy clusters',
+  description='Soft long wisps with subtle curl. The "crying-pretty" K-beauty look. Comfortable for long wear, blends seamlessly under top liner.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+  length_mm=14, band_type='cluster',
+  price=32.00, compare_at_price=42.00,
+  image_url='/images/products/GE-CK-WISPY/main-1024.jpg',
+  gallery_urls='["/images/products/GE-CK-WISPY/gallery-1-1024.jpg", "/images/products/GE-CK-WISPY/gallery-2-1024.jpg", "/images/products/GE-CK-WISPY/gallery-3-1024.jpg", "/images/products/GE-CK-WISPY/gallery-4-1024.jpg", "/images/products/GE-CK-WISPY/gallery-5-1024.jpg"]',
+  is_active=1
+  WHERE sku='GE-CK-WISPY';
+UPDATE products SET
+  category='cluster-kit', style='natural', name='Soft Whisper Cluster Kit',
+  short_description='Mid-length tapered tips, soft tone',
+  description='Tapered clusters with whisper-thin ends. Adds quiet length without screaming "lashes". Most-loved by first-time cluster users.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+  length_mm=14, band_type='cluster',
+  price=29.00, compare_at_price=39.00,
+  image_url='/images/products/GE-CK-SOFT/main-1024.jpg',
+  gallery_urls='["/images/products/GE-CK-SOFT/gallery-1-1024.jpg", "/images/products/GE-CK-SOFT/gallery-2-1024.jpg", "/images/products/GE-CK-SOFT/gallery-3-1024.jpg", "/images/products/GE-CK-SOFT/gallery-4-1024.jpg", "/images/products/GE-CK-SOFT/gallery-5-1024.jpg", "/images/products/GE-CK-SOFT/gallery-6-1024.jpg", "/images/products/GE-CK-SOFT/gallery-7-1024.jpg", "/images/products/GE-CK-SOFT/gallery-8-1024.jpg", "/images/products/GE-CK-SOFT/gallery-9-1024.jpg"]',
+  is_active=1
+  WHERE sku='GE-CK-SOFT';
+UPDATE products SET
+  category='cluster-kit', style='wispy', name='Dense Glamour Cluster Kit',
+  short_description='Mid-density precision clusters',
+  description='Refined density for that "lash extension" finish. Mid-length, mid-volume — the universal flatter that works for any eye shape.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+  length_mm=14, band_type='cluster',
+  price=29.00, compare_at_price=39.00,
+  image_url='/images/products/GE-CK-DENSE/main-1024.jpg',
+  gallery_urls='["/images/products/GE-CK-DENSE/gallery-1-1024.jpg", "/images/products/GE-CK-DENSE/gallery-2-1024.jpg", "/images/products/GE-CK-DENSE/gallery-3-1024.jpg", "/images/products/GE-CK-DENSE/gallery-4-1024.jpg", "/images/products/GE-CK-DENSE/gallery-5-1024.jpg", "/images/products/GE-CK-DENSE/gallery-6-1024.jpg", "/images/products/GE-CK-DENSE/gallery-7-1024.jpg", "/images/products/GE-CK-DENSE/gallery-8-1024.jpg", "/images/products/GE-CK-DENSE/gallery-9-1024.jpg"]',
+  is_active=1
+  WHERE sku='GE-CK-DENSE';
+UPDATE products SET
+  category='cluster-kit', style='dramatic', name='Fox Eye Cluster Kit',
+  short_description='Extra-long spikes, lifted outer corner',
+  description='Long graduated spikes for the snatched fox-eye look. Concentrate longer clusters on outer corners for instant lift. TikTok-famous shape.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+  length_mm=14, band_type='cluster',
+  price=34.00, compare_at_price=44.00,
+  image_url='/images/products/GE-CK-FOXEYE/main-1024.jpg',
+  gallery_urls='["/images/products/GE-CK-FOXEYE/gallery-1-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-2-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-3-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-4-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-5-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-6-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-7-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-8-1024.jpg", "/images/products/GE-CK-FOXEYE/gallery-9-1024.jpg"]',
+  is_active=1
+  WHERE sku='GE-CK-FOXEYE';
+UPDATE products SET
+  category='cluster-kit', style='natural', name='Daily Bare Cluster Kit',
+  short_description='Shortest, sparsest, totally invisible',
+  description='Almost-bare cluster kit for the most natural finish. Adds definition without volume. Perfect for clients who say "I just want my own lashes — better".
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+  length_mm=14, band_type='cluster',
+  price=25.00, compare_at_price=35.00,
+  image_url='/images/products/GE-CK-DAILY/main-1024.jpg',
+  gallery_urls='["/images/products/GE-CK-DAILY/gallery-1-1024.jpg", "/images/products/GE-CK-DAILY/gallery-2-1024.jpg", "/images/products/GE-CK-DAILY/gallery-3-1024.jpg", "/images/products/GE-CK-DAILY/gallery-4-1024.jpg", "/images/products/GE-CK-DAILY/gallery-5-1024.jpg"]',
+  is_active=1
+  WHERE sku='GE-CK-DAILY';
+UPDATE products SET
+  category='cluster-kit', style='natural', name='Invisible Lite Cluster Kit',
+  short_description='Ultra-fine bare-band clusters',
+  description='Our lightest weight cluster. Ultra-thin band, ultra-fine fibers. You will forget you are wearing them.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+  length_mm=14, band_type='cluster',
+  price=25.00, compare_at_price=35.00,
+  image_url='/images/products/GE-CK-INVISIBLE/main-1024.jpg',
+  gallery_urls='["/images/products/GE-CK-INVISIBLE/gallery-1-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-2-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-3-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-4-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-5-1024.jpg"]',
+  is_active=1
+  WHERE sku='GE-CK-INVISIBLE';
+UPDATE products SET
+  category='cluster-kit', style='wispy', name='Feather Flutter Cluster Kit',
+  short_description='Feathery wispy clusters, all-day flutter',
+  description='Feather-weight clusters with a wispy flutter on every blink. The crowd-favorite for weddings and content days.
+
+Apply in 5 easy steps:
+1. Curl your natural lashes gently
+2. Apply a thin layer of BOND to your lash roots; wait a few seconds until slightly tacky
+3. Use tweezers to pick up a cluster, dab a little BOND on the base
+4. Place cluster under your natural lashes
+5. Apply SEAL to lock the look and wait until fully dry
+
+Kit Contents: Graduated 8/10/12/14mm DIY clusters · BOND pen 5ml (waterproof, sweat-proof, all-day hold) · SEAL pen 5ml (lock & shield, all-day armor) · REMOVER pen 5ml (gentle off, zero damage) · precision applicator tweezer.
+
+Pro Fibers · Pro Adhesive (polyacrylic acid + aqua) · Pro Retention',
+  length_mm=14, band_type='cluster',
+  price=32.00, compare_at_price=42.00,
+  image_url='/images/products/GE-CK-FEATHER/main-1024.jpg',
+  gallery_urls='["/images/products/GE-CK-FEATHER/gallery-1-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-2-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-3-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-4-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-5-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-6-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-7-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-8-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-9-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-10-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-11-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-12-1024.jpg"]',
+  is_active=1
+  WHERE sku='GE-CK-FEATHER';
