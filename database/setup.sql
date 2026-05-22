@@ -305,9 +305,9 @@ INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 ('social_facebook',    'https://facebook.com/glameye'),
 ('amazon_store_url',   ''),
 ('amazon_status',      'coming_soon'),
-('hero_image_url',     '/images/lash-photos/style-14-frost-split.jpg'),
+('hero_image_url',     '/images/about/cluster-application-1600.jpg'),
 -- 多图轮播（JSON array）。如果非空，覆盖 hero_image_url。前端 5s 切换
-('hero_image_urls',    '["/images/lash-photos/style-14-frost-split.jpg","/images/lash-photos/style-17-ice-split.jpg","/images/lash-photos/style-18-velvet-split.jpg"]'),
+('hero_image_urls',    '["/images/about/cluster-application-1600.jpg","/images/about/tools-trio-1600.jpg","/images/products/GE-CK-FEATHER/gallery-3-1600.jpg"]'),
 ('hero_slide_interval','5000'),
 ('seo_blocked',        '1'),
 -- 支付配置（PRIVATE - 不通过 api/settings.php 暴露）
@@ -556,8 +556,9 @@ SELECT * FROM (
 ) AS seed
 WHERE NOT EXISTS (SELECT 1 FROM ugc_submissions WHERE image_url = seed.image_url AND instagram_handle = seed.instagram_handle);
 
--- Hero 图覆盖
-UPDATE site_settings SET `value` = '/images/lash-photos/style-14-frost-split.jpg' WHERE `key` = 'hero_image_url';
+-- Hero 图覆盖(cluster kit 真实素材)
+UPDATE site_settings SET `value` = '/images/about/cluster-application-1600.jpg' WHERE `key` = 'hero_image_url';
+UPDATE site_settings SET `value` = '["/images/about/cluster-application-1600.jpg","/images/about/tools-trio-1600.jpg","/images/products/GE-CK-FEATHER/gallery-3-1600.jpg"]' WHERE `key` = 'hero_image_urls';
 
 -- ============================================================
 -- 种子评论:每个 bestseller 3-5 条 approved 真实质感评论 + 1-2 条 featured
