@@ -148,7 +148,7 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   <div class="form-group">
     <div class="form-row">
       <label><span class="label-text">Mode</span>
-        <select data-key="stripe_mode">
+        <select data-key="stripe_mode" id="stripe-mode-select">
           <option value="test">Test (sandbox)</option>
           <option value="live">Live (real money)</option>
         </select>
@@ -165,22 +165,86 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
     </label>
   </div>
 
+  <!-- P1#2: Test Connection 按钮 + 上次测试反馈 -->
+  <div style="display:flex; gap:.75rem; align-items:center; margin-top:1rem; flex-wrap:wrap;">
+    <button type="button" id="stripe-ping-btn" class="button button-outline" style="padding:.5rem 1rem;">
+      🔌 <?= $lang === 'zh' ? '测试连接' : 'Test Stripe Connection' ?>
+    </button>
+    <span id="stripe-ping-result" style="font-size:.85rem; color:var(--text-muted); flex:1 1 240px;">
+      <?= $lang === 'zh' ? '配置完后点这里验证密钥可用。' : 'Click to verify keys are valid before going live.' ?>
+    </span>
+  </div>
+
   <script>
     (function () {
-      var btn = document.getElementById('copy-webhook-url');
+      // Webhook URL Copy 按钮
+      var copyBtn = document.getElementById('copy-webhook-url');
       var code = document.getElementById('webhook-url');
-      if (!btn || !code) return;
-      btn.addEventListener('click', function () {
-        var url = code.textContent.trim();
-        var done = function () { btn.textContent = '✓ <?= $lang === 'zh' ? '已复制' : 'Copied' ?>'; setTimeout(function () { btn.textContent = '<?= $lang === 'zh' ? '复制' : 'Copy' ?>'; }, 1600); };
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(url).then(done).catch(function () {
+      if (copyBtn && code) {
+        copyBtn.addEventListener('click', function () {
+          var url = code.textContent.trim();
+          var done = function () { copyBtn.textContent = '✓ <?= $lang === 'zh' ? '已复制' : 'Copied' ?>'; setTimeout(function () { copyBtn.textContent = '<?= $lang === 'zh' ? '复制' : 'Copy' ?>'; }, 1600); };
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(done).catch(function () {
+              var r = document.createRange(); r.selectNode(code); window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+            });
+          } else {
             var r = document.createRange(); r.selectNode(code); window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
-          });
-        } else {
-          var r = document.createRange(); r.selectNode(code); window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
-        }
-      });
+          }
+        });
+      }
+
+      // P1#4: Mode 切换到 Live 时弹窗警告
+      var modeSel = document.getElementById('stripe-mode-select');
+      var lastSafeMode = modeSel ? modeSel.value : 'test';
+      if (modeSel) {
+        modeSel.addEventListener('focus', function () { lastSafeMode = modeSel.value; });
+        modeSel.addEventListener('change', function () {
+          if (modeSel.value === 'live' && lastSafeMode !== 'live') {
+            var confirmed = window.confirm(
+              <?= $lang === 'zh'
+                  ? "'⚠️ 切换到 LIVE 模式将使用真实信用卡处理付款!\\n\\n确认前请确保:\\n  1. 已用 Test 模式跑通了完整下单流程\\n  2. 已在 Stripe Dashboard 注册了 LIVE 模式的 webhook 端点\\n  3. 准备好把 sk_live_/pk_live_/whsec_ 密钥粘到下方字段\\n\\n继续切到 LIVE 模式吗?'"
+                  : "'⚠️ Switching to LIVE mode means real credit cards will be charged.\\n\\nBefore confirming:\\n  1. You should have tested the full checkout in TEST mode\\n  2. You should have registered a separate LIVE webhook endpoint in Stripe Dashboard\\n  3. You should be ready to paste your live sk_live_/pk_live_/whsec_ keys below\\n\\nContinue switching to LIVE mode?'"
+              ?>
+            );
+            if (!confirmed) { modeSel.value = lastSafeMode; return; }
+          }
+          lastSafeMode = modeSel.value;
+        });
+      }
+
+      // P1#2: Test Connection 按钮
+      var pingBtn = document.getElementById('stripe-ping-btn');
+      var pingResult = document.getElementById('stripe-ping-result');
+      if (pingBtn && pingResult) {
+        pingBtn.addEventListener('click', async function () {
+          pingBtn.disabled = true;
+          var origText = pingBtn.innerHTML;
+          pingBtn.textContent = '⏳ Testing…';
+          pingResult.style.color = 'var(--text-muted)';
+          pingResult.textContent = '<?= $lang === 'zh' ? '正在调用 Stripe…' : 'Calling Stripe…' ?>';
+          try {
+            var r = await fetch('../api/admin-stripe-ping.php', { credentials: 'include' });
+            var j = await r.json();
+            if (j.ok) {
+              pingResult.style.color = 'var(--success, #2c9)';
+              pingResult.innerHTML = '✓ ' + j.message;
+              if (j.webhook_secret_warning) {
+                pingResult.innerHTML += '<br><span style="color:var(--warn);">⚠ ' + j.webhook_secret_warning + '</span>';
+              }
+            } else {
+              pingResult.style.color = 'var(--error, #c33)';
+              pingResult.textContent = '✗ ' + j.message;
+            }
+          } catch (err) {
+            pingResult.style.color = 'var(--error, #c33)';
+            pingResult.textContent = '✗ Network error: ' + err.message;
+          } finally {
+            pingBtn.disabled = false;
+            pingBtn.innerHTML = origText;
+          }
+        });
+      }
     })();
   </script>
 </div>

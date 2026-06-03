@@ -1059,3 +1059,62 @@ UPDATE products SET image_url='/images/products/GE-CK-FOXEYE/gallery-5-1024.jpg'
 UPDATE products SET image_url='/images/products/GE-CK-DAILY/gallery-5-1024.jpg', gallery_urls='["/images/products/GE-CK-DAILY/gallery-3-1024.jpg", "/images/products/GE-CK-DAILY/gallery-4-1024.jpg", "/images/products/GE-CK-DAILY/main-1024.jpg", "/images/products/GE-CK-DAILY/gallery-1-1024.jpg", "/images/products/GE-CK-DAILY/gallery-2-1024.jpg"]' WHERE sku='GE-CK-DAILY';
 UPDATE products SET image_url='/images/products/GE-CK-INVISIBLE/gallery-5-1024.jpg', gallery_urls='["/images/products/GE-CK-INVISIBLE/gallery-3-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-4-1024.jpg", "/images/products/GE-CK-INVISIBLE/main-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-1-1024.jpg", "/images/products/GE-CK-INVISIBLE/gallery-2-1024.jpg"]' WHERE sku='GE-CK-INVISIBLE';
 UPDATE products SET image_url='/images/products/GE-CK-FEATHER/gallery-5-1024.jpg', gallery_urls='["/images/products/GE-CK-FEATHER/gallery-3-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-4-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-6-1024.jpg", "/images/products/GE-CK-FEATHER/main-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-1-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-2-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-7-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-8-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-9-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-10-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-11-1024.jpg", "/images/products/GE-CK-FEATHER/gallery-12-1024.jpg"]' WHERE sku='GE-CK-FEATHER';
+
+
+-- ============================================================
+-- Stripe 安全升级 #1:订单 checkout_token(防 IDOR)+ site_base_url(防 host 伪造)
+-- ============================================================
+DROP PROCEDURE IF EXISTS add_checkout_token_cols;
+DELIMITER //
+CREATE PROCEDURE add_checkout_token_cols()
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'orders' AND column_name = 'checkout_token') THEN
+    ALTER TABLE orders ADD COLUMN checkout_token VARCHAR(64) DEFAULT NULL;
+    ALTER TABLE orders ADD INDEX idx_checkout_token (checkout_token);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'orders' AND column_name = 'checkout_token_expires_at') THEN
+    ALTER TABLE orders ADD COLUMN checkout_token_expires_at TIMESTAMP NULL DEFAULT NULL;
+  END IF;
+END //
+DELIMITER ;
+CALL add_checkout_token_cols();
+DROP PROCEDURE add_checkout_token_cols;
+
+INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
+('site_base_url', 'https://glameyeshop.com');
+
+-- ============================================================
+-- Stripe 安全升级 #2:webhook 事件幂等表 — Stripe 重发同 event_id 时拦截重复处理
+-- ============================================================
+CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+    event_id   VARCHAR(64) PRIMARY KEY,                          -- evt_xxx Stripe 全局唯一
+    type       VARCHAR(80) NOT NULL,                              -- checkout.session.completed 等
+    order_id   INT DEFAULT NULL,                                  -- 关联订单(可空,如纯账户事件)
+    status     VARCHAR(32) NOT NULL DEFAULT 'received',           -- received / processed / error / amount_mismatch
+    raw_payload TEXT DEFAULT NULL,                                -- 失败时存 JSON 便于排查
+    error      TEXT DEFAULT NULL,
+    received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP NULL DEFAULT NULL,
+    INDEX idx_type (type),
+    INDEX idx_order (order_id),
+    INDEX idx_status (status),
+    INDEX idx_received (received_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- order_tracking_events 加 stripe_event_id 去重列(可空,已存在事件不动)
+DROP PROCEDURE IF EXISTS add_tracking_dedup;
+DELIMITER //
+CREATE PROCEDURE add_tracking_dedup()
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'order_tracking_events'
+                   AND column_name = 'stripe_event_id') THEN
+    ALTER TABLE order_tracking_events ADD COLUMN stripe_event_id VARCHAR(64) DEFAULT NULL;
+    ALTER TABLE order_tracking_events ADD UNIQUE KEY uniq_stripe_event (stripe_event_id);
+  END IF;
+END //
+DELIMITER ;
+CALL add_tracking_dedup();
+DROP PROCEDURE add_tracking_dedup;

@@ -44,6 +44,7 @@ $notes         = trim((string)($input['notes'] ?? ''));
 
 // Test-account handling: if logged-in user is flagged as test, mark this order as test
 // and route through a no-op confirmation instead of real Stripe/PayPal.
+// P0#5: test 账号无论选什么 payment_method,都强制走 test 通道,不创建 Stripe Session
 $isTest = 0;
 if ($user && !empty($user['is_test_account'])) {
     $isTest = 1;
@@ -98,18 +99,27 @@ $tax = 0.00;
 $total = round($subtotal + $shipping + $tax, 2);
 
 try {
+    // P0#1: 生成一次性 checkout_token 防 IDOR
+    // 仅非测试订单需要 token(测试订单直接进 confirmation 页,不经 Stripe)
+    $checkoutToken = $isTest ? null : bin2hex(random_bytes(24));  // 48 hex chars
+
+    // P0#5: 强制覆盖 payment_method 为 'test' 以正确反映"未走真实网关"
+    $effectivePaymentMethod = $isTest ? 'test' : $paymentMethod;
+
     $db->beginTransaction();
     $stmt = $db->prepare(
         'INSERT INTO orders
            (user_id, customer_name, email, phone, address_line, address_line2,
             city, state, postal_code, country,
             product_name, quantity, subtotal, shipping, tax, amount, currency,
-            payment_method, status, notes, is_test, created_at)
+            payment_method, status, notes, is_test, checkout_token,
+            checkout_token_expires_at, created_at)
          VALUES
            (:user_id, :customer_name, :email, :phone, :address_line, :address_line2,
             :city, :state, :postal_code, :country,
             :product_name, :quantity, :subtotal, :shipping, :tax, :amount, :currency,
-            :payment_method, :status, :notes, :is_test, NOW())'
+            :payment_method, :status, :notes, :is_test, :checkout_token,
+            :token_exp, NOW())'
     );
     $first = $resolvedItems[0];
     $stmt->execute([
@@ -130,10 +140,12 @@ try {
         ':tax'            => $tax,
         ':amount'         => $total,
         ':currency'       => 'USD',
-        ':payment_method' => $paymentMethod,
+        ':payment_method' => $effectivePaymentMethod,
         ':status'         => $isTest ? 'paid' : 'pending',  // test orders auto-marked paid
         ':notes'          => $isTest ? trim($notes . " [TEST ORDER — no real charge]") : $notes,
         ':is_test'        => $isTest,
+        ':checkout_token' => $checkoutToken,
+        ':token_exp'      => $isTest ? null : date('Y-m-d H:i:s', time() + 900), // 15min
     ]);
     $orderId = (int)$db->lastInsertId();
 
@@ -170,12 +182,13 @@ try {
         'amount'   => $total,
         'currency' => 'USD',
         'is_test'  => $isTest,
-        // Test orders skip payment entirely and go straight to confirmation
+        // Test orders skip payment entirely and go straight to confirmation;
+        // 真订单的 next URL 带 checkout_token,后端校验 token 防 IDOR(P0#1)
         'next'     => $isTest
             ? "/order-confirmation.html?order_id=$orderId&test=1"
             : ($paymentMethod === 'stripe'
-                ? "/api/stripe-checkout.php?order_id=$orderId"
-                : "/api/paypal-checkout.php?order_id=$orderId"),
+                ? "/api/stripe-checkout.php?order_id=$orderId&t=$checkoutToken"
+                : "/api/paypal-checkout.php?order_id=$orderId&t=$checkoutToken"),
     ]);
 } catch (PDOException $e) {
     if ($db->inTransaction()) $db->rollBack();

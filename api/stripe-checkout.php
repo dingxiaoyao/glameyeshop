@@ -17,9 +17,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 $orderId = intval($_GET['order_id'] ?? 0);
+$token   = trim((string)($_GET['t'] ?? ''));
 if ($orderId <= 0) {
     http_response_code(400);
     exit('Invalid order_id');
+}
+// P0#1: checkout_token 是必需的(防 IDOR — 任意人不能用别人的 order_id 创 Stripe Session)
+if ($token === '' || !preg_match('/^[a-f0-9]{48}$/', $token)) {
+    http_response_code(403);
+    exit('Missing or malformed checkout token');
 }
 
 try {
@@ -56,6 +62,18 @@ try {
         exit('Order not found');
     }
 
+    // P0#1: 常量时间比较 token,防时序攻击 + 检查未过期
+    $storedToken = (string)($order['checkout_token'] ?? '');
+    $expiresAt   = $order['checkout_token_expires_at'] ?? null;
+    if ($storedToken === '' || !hash_equals($storedToken, $token)) {
+        http_response_code(403);
+        exit('Invalid checkout token');
+    }
+    if ($expiresAt && strtotime($expiresAt) < time()) {
+        http_response_code(403);
+        exit('Checkout token expired. Please go back to your cart and check out again.');
+    }
+
     // 已支付 / 已发货的订单不应再走 checkout
     if (in_array($order['status'], ['paid', 'processing', 'shipped', 'delivered'], true)) {
         header('Location: /order-success.html?order_id=' . $orderId);
@@ -71,10 +89,13 @@ try {
         exit('Order has no items');
     }
 
-    // 构造 Stripe Checkout Session 参数(form-urlencoded 嵌套数组语法)
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host   = $_SERVER['HTTP_HOST'] ?? 'glameyeshop.com';
-    $base   = $scheme . '://' . $host;
+    // P0#3: 用 admin 配置的 site_base_url(不信任 HTTP_HOST,防钓鱼 success_url 注入)
+    $base = rtrim(getPaymentConfig('site_base_url') ?: 'https://glameyeshop.com', '/');
+    // 极端兜底:如果 site_base_url 被清空且 fallback 不可用,用 HTTPS 强制 + 当前 host(失败模式 only)
+    if (!preg_match('#^https?://#', $base)) {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $base = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'glameyeshop.com');
+    }
 
     $params = [
         'mode'                 => 'payment',

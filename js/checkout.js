@@ -177,10 +177,46 @@
     });
   }
 
+  // P1#3: 根据 admin 配置动态显示/隐藏 Stripe / PayPal 支付选项
+  // 未配置的方式 disable 并隐藏 radio,避免用户选了之后跳到 503 错误页(且库存已扣)
+  async function applyPaymentMethodVisibility() {
+    try {
+      const r = await fetch('api/settings.php', { credentials: 'omit' });
+      const s = await r.json();
+      const stripeOn = s.stripe_enabled === '1';
+      const paypalOn = s.paypal_enabled === '1';
+      const stripeRow  = document.querySelector('input[name="payment_method"][value="stripe"]')?.closest('.checkbox-row');
+      const paypalRow  = document.querySelector('input[name="payment_method"][value="paypal"]')?.closest('.checkbox-row');
+      const stripeRadio = document.getElementById('pay-stripe');
+      const paypalRadio = document.getElementById('pay-paypal');
+      if (stripeRow && !stripeOn) { stripeRow.style.display = 'none'; if (stripeRadio) { stripeRadio.disabled = true; stripeRadio.checked = false; } }
+      if (paypalRow && !paypalOn) { paypalRow.style.display = 'none'; if (paypalRadio) { paypalRadio.disabled = true; paypalRadio.checked = false; } }
+      // 兜底:两个都关 → 给个清晰提示且禁用提交
+      if (!stripeOn && !paypalOn) {
+        const note = document.getElementById('payment-note');
+        if (note) {
+          note.textContent = 'Payment is temporarily unavailable. The site owner has not configured a payment gateway yet.';
+          note.style.color = 'var(--error, #c33)';
+        }
+        const submitBtn = document.querySelector('.submit-btn');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.title = 'Payment unavailable'; }
+      } else if (!stripeOn && paypalOn && paypalRadio) {
+        // 只有 PayPal 可用 → 默认选 PayPal
+        paypalRadio.checked = true;
+      } else if (stripeOn && !paypalOn && stripeRadio) {
+        stripeRadio.checked = true;
+      }
+    } catch (e) {
+      // 拿不到 settings 不阻塞下单(用户看到的可能仍是 Stripe + PayPal,
+      // 服务端会用 503 错误页接住)
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     renderCart();
     bindCart();
     bindPaymentNote();
     bindSubmit();
+    applyPaymentMethodVisibility();
   });
 })();

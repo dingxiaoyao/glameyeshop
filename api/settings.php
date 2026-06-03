@@ -16,6 +16,8 @@ const PUBLIC_SETTING_KEYS = [
 const _SECRET_KEYS_FOR_DERIVATION = [
     'google_client_id',  'google_client_secret',
     'tiktok_client_key', 'tiktok_client_secret',
+    'stripe_secret_key', 'stripe_webhook_secret',
+    'paypal_secret',
 ];
 
 try {
@@ -32,6 +34,14 @@ try {
     // derive enabled flags from whether both client_id and secret are configured
     $out['oauth_google_enabled'] = (!empty($rawAll['google_client_id']) && !empty($rawAll['google_client_secret'])) ? '1' : '0';
     $out['oauth_tiktok_enabled'] = (!empty($rawAll['tiktok_client_key']) && !empty($rawAll['tiktok_client_secret'])) ? '1' : '0';
+    // P1#5: secret _present 标识(仅布尔,不暴露内容)— 帮 admin UI 显示
+    // "●●● configured" 取代空白,避免每次保存担心是不是清空了
+    $out['stripe_secret_key_present']     = !empty($rawAll['stripe_secret_key'])     ? '1' : '0';
+    $out['stripe_webhook_secret_present'] = !empty($rawAll['stripe_webhook_secret']) ? '1' : '0';
+    $out['paypal_secret_present']         = !empty($rawAll['paypal_secret'])         ? '1' : '0';
+    // P1#3: 给前端 checkout 用,判断是否真正可用(pk 和 sk 都得有)
+    $out['stripe_enabled'] = (!empty($rawAll['stripe_secret_key']) && !empty($out['stripe_publishable_key'])) ? '1' : '0';
+    $out['paypal_enabled'] = (!empty($rawAll['paypal_secret']) && !empty($out['paypal_client_id'])) ? '1' : '0';
     sendJson($out);
 } catch (PDOException $e) {
     sendError('Failed', 500, $e);
