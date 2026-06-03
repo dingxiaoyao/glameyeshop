@@ -103,10 +103,48 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 <div class="settings-section" data-section="payments">
 <div class="admin-card">
   <h3>💳 Payment Gateway · Stripe</h3>
-  <p class="muted small" style="margin-bottom:1rem;">
-    <?= $lang === 'zh' ? '在 dashboard.stripe.com 获取你的密钥。Webhook URL：' : 'Get your keys from dashboard.stripe.com. Webhook URL: ' ?>
-    <code>https://glameyeshop.com/api/stripe-webhook.php</code>
-  </p>
+
+  <?php
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host   = $_SERVER['HTTP_HOST'] ?? 'glameyeshop.com';
+    $webhookUrl = $scheme . '://' . $host . '/api/stripe-webhook.php';
+  ?>
+
+  <details style="margin-bottom: 1.25rem; background: var(--bg-soft); padding: 1rem 1.25rem; border-radius: var(--radius); border-left: 3px solid var(--gold);" open>
+    <summary style="cursor:pointer; font-weight:600; color:var(--gold); margin-bottom:.5rem;">
+      <?= $lang === 'zh' ? '📋 Stripe 配置 3 步指引' : '📋 Stripe Setup · 3 Steps' ?>
+    </summary>
+    <ol style="margin: .75rem 0 .25rem 1.25rem; padding-left: 0; font-size: .88rem; line-height: 1.75;">
+      <li>
+        <strong><?= $lang === 'zh' ? '拿到 API 密钥' : 'Get your API keys' ?></strong> —
+        <a href="https://dashboard.stripe.com/test/apikeys" target="_blank" rel="noopener">dashboard.stripe.com/test/apikeys</a>
+        <?= $lang === 'zh' ? '。复制 Publishable key 和 Secret key,粘贴到下方对应字段,Mode 选 Test。' : '. Copy the Publishable key and Secret key, paste into the fields below, set Mode = Test.' ?>
+      </li>
+      <li>
+        <strong><?= $lang === 'zh' ? '注册 Webhook 端点' : 'Add a webhook endpoint' ?></strong> —
+        <a href="https://dashboard.stripe.com/test/webhooks/create" target="_blank" rel="noopener"><?= $lang === 'zh' ? '点这里直接打开' : 'open this link' ?></a>
+        <?= $lang === 'zh' ? ' · Endpoint URL 粘贴:' : ' · paste this Endpoint URL:' ?>
+        <div style="display:flex; gap:.5rem; align-items:center; margin:.4rem 0; flex-wrap:wrap;">
+          <code id="webhook-url" style="background:var(--bg); padding:.4rem .65rem; border-radius:4px; border:1px solid var(--border); flex:1; min-width:0; overflow-x:auto; white-space:nowrap; font-size:.78rem;"><?= htmlspecialchars($webhookUrl) ?></code>
+          <button type="button" id="copy-webhook-url" class="button button-outline" style="padding:.4rem .85rem; font-size:.75rem; white-space:nowrap;">
+            <?= $lang === 'zh' ? '复制' : 'Copy' ?>
+          </button>
+        </div>
+        <?= $lang === 'zh' ? 'Events to send 选这 5 个:' : 'Events to send — select these 5:' ?>
+        <code style="display:block; background:var(--bg); padding:.4rem .65rem; border-radius:4px; border:1px solid var(--border); margin:.4rem 0; font-size:.75rem; line-height:1.7;">checkout.session.completed<br>checkout.session.async_payment_succeeded<br>checkout.session.async_payment_failed<br>checkout.session.expired<br>charge.refunded</code>
+      </li>
+      <li>
+        <strong><?= $lang === 'zh' ? '复制 Signing secret' : 'Copy the Signing secret' ?></strong> —
+        <?= $lang === 'zh' ? '注册完 Webhook 后,Stripe 给你一个 whsec_… 开头的 Signing secret,粘到下方 Webhook Signing Secret 字段。' : 'After creating the webhook, Stripe shows a whsec_… signing secret. Paste it into the Webhook Signing Secret field below.' ?>
+      </li>
+    </ol>
+    <p style="margin: 0.75rem 0 .25rem; font-size: .82rem; color: var(--text-muted);">
+      <?= $lang === 'zh' ? '⚙️ 测试模式用测试卡 ' : '⚙️ Test mode card: ' ?>
+      <code style="font-size:.78rem;">4242 4242 4242 4242</code>
+      <?= $lang === 'zh' ? '(任意未来日期 + 任意 CVC + 任意 ZIP)。' : ' (any future date · any CVC · any ZIP).' ?>
+    </p>
+  </details>
+
   <div class="form-group">
     <div class="form-row">
       <label><span class="label-text">Mode</span>
@@ -126,6 +164,25 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
       <input type="password" data-key="stripe_webhook_secret" autocomplete="new-password" placeholder="whsec_…" />
     </label>
   </div>
+
+  <script>
+    (function () {
+      var btn = document.getElementById('copy-webhook-url');
+      var code = document.getElementById('webhook-url');
+      if (!btn || !code) return;
+      btn.addEventListener('click', function () {
+        var url = code.textContent.trim();
+        var done = function () { btn.textContent = '✓ <?= $lang === 'zh' ? '已复制' : 'Copied' ?>'; setTimeout(function () { btn.textContent = '<?= $lang === 'zh' ? '复制' : 'Copy' ?>'; }, 1600); };
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(url).then(done).catch(function () {
+            var r = document.createRange(); r.selectNode(code); window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+          });
+        } else {
+          var r = document.createRange(); r.selectNode(code); window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+        }
+      });
+    })();
+  </script>
 </div>
 
 <div class="admin-card">
