@@ -10,6 +10,7 @@
 //   POST  change-password
 // ============================================================
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/rate-limit.php';
 
 $action = $_GET['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
@@ -44,10 +45,18 @@ function handleSignup(): void {
     if (!$first)               sendJson(['error' => 'First name required'], 422);
     if (mb_strlen($first) > 100 || mb_strlen($last) > 100) sendJson(['error' => 'Name too long'], 422);
 
+    // P0#2: 防注册爆破 / 邮件枚举(同 IP 10 次失败/小时 锁)
+    $ip = rateLimitClientIp();
+    $bucket = "signup:$ip";
+    rateLimitGuard($bucket, 10, 3600, 'Too many signup attempts. Please wait an hour.');
+
     $db = getDb();
     $stmt = $db->prepare('SELECT id FROM users WHERE email = :email LIMIT 1');
     $stmt->execute([':email' => $email]);
-    if ($stmt->fetch()) sendJson(['error' => 'Email already registered'], 409);
+    if ($stmt->fetch()) {
+        rateLimitFail($bucket);  // 邮件已存在也算一次失败,防"用枚举判定是否已注册"
+        sendJson(['error' => 'Email already registered'], 409);
+    }
 
     $hash = password_hash($pwd, PASSWORD_BCRYPT);
     $stmt = $db->prepare('INSERT INTO users (email, password_hash, first_name, last_name, phone, is_subscribed) VALUES (:email, :hash, :first, :last, :phone, :sub)');
@@ -74,6 +83,14 @@ function handleLogin(): void {
 
     if (!$email || !$pwd) sendJson(['error' => 'Email and password required'], 422);
 
+    // P0#2: 防密码字典攻击 — IP+email 5 次失败/15min 锁
+    // 同时维护一个 IP-only bucket(50 次/15min)防同 IP 跨 email 撞库
+    $ip = rateLimitClientIp();
+    $bucketEmail = "login:$ip:" . mb_substr($email, 0, 80);
+    $bucketIp    = "login-ip:$ip";
+    rateLimitGuard($bucketEmail, 5, 900, 'Too many login attempts for this email. Wait 15 minutes or reset your password.');
+    rateLimitGuard($bucketIp,   50, 900, 'Too many login attempts from your network. Wait 15 minutes.');
+
     $db = getDb();
     $stmt = $db->prepare('SELECT id, email, password_hash, first_name FROM users WHERE email = :email LIMIT 1');
     $stmt->execute([':email' => $email]);
@@ -82,8 +99,13 @@ function handleLogin(): void {
     // 时序攻击防护：始终调用 password_verify
     $hash = $user['password_hash'] ?? '$2y$10$invalidhashinvalidhashinvalidhashinvalidhashinvalidhash';
     if (!password_verify($pwd, $hash) || !$user) {
+        rateLimitFail($bucketEmail);
+        rateLimitFail($bucketIp);
         sendJson(['error' => 'Invalid email or password'], 401);
     }
+
+    // 登录成功 — 清掉 email-bucket(同 IP-bucket 不清,防"成功一次刷掉跨账号撞库累积")
+    rateLimitClear($bucketEmail);
 
     startUserSession();
     session_regenerate_id(true);
@@ -138,13 +160,20 @@ function handleChangePassword(): void {
     $new = (string)($in['new_password'] ?? '');
     if (strlen($new) < 8) sendJson(['error' => 'New password must be at least 8 characters'], 422);
 
+    // P0#2: 防 session 被劫后猜旧密码 — 同账户 5 次失败/15min 锁
+    $bucket = 'change-pwd:' . (int)$u['id'];
+    rateLimitGuard($bucket, 5, 900, 'Too many password change attempts. Wait 15 minutes.');
+
     $db = getDb();
     $stmt = $db->prepare('SELECT password_hash FROM users WHERE id=:id LIMIT 1');
     $stmt->execute([':id' => $u['id']]);
     $row = $stmt->fetch();
     if (!$row || !password_verify($old, $row['password_hash'])) {
+        rateLimitFail($bucket);
         sendJson(['error' => 'Current password is incorrect'], 401);
     }
+    rateLimitClear($bucket);
+
     $hash = password_hash($new, PASSWORD_BCRYPT);
     $stmt = $db->prepare('UPDATE users SET password_hash=:h WHERE id=:id');
     $stmt->execute([':h' => $hash, ':id' => $u['id']]);

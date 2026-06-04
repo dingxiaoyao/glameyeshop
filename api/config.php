@@ -73,13 +73,30 @@ function requireAdminAuth(): void {
     }
     $u = $_SERVER['PHP_AUTH_USER'] ?? '';
     $p = $_SERVER['PHP_AUTH_PW'] ?? '';
+
+    // P0#2 (审计 P1#22): 防 BasicAuth 字典攻击 — 同 IP 20 次失败/15min 锁
+    // 注意:rate-limit lib 依赖 DB,放在 hash_equals 之前 require 避免循环依赖
+    require_once __DIR__ . '/lib/rate-limit.php';
+    $ip = rateLimitClientIp();
+    $bucket = "admin-basic-auth:$ip";
+    if (rateLimitFailCount($bucket, 900) >= 20) {
+        header('Retry-After: 900');
+        http_response_code(429);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'Too many failed admin login attempts. Wait 15 minutes.';
+        exit;
+    }
+
     if (!hash_equals($expectedUser, $u) || !hash_equals($expectedPass, $p)) {
+        rateLimitFail($bucket);
         header('WWW-Authenticate: Basic realm="GlamEye Admin"');
         http_response_code(401);
         header('Content-Type: text/plain; charset=utf-8');
         echo 'Authentication required.';
         exit;
     }
+    // 成功 — 清掉历史失败
+    rateLimitClear($bucket);
 }
 
 // ============================================================
