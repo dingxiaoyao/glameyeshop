@@ -18,6 +18,7 @@ const _SECRET_KEYS_FOR_DERIVATION = [
     'tiktok_client_key', 'tiktok_client_secret',
     'stripe_secret_key', 'stripe_webhook_secret',
     'paypal_secret',
+    'resend_api_key',  // P0#7: Resend email API key
 ];
 
 try {
@@ -39,6 +40,7 @@ try {
     $out['stripe_secret_key_present']     = !empty($rawAll['stripe_secret_key'])     ? '1' : '0';
     $out['stripe_webhook_secret_present'] = !empty($rawAll['stripe_webhook_secret']) ? '1' : '0';
     $out['paypal_secret_present']         = !empty($rawAll['paypal_secret'])         ? '1' : '0';
+    $out['resend_api_key_present']        = !empty($rawAll['resend_api_key'])        ? '1' : '0';
     // P1#3: 给前端 checkout 用,判断是否真正可用(pk 和 sk 都得有)
     $out['stripe_enabled'] = (!empty($rawAll['stripe_secret_key']) && !empty($out['stripe_publishable_key'])) ? '1' : '0';
     $out['paypal_enabled'] = (!empty($rawAll['paypal_secret']) && !empty($out['paypal_client_id'])) ? '1' : '0';

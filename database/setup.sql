@@ -1148,3 +1148,56 @@ CREATE TABLE IF NOT EXISTS rate_limit_log (
     INDEX idx_bucket_time (bucket, occurred_at),
     INDEX idx_cleanup (occurred_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ============================================================
+-- P0#5: CAN-SPAM 退订 + P0#7: 邮件日志
+-- ============================================================
+
+-- newsletter_subscribers 加 unsubscribe_token + unsubscribed_at
+DROP PROCEDURE IF EXISTS add_unsubscribe_cols;
+DELIMITER //
+CREATE PROCEDURE add_unsubscribe_cols()
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'newsletter_subscribers'
+                   AND column_name = 'unsubscribe_token') THEN
+    ALTER TABLE newsletter_subscribers ADD COLUMN unsubscribe_token VARCHAR(48) DEFAULT NULL;
+    ALTER TABLE newsletter_subscribers ADD UNIQUE KEY uniq_unsub_token (unsubscribe_token);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'newsletter_subscribers'
+                   AND column_name = 'unsubscribed_at') THEN
+    ALTER TABLE newsletter_subscribers ADD COLUMN unsubscribed_at TIMESTAMP NULL DEFAULT NULL;
+    ALTER TABLE newsletter_subscribers ADD INDEX idx_unsubscribed (unsubscribed_at);
+  END IF;
+END //
+DELIMITER ;
+CALL add_unsubscribe_cols();
+DROP PROCEDURE add_unsubscribe_cols;
+
+-- 给所有存量订阅自动生成 token(下次发邮件用)
+UPDATE newsletter_subscribers
+   SET unsubscribe_token = LOWER(CONCAT(LPAD(HEX(RAND() * POW(2,32)), 8, '0'), LPAD(HEX(RAND() * POW(2,32)), 8, '0'),
+                                         LPAD(HEX(RAND() * POW(2,32)), 8, '0'), LPAD(HEX(RAND() * POW(2,32)), 8, '0'),
+                                         LPAD(HEX(RAND() * POW(2,32)), 8, '0'), LPAD(HEX(RAND() * POW(2,32)), 8, '0')))
+ WHERE unsubscribe_token IS NULL;
+
+-- 邮件日志(成功/失败一律记,admin 排查投递问题)
+CREATE TABLE IF NOT EXISTS email_log (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    to_email    VARCHAR(255) NOT NULL,
+    subject     VARCHAR(500) NOT NULL DEFAULT '',
+    mode        VARCHAR(16) NOT NULL DEFAULT '',   -- resend / smtp / mail
+    ok          TINYINT(1) NOT NULL DEFAULT 0,
+    error       TEXT DEFAULT NULL,
+    provider_id VARCHAR(120) DEFAULT NULL,         -- Resend message id 等
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_to (to_email),
+    INDEX idx_ok (ok),
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Resend API key 配置项
+INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
+('resend_api_key', '');

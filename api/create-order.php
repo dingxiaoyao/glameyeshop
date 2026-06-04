@@ -213,6 +213,28 @@ try {
 
     $db->commit();
 
+    // P0#7: 发订单确认邮件(不阻塞响应,失败不影响下单)
+    try {
+        require_once __DIR__ . '/lib/mailer.php';
+        require_once __DIR__ . '/lib/email-templates.php';
+        $orderData = [
+            'id'            => $orderId,
+            'customer_name' => $customerName,
+            'address_line'  => $addressLine,
+            'city'          => $city,
+            'state'         => $state,
+            'postal_code'   => $postalCode,
+            'subtotal'      => $subtotal,
+            'shipping'      => $shipping,
+            'tax'           => $tax,
+            'amount'        => $total,
+        ];
+        $tpl = EmailTemplates::orderConfirmation($orderData, $resolvedItems, $lookupToken);
+        Mailer::send($email, $customerName, $tpl['subject'], $tpl['html']);
+    } catch (Throwable $e) {
+        error_log('[create-order] confirmation email failed for order ' . $orderId . ': ' . $e->getMessage());
+    }
+
     sendJson([
         'success'  => true,
         'order_id' => $orderId,

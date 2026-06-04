@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Unsubscribe · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/styles.css?v=DEPLOYHASH" />
+  <style>
+    .unsub-card { max-width: 540px; margin: 4rem auto; padding: 2rem; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-soft); text-align: center; }
+    .unsub-card h1 { font-size: 1.6rem; margin-bottom: 1rem; }
+    .unsub-card p { line-height: 1.7; color: var(--text); margin: 1rem 0; }
+    .unsub-actions { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; }
+    .unsub-status { margin-top: 1.5rem; padding: 1rem; border-radius: 8px; font-size: 0.9rem; }
+    .unsub-status.success { background: rgba(95, 207, 128, 0.12); color: var(--success, #2c9); }
+    .unsub-status.error   { background: rgba(238, 90, 90, 0.12); color: var(--error, #c33); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand"><img src="images/logo.png?v=DEPLOYHASH" alt="GlamEye" class="brand-logo" width="160" height="36" /></a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="unsub-card">
+      <h1>Unsubscribe from marketing emails</h1>
+      <p id="unsub-email-display">Loading…</p>
+      <p style="font-size:0.88rem; color:var(--text-muted);">
+        You'll still receive transactional emails about active orders (confirmation, shipping notifications) as required to fulfill your purchase.
+      </p>
+      <div class="unsub-actions">
+        <button type="button" class="button button-primary" id="confirm-btn">Unsubscribe</button>
+        <a href="/" class="button button-outline">Keep me subscribed</a>
+      </div>
+      <div id="unsub-result" class="unsub-status" hidden></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom container">
+      <p>© 2026 GlamEye, Inc. · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a></p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.search);
+      const token = (params.get('token') || '').trim();
+      const email = (params.get('email') || '').trim();
+      const display = document.getElementById('unsub-email-display');
+      const result  = document.getElementById('unsub-result');
+      const btn     = document.getElementById('confirm-btn');
+
+      function showStatus(msg, kind) {
+        result.hidden = false;
+        result.className = 'unsub-status ' + (kind || 'success');
+        result.textContent = msg;
+      }
+
+      if (!token || !/^[a-f0-9]{48}$/.test(token) || !email) {
+        display.textContent = '';
+        showStatus('This link is invalid or expired. Email support@glameyeshop.com and we\'ll unsubscribe you manually.', 'error');
+        btn.disabled = true;
+        return;
+      }
+      display.innerHTML = 'Click below to unsubscribe <strong>' + email.replace(/[<>"&]/g, c => ({'<':'&lt;','>':'&gt;','"':'&quot;','&':'&amp;'}[c])) + '</strong>';
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Unsubscribing…';
+        try {
+          const r = await fetch('/api/unsubscribe.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, email }),
+          });
+          const j = await r.json();
+          if (j.success) {
+            showStatus(j.message || 'You are unsubscribed.', 'success');
+            btn.textContent = '✓ Unsubscribed';
+          } else {
+            showStatus(j.error || 'Could not process request', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Try again';
+          }
+        } catch (e) {
+          showStatus('Network error: ' + e.message, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Try again';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

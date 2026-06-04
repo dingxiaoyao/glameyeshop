@@ -14,9 +14,16 @@ rateLimitGuard($bucket, 20, 3600, 'Too many subscribe attempts.');
 
 try {
     $db = getDb();
-    $stmt = $db->prepare("INSERT IGNORE INTO newsletter_subscribers (email, source) VALUES (:e, 'newsletter_form')");
-    $stmt->execute([':e' => $email]);
-    // 即使 INSERT IGNORE 让重复邮件无效,也消耗 1 次配额(防"用接口判定邮件是否已订阅")
+    // P0#5: 订阅时签发 unsubscribe_token(每个订阅一个,可放进所有未来邮件的退订 link)
+    $unsubToken = bin2hex(random_bytes(24));
+    $stmt = $db->prepare(
+        "INSERT INTO newsletter_subscribers (email, source, unsubscribe_token)
+              VALUES (:e, 'newsletter_form', :t)
+         ON DUPLICATE KEY UPDATE
+              unsubscribe_token = COALESCE(unsubscribe_token, :t2),
+              unsubscribed_at   = NULL"  // 重新订阅清掉退订时间戳
+    );
+    $stmt->execute([':e' => $email, ':t' => $unsubToken, ':t2' => $unsubToken]);
     rateLimitFail($bucket);
     sendJson(['success' => true]);
 } catch (PDOException $e) {

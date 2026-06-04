@@ -331,8 +331,21 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
     <label><span class="label-text">From email <small class="muted">— 自己域名 + DKIM 不会进垃圾箱</small></span>
       <input type="email" data-key="email_from_address" placeholder="support@glameyeshop.com" />
     </label>
+
     <hr style="border:0; border-top:1px solid var(--border-soft); margin:.5rem 0;">
-    <p class="muted small">SMTP relay (留空则用本机 mail()):</p>
+    <div style="background: var(--bg-soft); padding: 1rem 1.25rem; border-radius: var(--radius); border-left: 3px solid var(--gold); margin: .5rem 0;">
+      <p style="margin:0 0 .5rem; font-weight:600; color:var(--gold);">📮 Resend (recommended) — 现代 API,简单</p>
+      <p class="muted small" style="margin:0 0 .65rem;">
+        <?= $lang === 'zh'
+            ? '在 <a href="https://resend.com" target="_blank">resend.com</a> 注册免费账号(每月 3000 封邮件免费),拿到 API key 粘进来。配置后 Mailer 自动优先用 Resend(下方 SMTP 仅作 fallback)。'
+            : 'Sign up free at <a href="https://resend.com" target="_blank">resend.com</a> (3,000 emails/mo free). Paste the API key here — Mailer will automatically prefer Resend over SMTP.' ?>
+      </p>
+      <label><span class="label-text">Resend API key (re_…) <small style="color:var(--warn);">— never shared with frontend</small></span>
+        <input type="password" data-key="resend_api_key" autocomplete="new-password" placeholder="re_…" />
+      </label>
+    </div>
+
+    <p class="muted small">SMTP relay (fallback,如果 Resend 没配):</p>
     <div class="form-row">
       <label><span class="label-text">SMTP host</span>
         <input type="text" data-key="smtp_host" placeholder="smtp.gmail.com / smtp.sendgrid.net" />

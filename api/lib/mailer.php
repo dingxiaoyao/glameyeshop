@@ -18,17 +18,19 @@ class Mailer
     {
         if (self::$cfg !== null) return self::$cfg;
         $defaults = [
+            'resend_api_key' => '',  // P0#7: Resend.com API key (re_xxx),最优先
             'smtp_host' => '', 'smtp_port' => '587', 'smtp_user' => '', 'smtp_pass' => '',
             'smtp_secure' => 'tls',  // tls / ssl / ''
             'email_from_address' => 'noreply@glameyeshop.com',
             'email_from_name'    => 'GlamEye Support',
             'admin_email'        => '',
+            'site_base_url'      => 'https://glameyeshop.com',
         ];
         try {
             $db = getDb();
             $stmt = $db->query("SELECT `key`, `value` FROM site_settings
-                                WHERE `key` IN ('smtp_host','smtp_port','smtp_user','smtp_pass','smtp_secure',
-                                                 'email_from_address','email_from_name','admin_email')");
+                                WHERE `key` IN ('resend_api_key','smtp_host','smtp_port','smtp_user','smtp_pass','smtp_secure',
+                                                 'email_from_address','email_from_name','admin_email','site_base_url')");
             while ($r = $stmt->fetch()) {
                 if ($r['value'] !== '' && $r['value'] !== null) $defaults[$r['key']] = $r['value'];
             }
@@ -49,7 +51,9 @@ class Mailer
             return ['ok' => false, 'mode' => 'none', 'error' => 'invalid recipient'];
         }
         $cfg = self::loadConfig();
-        $mode = $cfg['smtp_host'] ? 'smtp' : 'mail';
+        // P0#7: 三级降级 resend > smtp > mail()
+        $mode = !empty($cfg['resend_api_key']) ? 'resend'
+              : ($cfg['smtp_host'] ? 'smtp' : 'mail');
 
         $textBody = self::htmlToText($htmlBody);
         $fromAddr = $cfg['email_from_address'];
@@ -57,7 +61,9 @@ class Mailer
 
         $result = ['ok' => false, 'mode' => $mode];
         try {
-            if ($mode === 'smtp') {
+            if ($mode === 'resend') {
+                $result = self::sendViaResend($cfg, $toEmail, $toName, $subject, $htmlBody, $textBody, $replyTo);
+            } elseif ($mode === 'smtp') {
                 $result = self::sendViaSmtp($cfg, $toEmail, $toName, $subject, $htmlBody, $textBody, $replyTo);
             } else {
                 $result = self::sendViaMailFunction($fromAddr, $fromName, $toEmail, $toName, $subject, $htmlBody, $textBody, $replyTo);
@@ -83,6 +89,53 @@ class Mailer
             }
         }
         return $result;
+    }
+
+    /**
+     * Resend.com API (https://resend.com/docs/api-reference/emails/send-email)
+     * 用 curl POST,不依赖 SDK / composer
+     */
+    private static function sendViaResend(array $cfg, string $to, string $toName, string $subject, string $html, string $text, ?string $replyTo): array
+    {
+        $apiKey = $cfg['resend_api_key'];
+        $fromAddr = $cfg['email_from_address'];
+        $fromName = $cfg['email_from_name'];
+
+        $payload = [
+            'from'    => sprintf('%s <%s>', $fromName, $fromAddr),
+            'to'      => [$toName ? sprintf('%s <%s>', $toName, $to) : $to],
+            'subject' => $subject,
+            'html'    => $html,
+            'text'    => $text,
+        ];
+        if ($replyTo) $payload['reply_to'] = $replyTo;
+
+        $ch = curl_init('https://api.resend.com/emails');
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => [
+                'Authorization: Bearer ' . $apiKey,
+                'Content-Type: application/json',
+            ],
+            CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE),
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_CONNECTTIMEOUT => 5,
+        ]);
+        $resp = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr  = curl_error($ch);
+        curl_close($ch);
+
+        if ($resp === false) {
+            return ['ok' => false, 'mode' => 'resend', 'error' => 'curl: ' . $curlErr];
+        }
+        $data = json_decode($resp, true);
+        if ($httpCode === 200 && !empty($data['id'])) {
+            return ['ok' => true, 'mode' => 'resend', 'id' => $data['id']];
+        }
+        $err = $data['message'] ?? ('HTTP ' . $httpCode);
+        return ['ok' => false, 'mode' => 'resend', 'error' => $err];
     }
 
     private static function sendViaMailFunction(string $fromAddr, string $fromName, string $to, string $toName, string $subject, string $html, string $text, ?string $replyTo): array
