@@ -14,12 +14,26 @@ $options = [
     PDO::ATTR_EMULATE_PREPARES => false,
 ];
 
+// P0#3: 严守门 — root + 空密码组合 = 任何 PHP RCE 即拿全库,绝对不可接受
 $appEnv = getenv('APP_ENV') ?: 'development';
-if ($appEnv === 'production' && ($dbUser === 'root' || $dbPass === '')) {
-    http_response_code(500);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['error' => 'Server misconfiguration']);
-    exit;
+$host   = $_SERVER['HTTP_HOST'] ?? '';
+$isLocalhost = in_array($host, ['localhost', '127.0.0.1', '127.0.0.1:8000', 'localhost:8000'], true)
+               || strpos($host, '.local') !== false
+               || strpos($host, ':8') !== false;  // 任何端口的本地开发
+
+if ($dbUser === 'root' && $dbPass === '') {
+    // 生产环境或非本机访问 → 直接拒绝启动,不允许裸 root 跑生产
+    if ($appEnv === 'production' || !$isLocalhost) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'error' => 'Server misconfiguration: DB must use a dedicated user (not root) with a password. See STRIPE-SETUP.md or wait for the next deploy to auto-provision /etc/glameye/db.conf.',
+        ]);
+        error_log('[CONFIG] FATAL: DB root+empty credentials in production-like environment, refusing to start');
+        exit;
+    }
+    // 本机开发模式 — 允许但警告
+    error_log('[CONFIG] WARNING: running with DB root+empty credentials (dev mode, host=' . $host . ')');
 }
 
 const MAX_QUANTITY_PER_ITEM = 50;

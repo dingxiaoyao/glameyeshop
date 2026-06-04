@@ -69,9 +69,35 @@ jobs:
               nginx -t && systemctl reload nginx 2>/dev/null || true
             fi
 
-            # Schema (CREATE IF NOT EXISTS - 幂等)
+            # ============================================================
+            # P0#3: 安全 DB 凭据自动配置 (零额外配置)
+            # 第一次部署:生成 32 字符随机密码 + 创建独立 DB 用户 + 写 /etc/glameye/db.conf
+            # 后续部署:读 /etc/glameye/db.conf 复用现有凭据
+            # PHP-FPM env 注入,跑 setup.sql 不再用 root
+            # ============================================================
+            DB_CONF=/etc/glameye/db.conf
+            if [ ! -f "$DB_CONF" ]; then
+              mkdir -p /etc/glameye
+              GENPASS=$(openssl rand -base64 36 | tr -d '=+/' | head -c 32)
+              printf 'DB_HOST=127.0.0.1\nDB_NAME=glameyeshop\nDB_USER=glameye_app\nDB_PASS=%s\n' "$GENPASS" > "$DB_CONF"
+              chmod 600 "$DB_CONF"
+              chown root:www-data "$DB_CONF" 2>/dev/null || true
+              # 创建 MySQL 用户(root socket auth 一次性使用,之后 PHP 不再用 root)
+              SQL_CREATE="CREATE DATABASE IF NOT EXISTS glameyeshop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE USER IF NOT EXISTS 'glameye_app'@'localhost' IDENTIFIED BY '$GENPASS'; ALTER USER 'glameye_app'@'localhost' IDENTIFIED BY '$GENPASS'; GRANT ALL PRIVILEGES ON glameyeshop.* TO 'glameye_app'@'localhost'; FLUSH PRIVILEGES;"
+              mysql --protocol=socket -u root -e "$SQL_CREATE"
+              echo "✓ Created dedicated MySQL user 'glameye_app' with random 32-char password"
+            else
+              echo "✓ Using existing DB credentials at $DB_CONF"
+            fi
+
+            # 读取凭据进 shell vars
+            # shellcheck disable=SC1090
+            . "$DB_CONF"
+            export DB_HOST DB_NAME DB_USER DB_PASS
+
+            # Schema (CREATE IF NOT EXISTS - 幂等) — 用独立用户跑,不再 root
             if [ -f database/setup.sql ]; then
-              mysql --protocol=socket -u root glameyeshop < database/setup.sql 2>/dev/null || true
+              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" < database/setup.sql 2>/dev/null || true
             fi
 
             # 增量 ALTER（每条独立，列已存在时忽略）
@@ -173,13 +199,35 @@ jobs:
                 ('smtp_pass',           ''),
                 ('smtp_secure',         'tls')" \
             ; do
-              mysql --protocol=socket -u root glameyeshop -e "$sql" 2>/dev/null || true
+              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" -e "$sql" 2>/dev/null || true
             done
 
             # nginx：把 /robots.txt 重写到 /robots.php（动态）
             if ! grep -q 'rewrite ^/robots.txt' /etc/nginx/sites-enabled/glameye 2>/dev/null; then
               sed -i '/server_name.*\b173\.199\b.*;/a\    rewrite ^/robots\\.txt$ /robots.php last;' /etc/nginx/sites-enabled/glameye 2>/dev/null || true
               nginx -t && systemctl reload nginx 2>/dev/null || true
+            fi
+
+            # ============================================================
+            # P0#3: PHP-FPM env 注入 DB 凭据 + APP_ENV=production
+            # PHP 进程读 getenv() 拿不到 secret,只能等 PHP-FPM 重启
+            # 用 env[KEY] = value 语法(www.conf),不要用 php_admin_value
+            # ============================================================
+            POOL_CONF=$(ls /etc/php/*/fpm/pool.d/www.conf 2>/dev/null | head -1)
+            if [ -n "$POOL_CONF" ]; then
+              # 移除旧的 GLAMEYE_DB 块(idempotent — 改密码后下次部署自动同步)
+              sed -i '/; GLAMEYE_DB_BEGIN/,/; GLAMEYE_DB_END/d' "$POOL_CONF"
+              {
+                printf '\n; GLAMEYE_DB_BEGIN (managed by deploy.yml, do not edit)\n'
+                printf 'env[APP_ENV] = production\n'
+                printf 'env[DB_HOST] = %s\n' "$DB_HOST"
+                printf 'env[DB_NAME] = %s\n' "$DB_NAME"
+                printf 'env[DB_USER] = %s\n' "$DB_USER"
+                printf 'env[DB_PASS] = %s\n' "$DB_PASS"
+                printf 'clear_env = no\n'
+                printf '; GLAMEYE_DB_END\n'
+              } >> "$POOL_CONF"
+              echo "✓ Injected DB env into PHP-FPM www.conf"
             fi
 
             # 重载 PHP-FPM
