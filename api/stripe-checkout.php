@@ -97,9 +97,12 @@ try {
         $base = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'glameyeshop.com');
     }
 
+    $lookupTokenSafe = preg_match('/^[a-f0-9]{48}$/', (string)($order['lookup_token'] ?? '')) ? $order['lookup_token'] : '';
     $params = [
         'mode'                 => 'payment',
-        'success_url'          => $base . '/order-success.html?order_id=' . $orderId . '&session_id={CHECKOUT_SESSION_ID}',
+        'success_url'          => $base . '/order-success.html?order_id=' . $orderId
+                                  . ($lookupTokenSafe ? '&lt=' . $lookupTokenSafe : '')
+                                  . '&session_id={CHECKOUT_SESSION_ID}',
         'cancel_url'           => $base . '/checkout.html?cancelled=1&order_id=' . $orderId,
         'customer_email'       => $order['email'],
         'client_reference_id'  => (string)$orderId,

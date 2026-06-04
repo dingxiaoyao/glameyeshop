@@ -153,11 +153,17 @@
         });
         const j = await r.json();
         if (j.success && j.order_id) {
+          // P0#1: 存 lookup_token 替代 email — order-success/track 用它查订单
           sessionStorage.setItem('glameye_last_order', JSON.stringify({
-            order_id: j.order_id, email: payload.email,
+            order_id: j.order_id,
+            email: payload.email,           // 留着兼容,但 next URL 已带 lookup token
+            lookup_token: j.lookup_token,    // 新:永久 token
           }));
           cart.clear();
-          window.location.href = j.next || ('/order-success.html?order_id=' + j.order_id);
+          // 默认 success URL 加上 lookup_token,避免依赖 sessionStorage(关浏览器丢)
+          const fallbackSuccess = '/order-success.html?order_id=' + j.order_id +
+            (j.lookup_token ? '&lt=' + j.lookup_token : '');
+          window.location.href = j.next || fallbackSuccess;
         } else {
           fb.textContent = j.error || 'Order failed. Please try again.';
           fb.className = 'form-feedback error';

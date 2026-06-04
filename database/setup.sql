@@ -1118,3 +1118,33 @@ END //
 DELIMITER ;
 CALL add_tracking_dedup();
 DROP PROCEDURE add_tracking_dedup;
+
+
+-- ============================================================
+-- P0#1+#2 安全升级:订单查询 token + 通用限频表
+-- ============================================================
+
+-- 每个订单签发一个永久 lookup_token(48 hex),客户用 token 替代 email 查订单
+DROP PROCEDURE IF EXISTS add_lookup_token_col;
+DELIMITER //
+CREATE PROCEDURE add_lookup_token_col()
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'orders' AND column_name = 'lookup_token') THEN
+    ALTER TABLE orders ADD COLUMN lookup_token VARCHAR(48) DEFAULT NULL;
+    ALTER TABLE orders ADD UNIQUE KEY uniq_lookup_token (lookup_token);
+  END IF;
+END //
+DELIMITER ;
+CALL add_lookup_token_col();
+DROP PROCEDURE add_lookup_token_col;
+
+-- 通用限频日志表(订单查询失败 / 登录失败 / 其他)
+CREATE TABLE IF NOT EXISTS rate_limit_log (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    bucket      VARCHAR(160) NOT NULL,             -- 'order-lookup:1.2.3.4:user@example.com'
+    ip          VARCHAR(45) DEFAULT NULL,
+    occurred_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_bucket_time (bucket, occurred_at),
+    INDEX idx_cleanup (occurred_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

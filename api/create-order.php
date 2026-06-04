@@ -99,9 +99,12 @@ $tax = 0.00;
 $total = round($subtotal + $shipping + $tax, 2);
 
 try {
-    // P0#1: 生成一次性 checkout_token 防 IDOR
-    // 仅非测试订单需要 token(测试订单直接进 confirmation 页,不经 Stripe)
+    // P0#1: 生成一次性 checkout_token(15min,防 Stripe checkout 入口 IDOR)
+    // 仅非测试订单需要 checkout_token(测试订单直接进 confirmation 页,不经 Stripe)
     $checkoutToken = $isTest ? null : bin2hex(random_bytes(24));  // 48 hex chars
+
+    // P0#1 (v2): 生成永久 lookup_token 让客户后续查订单 — 替代用 email 查询的 IDOR 模式
+    $lookupToken = bin2hex(random_bytes(24));  // 48 hex chars
 
     // P0#5: 强制覆盖 payment_method 为 'test' 以正确反映"未走真实网关"
     $effectivePaymentMethod = $isTest ? 'test' : $paymentMethod;
@@ -149,13 +152,13 @@ try {
             city, state, postal_code, country,
             product_name, quantity, subtotal, shipping, tax, amount, currency,
             payment_method, status, notes, is_test, checkout_token,
-            checkout_token_expires_at, created_at)
+            checkout_token_expires_at, lookup_token, created_at)
          VALUES
            (:user_id, :customer_name, :email, :phone, :address_line, :address_line2,
             :city, :state, :postal_code, :country,
             :product_name, :quantity, :subtotal, :shipping, :tax, :amount, :currency,
             :payment_method, :status, :notes, :is_test, :checkout_token,
-            :token_exp, NOW())'
+            :token_exp, :lookup_token, NOW())'
     );
     $first = $resolvedItems[0];
     $stmt->execute([
@@ -182,6 +185,7 @@ try {
         ':is_test'        => $isTest,
         ':checkout_token' => $checkoutToken,
         ':token_exp'      => $isTest ? null : date('Y-m-d H:i:s', time() + 900), // 15min
+        ':lookup_token'   => $lookupToken,
     ]);
     $orderId = (int)$db->lastInsertId();
 
@@ -218,10 +222,11 @@ try {
         'amount'   => $total,
         'currency' => 'USD',
         'is_test'  => $isTest,
+        'lookup_token' => $lookupToken,  // 客户用此 token 后续查订单状态(替代 email)
         // Test orders skip payment entirely and go straight to confirmation;
         // 真订单的 next URL 带 checkout_token,后端校验 token 防 IDOR(P0#1)
         'next'     => $isTest
-            ? "/order-confirmation.html?order_id=$orderId&test=1"
+            ? "/order-confirmation.html?order_id=$orderId&test=1&lt=$lookupToken"
             : ($paymentMethod === 'stripe'
                 ? "/api/stripe-checkout.php?order_id=$orderId&t=$checkoutToken"
                 : "/api/paypal-checkout.php?order_id=$orderId&t=$checkoutToken"),

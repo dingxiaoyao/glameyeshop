@@ -42,15 +42,21 @@
       const params = new URLSearchParams(location.search);
       const orderId = parseInt(params.get('order_id'), 10);
       const stored = JSON.parse(sessionStorage.getItem('glameye_last_order') || '{}');
+      // P0#1: 优先用 token,fallback email
+      const token = (params.get('lt') || params.get('token') || stored.lookup_token || '').trim();
       const email = stored.email;
       const target = document.getElementById('order-detail');
 
-      if (!orderId || !email) {
+      if (!orderId || (!token && !email)) {
         target.innerHTML = '<p>Order ID missing. Please contact support@glameyeshop.com with your order number.</p>';
         return;
       }
 
-      fetch(`api/order-status.php?order_id=${orderId}&email=${encodeURIComponent(email)}`)
+      const qs = token
+        ? 'order_id=' + orderId + '&token=' + encodeURIComponent(token)
+        : 'order_id=' + orderId + '&email=' + encodeURIComponent(email);
+
+      fetch('api/order-status.php?' + qs)
         .then((r) => r.json())
         .then((j) => {
           if (j.error) { target.innerHTML = `<p>Could not load order: ${j.error}</p>`; return; }
