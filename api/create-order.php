@@ -107,6 +107,42 @@ try {
     $effectivePaymentMethod = $isTest ? 'test' : $paymentMethod;
 
     $db->beginTransaction();
+
+    // P0#6: 锁定所有相关产品行(SELECT … FOR UPDATE)防并发超卖
+    // 两单同时抢最后一件时,后到的事务会等前一个 commit/rollback 后再读到真实 stock
+    $productIds = array_unique(array_map(fn($it) => (int)$it['product_id'], $resolvedItems));
+    $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+    $lockStmt = $db->prepare(
+        "SELECT id, stock, name FROM products WHERE id IN ($placeholders) FOR UPDATE"
+    );
+    $lockStmt->execute($productIds);
+    $lockedRows = [];
+    foreach ($lockStmt->fetchAll() as $row) {
+        $lockedRows[(int)$row['id']] = $row;
+    }
+
+    // 锁后用真实 stock 重新检查 — 跟事务外早期检查重复,但这一次是"权威"的
+    // 累加同一 product_id 的 quantity(虽然前端不会重复,但防御性兜底)
+    $neededByProduct = [];
+    foreach ($resolvedItems as $it) {
+        $pid = (int)$it['product_id'];
+        $neededByProduct[$pid] = ($neededByProduct[$pid] ?? 0) + (int)$it['quantity'];
+    }
+    foreach ($neededByProduct as $pid => $needed) {
+        $row = $lockedRows[$pid] ?? null;
+        $available = $row ? (int)$row['stock'] : 0;
+        if (!$row || $needed > $available) {
+            $db->rollBack();
+            $name = $row['name'] ?? ('product#' . $pid);
+            sendJson([
+                'error'     => "Insufficient stock for $name (needed: $needed, available: $available)",
+                'sku'       => null,
+                'requested' => $needed,
+                'available' => $available,
+            ], 409);
+        }
+    }
+
     $stmt = $db->prepare(
         'INSERT INTO orders
            (user_id, customer_name, email, phone, address_line, address_line2,
