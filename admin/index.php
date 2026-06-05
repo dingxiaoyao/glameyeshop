@@ -88,20 +88,43 @@ if (!empty($lowStock)):
 (async () => {
   function escape(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function money(n) { return '$' + Number(n || 0).toFixed(2); }
+  function showLoadError(detail) {
+    document.querySelector('.admin-main').insertAdjacentHTML('beforeend',
+      '<div class="admin-card" style="margin-top:1.5rem;border:1px solid var(--error,#c33);background:rgba(238,90,90,.08)">' +
+      '<strong style="color:var(--error,#c33)">⚠ Dashboard stats failed to load</strong>' +
+      '<pre style="margin-top:.5rem;font-size:.78rem;white-space:pre-wrap;color:var(--text)">' + escape(detail) + '</pre>' +
+      '<p class="muted small" style="margin-top:.5rem">Open the 🔧 System Self-Check panel below and click <strong>admin-stats</strong> to see the raw response.</p>' +
+      '</div>');
+  }
+  let r, rawText = '', j = null;
   try {
-    const r = await fetch('../api/admin-stats.php', { credentials: 'include' });
-    const j = await r.json();
-    const k = j.kpi;
+    r = await fetch('../api/admin-stats.php', { credentials: 'include' });
+    rawText = await r.text();
+    try { j = JSON.parse(rawText); } catch (_) { /* not JSON */ }
+  } catch (netErr) {
+    showLoadError('Network error: ' + (netErr.message || String(netErr)));
+    return;
+  }
+  if (!r.ok || !j) {
+    showLoadError('HTTP ' + (r ? r.status : '???') + '\n' + (rawText || '(empty response)').slice(0, 800));
+    return;
+  }
+  if (j.error) {
+    showLoadError('Server error: ' + j.error + '\n\n(See PHP error log for stack trace. Most common causes: DB connection lost, missing column, admin session expired.)');
+    return;
+  }
+  const k = j.kpi || {};
+  try {
     document.getElementById('kpi-today-rev').textContent  = money(k.today_revenue);
-    document.getElementById('kpi-today-cnt').textContent  = k.today_orders + ' ' + T.orders;
+    document.getElementById('kpi-today-cnt').textContent  = (k.today_orders ?? 0) + ' ' + T.orders;
     document.getElementById('kpi-month-rev').textContent  = money(k.month_revenue);
-    document.getElementById('kpi-month-cnt').textContent  = k.month_orders + ' ' + T.orders;
+    document.getElementById('kpi-month-cnt').textContent  = (k.month_orders ?? 0) + ' ' + T.orders;
     document.getElementById('kpi-total-rev').textContent  = money(k.total_revenue);
-    document.getElementById('kpi-total-cnt').textContent  = k.total_orders + ' ' + T.orders;
-    document.getElementById('kpi-customers').textContent  = k.total_customers;
-    document.getElementById('kpi-subs').textContent       = k.newsletter_subs + ' ' + T.subscribers;
-    document.getElementById('kpi-pending').textContent    = k.pending_orders;
-    document.getElementById('kpi-lowstock').textContent   = k.low_stock;
+    document.getElementById('kpi-total-cnt').textContent  = (k.total_orders ?? 0) + ' ' + T.orders;
+    document.getElementById('kpi-customers').textContent  = (k.total_customers ?? 0);
+    document.getElementById('kpi-subs').textContent       = (k.newsletter_subs ?? 0) + ' ' + T.subscribers;
+    document.getElementById('kpi-pending').textContent    = (k.pending_orders ?? 0);
+    document.getElementById('kpi-lowstock').textContent   = (k.low_stock ?? 0);
 
     // Sales chart
     const sales = j.sales_30d || [];

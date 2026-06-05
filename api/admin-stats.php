@@ -76,6 +76,13 @@ try {
         'low_stock' => $lowStock,
         'recent_orders' => $recentOrders,
     ]);
-} catch (PDOException $e) {
-    sendError('Stats failed', 500, $e);
+} catch (Throwable $e) {
+    // admin endpoint — 把异常类型+消息回吐到前端,方便定位
+    // (stack trace 仍走 error_log,只暴露 class+message)
+    error_log(sprintf('[admin-stats] %s | %s | %s:%d',
+        get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()));
+    sendJson([
+        'error' => sprintf('%s: %s', get_class($e), $e->getMessage()),
+        'hint'  => 'See PHP error log for full stack trace.',
+    ], 500);
 }
