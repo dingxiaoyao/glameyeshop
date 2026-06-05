@@ -50,6 +50,30 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 </div>
 
 <div class="admin-card">
+  <h3>🌍 <?= $lang === 'zh' ? '国际下单' : 'International Shipping' ?></h3>
+  <label><span class="label-text">
+    <?= $lang === 'zh' ? '可送达国家(ISO 2 字母代码,JSON 数组)' : 'Enabled countries (ISO 2-letter codes, JSON array)' ?>
+  </span>
+    <textarea data-key="enabled_countries" rows="2" placeholder='["US","CA","GB","AU","DE","FR","JP","CN","SG","HK","TW","KR"]' style="font-family:monospace;font-size:.85rem;"></textarea>
+  </label>
+  <small class="muted" style="display:block;margin:-.4rem 0 .85rem;font-size:.78rem;">
+    <?= $lang === 'zh'
+        ? '常见:US CA GB AU DE FR IT ES NL JP SG HK TW CN KR MX BR AE IN MY TH PH VN ID NZ。完整代码见 ISO 3166-1。'
+        : 'Common: US CA GB AU DE FR IT ES NL JP SG HK TW CN KR MX BR AE IN MY TH PH VN ID NZ. Full list: ISO 3166-1.' ?>
+  </small>
+  <label><span class="label-text">
+    <?= $lang === 'zh' ? '运费分区(JSON)' : 'Shipping zones (JSON)' ?>
+  </span>
+    <textarea data-key="shipping_zones" rows="5" placeholder='{"US":{"price":5.99,"free_threshold":50},"CA":{"price":12.99,"free_threshold":75},"EU":{...},"ASIA":{...},"default":{...}}' style="font-family:monospace;font-size:.78rem;"></textarea>
+  </label>
+  <small class="muted" style="display:block;margin-top:-.4rem;font-size:.78rem;">
+    <?= $lang === 'zh'
+        ? '特定国家用 ISO 代码 key(如 US/CA/GB),EU/ASIA 是通用 zone(欧盟/亚洲国家未单列时走 zone),default 是兜底。price 单位 USD,free_threshold 满包邮门槛。'
+        : 'Use ISO code (US/CA/GB…) for country-specific rates. EU/ASIA are fallback zones. default catches the rest. price in USD, free_threshold = free shipping over.' ?>
+  </small>
+</div>
+
+<div class="admin-card">
   <h3>Social Media URLs</h3>
   <div class="form-group" id="settings-form">
     <label><span class="label-text">TikTok</span><input type="url" data-key="social_tiktok" placeholder="https://www.tiktok.com/@glameye" /></label>

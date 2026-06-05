@@ -11,6 +11,7 @@ const PUBLIC_SETTING_KEYS = [
     'stripe_mode', 'paypal_mode',
     'paypal_client_id',        // PayPal SDK init 需要 (公开)
     'require_login_for_checkout',  // checkout 客户端守门用
+    'enabled_countries', 'shipping_zones',  // 国际下单
 ];
 
 // Internal keys used to derive boolean "enabled" flags (not exposed)

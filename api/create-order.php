@@ -112,6 +112,30 @@ foreach ($items as $it) {
 }
 $subtotal = round($subtotal, 2);
 
+// 国际下单:country 白名单 + 按 zone 计算运费
+$enabledCountries = [];
+$shippingZones = [];
+try {
+    $stmt = $db->query("SELECT `key`, `value` FROM site_settings WHERE `key` IN ('enabled_countries', 'shipping_zones')");
+    foreach ($stmt->fetchAll() as $r) {
+        if ($r['key'] === 'enabled_countries') {
+            $tmp = json_decode($r['value'], true);
+            if (is_array($tmp)) $enabledCountries = $tmp;
+        } elseif ($r['key'] === 'shipping_zones') {
+            $tmp = json_decode($r['value'], true);
+            if (is_array($tmp)) $shippingZones = $tmp;
+        }
+    }
+} catch (Throwable $e) { /* 用 fallback */ }
+if (empty($enabledCountries)) $enabledCountries = ['US'];
+if (empty($shippingZones)) $shippingZones = ['default' => ['price' => 5.99, 'free_threshold' => 50]];
+
+// 校验 country 在白名单内
+$country = strtoupper($country);
+if (!in_array($country, $enabledCountries, true)) {
+    sendJson(['error' => "We don't currently ship to $country. Supported: " . implode(', ', $enabledCountries)], 422);
+}
+
 // P1#13: 服务端权威校验 promo code(前端传的 discount 不可信)
 $promoCodeInput = strtoupper(trim((string)($input['promo_code'] ?? '')));
 $discountAmount = 0.0;
@@ -143,10 +167,18 @@ if ($promoCodeInput !== '' && mb_strlen($promoCodeInput) <= 64) {
 
 $subtotalAfterDiscount = round($subtotal - $discountAmount, 2);
 
-// 简化运费：折后 subtotal >= $50 免邮，否则 $5.99
-$shipping = $subtotalAfterDiscount >= 50 ? 0.00 : 5.99;
-// 税费暂为 0（下一步可接 TaxJar 等）
-$tax = 0.00;
+// 国际运费按 zone 查表(country → EU/ASIA fallback → default)
+$EU_ZONE = ['DE','FR','IT','ES','NL','BE','AT','SE','NO','DK','FI','IE','PT','PL','CH'];
+$ASIA_ZONE = ['JP','SG','HK','TW','CN','KR','MY','TH','PH','VN','ID','IN'];
+$zone = null;
+if (isset($shippingZones[$country]))                                    $zone = $shippingZones[$country];
+elseif (in_array($country, $EU_ZONE, true)   && isset($shippingZones['EU']))   $zone = $shippingZones['EU'];
+elseif (in_array($country, $ASIA_ZONE, true) && isset($shippingZones['ASIA'])) $zone = $shippingZones['ASIA'];
+else                                                                    $zone = $shippingZones['default'] ?? ['price' => 5.99, 'free_threshold' => 50];
+$shipPrice = floatval($zone['price'] ?? 5.99);
+$shipThreshold = floatval($zone['free_threshold'] ?? 50);
+$shipping = ($shipThreshold > 0 && $subtotalAfterDiscount >= $shipThreshold) ? 0.00 : $shipPrice;
+$tax = 0.00;  // 国际税务 P3 接 Stripe Tax / TaxJar
 $total = round($subtotalAfterDiscount + $shipping + $tax, 2);
 
 try {

@@ -55,6 +55,13 @@
         <fieldset class="form-group">
           <legend>Shipping Address</legend>
           <label>
+            <span class="label-text">Country / Region <span class="required">*</span></span>
+            <select name="country" id="country-select" required autocomplete="country">
+              <option value="">Loading countries…</option>
+            </select>
+            <small id="shipping-hint" class="muted" style="display:block;margin-top:.35rem;font-size:.78rem;"></small>
+          </label>
+          <label>
             <span class="label-text">Address Line 1 <span class="required">*</span></span>
             <input type="text" name="address" placeholder="Street address" required maxlength="255" autocomplete="address-line1" />
           </label>
@@ -68,28 +75,13 @@
               <input type="text" name="city" required maxlength="100" autocomplete="address-level2" />
             </label>
             <label>
-              <span class="label-text">State <span class="required">*</span></span>
-              <select name="state" required autocomplete="address-level1">
-                <option value="">Select state…</option>
-                <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
-                <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
-                <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
-                <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
-                <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
-                <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
-                <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
-                <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
-                <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
-                <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
-                <option>SD</option><option>TN</option><option>TX</option><option>UT</option>
-                <option>VT</option><option>VA</option><option>WA</option><option>WV</option>
-                <option>WI</option><option>WY</option><option>DC</option>
-              </select>
+              <span class="label-text" id="state-label">State / Province <span class="required">*</span></span>
+              <input type="text" name="state" id="state-input" required maxlength="64" autocomplete="address-level1" placeholder="State, province, or region" />
             </label>
           </div>
           <label>
-            <span class="label-text">ZIP Code <span class="required">*</span></span>
-            <input type="text" name="postal_code" pattern="[0-9]{5}(-[0-9]{4})?" placeholder="12345" required maxlength="10" autocomplete="postal-code" />
+            <span class="label-text" id="postal-label">ZIP / Postal Code <span class="required">*</span></span>
+            <input type="text" name="postal_code" id="postal-input" placeholder="Postal code" required maxlength="12" autocomplete="postal-code" pattern="[A-Za-z0-9\- ]{3,12}" title="3-12 characters: letters, numbers, dash or space" />
           </label>
           <label>
             <span class="label-text">Order Notes</span>

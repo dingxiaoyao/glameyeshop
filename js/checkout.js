@@ -48,13 +48,30 @@
     // P1#13: 应用 promo discount(如有)— discountedSubtotal 用于运费判定
     const discount = appliedPromo ? Number(appliedPromo.discount) || 0 : 0;
     const discountedSubtotal = Math.max(0, subtotal - discount);
-    const shipping = discountedSubtotal >= 50 ? 0 : 5.99;
+    // 国际:运费按国家 zone 查表
+    const shipInfo = calcShipping(discountedSubtotal);
+    const shipping = shipInfo.cost;
     const tax = 0;
     const total = Math.max(0, discountedSubtotal + shipping + tax);
     $('#subtotal').textContent = fmt(subtotal);
-    $('#shipping').textContent = discountedSubtotal >= 50 ? 'FREE' : fmt(shipping);
+    $('#shipping').textContent = shipping === 0 ? 'FREE' : fmt(shipping);
     $('#tax').textContent = fmt(tax);
     $('#total').textContent = fmt(total);
+    // 显示 shipping hint(eta / free threshold)
+    const hint = $('#shipping-hint');
+    if (hint) {
+      if (shipInfo.free_threshold && discountedSubtotal < shipInfo.free_threshold) {
+        const remaining = (shipInfo.free_threshold - discountedSubtotal).toFixed(2);
+        hint.textContent = '🚚 Add $' + remaining + ' more for FREE shipping to this country';
+        hint.style.color = 'var(--gold)';
+      } else if (shipInfo.cost === 0) {
+        hint.textContent = '🎉 You qualify for FREE shipping';
+        hint.style.color = 'var(--success, #2c9)';
+      } else {
+        hint.textContent = 'Standard shipping to your country: $' + shipInfo.cost.toFixed(2);
+        hint.style.color = '';
+      }
+    }
 
     const discountRow = $('#discount-row');
     if (discount > 0 && appliedPromo) {
@@ -64,6 +81,92 @@
     } else {
       discountRow.hidden = true;
     }
+  }
+
+  // 国际下单 — 加载国家清单 + 运费 zone 表
+  let shippingZones = {};  // { US:{price,free_threshold}, default:{...} }
+  let enabledCountries = [];
+  // ISO → display name(常用国,其他显示 ISO code)
+  const COUNTRY_NAMES = {
+    US: '🇺🇸 United States', CA: '🇨🇦 Canada', GB: '🇬🇧 United Kingdom',
+    AU: '🇦🇺 Australia', DE: '🇩🇪 Germany', FR: '🇫🇷 France', IT: '🇮🇹 Italy',
+    ES: '🇪🇸 Spain', NL: '🇳🇱 Netherlands', JP: '🇯🇵 Japan', SG: '🇸🇬 Singapore',
+    HK: '🇭🇰 Hong Kong', TW: '🇹🇼 Taiwan', CN: '🇨🇳 China', KR: '🇰🇷 South Korea',
+    MX: '🇲🇽 Mexico', BR: '🇧🇷 Brazil', NZ: '🇳🇿 New Zealand', SE: '🇸🇪 Sweden',
+    NO: '🇳🇴 Norway', DK: '🇩🇰 Denmark', FI: '🇫🇮 Finland', BE: '🇧🇪 Belgium',
+    AT: '🇦🇹 Austria', CH: '🇨🇭 Switzerland', IE: '🇮🇪 Ireland', PT: '🇵🇹 Portugal',
+    PL: '🇵🇱 Poland', AE: '🇦🇪 UAE', SA: '🇸🇦 Saudi Arabia', IL: '🇮🇱 Israel',
+    IN: '🇮🇳 India', ID: '🇮🇩 Indonesia', MY: '🇲🇾 Malaysia', TH: '🇹🇭 Thailand',
+    PH: '🇵🇭 Philippines', VN: '🇻🇳 Vietnam', ZA: '🇿🇦 South Africa',
+  };
+  // 通用 zone 兜底:EU 国家走 EU,亚洲走 ASIA
+  const EU_ZONE = ['DE','FR','IT','ES','NL','BE','AT','SE','NO','DK','FI','IE','PT','PL','CH'];
+  const ASIA_ZONE = ['JP','SG','HK','TW','CN','KR','MY','TH','PH','VN','ID','IN'];
+
+  function lookupZone(country) {
+    if (!country) return shippingZones.default || { price: 5.99, free_threshold: 50 };
+    if (shippingZones[country]) return shippingZones[country];
+    if (EU_ZONE.indexOf(country) > -1 && shippingZones.EU) return shippingZones.EU;
+    if (ASIA_ZONE.indexOf(country) > -1 && shippingZones.ASIA) return shippingZones.ASIA;
+    return shippingZones.default || { price: 5.99, free_threshold: 50 };
+  }
+
+  function calcShipping(subtotalAfterDiscount) {
+    const country = $('#country-select') ? $('#country-select').value : 'US';
+    const zone = lookupZone(country);
+    const threshold = Number(zone.free_threshold) || 0;
+    const price = Number(zone.price) || 0;
+    const cost = (threshold > 0 && subtotalAfterDiscount >= threshold) ? 0 : price;
+    return { cost: cost, free_threshold: threshold, price: price };
+  }
+
+  async function loadCountriesAndZones() {
+    try {
+      const r = await fetch('/api/settings.php');
+      const s = await r.json();
+      try { enabledCountries = JSON.parse(s.enabled_countries || '[]'); } catch { enabledCountries = ['US']; }
+      try { shippingZones = JSON.parse(s.shipping_zones || '{}'); } catch { shippingZones = {}; }
+      if (!enabledCountries.length) enabledCountries = ['US'];
+
+      const sel = $('#country-select');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">Select country…</option>' +
+        enabledCountries.map(c => `<option value="${c}">${COUNTRY_NAMES[c] || c}</option>`).join('');
+
+      // 默认 US
+      if (enabledCountries.indexOf('US') > -1) sel.value = 'US';
+      else sel.value = enabledCountries[0];
+
+      sel.addEventListener('change', () => {
+        renderCart();
+        adjustFieldsForCountry(sel.value);
+      });
+      adjustFieldsForCountry(sel.value);
+    } catch (e) { /* 网络出错时静默 */ }
+  }
+
+  function adjustFieldsForCountry(country) {
+    const stateLabel = $('#state-label');
+    const stateInput = $('#state-input');
+    const postalLabel = $('#postal-label');
+    const postalInput = $('#postal-input');
+    if (!stateLabel || !stateInput || !postalLabel || !postalInput) return;
+    // 各国 label 调整(英文,简洁)
+    const map = {
+      US: { state: 'State', postal: 'ZIP Code', postalPlaceholder: '12345', statePlaceholder: 'e.g. CA' },
+      CA: { state: 'Province', postal: 'Postal Code', postalPlaceholder: 'A1A 1A1', statePlaceholder: 'e.g. ON' },
+      GB: { state: 'County', postal: 'Postcode', postalPlaceholder: 'SW1A 1AA', statePlaceholder: 'e.g. Greater London' },
+      AU: { state: 'State', postal: 'Postcode', postalPlaceholder: '2000', statePlaceholder: 'e.g. NSW' },
+      JP: { state: 'Prefecture', postal: 'Postal Code', postalPlaceholder: '100-0001', statePlaceholder: 'e.g. Tokyo' },
+      CN: { state: 'Province', postal: 'Postal Code', postalPlaceholder: '100000', statePlaceholder: 'e.g. 北京' },
+      DE: { state: 'State', postal: 'PLZ', postalPlaceholder: '10115', statePlaceholder: 'e.g. Berlin' },
+      FR: { state: 'Region', postal: 'Code Postal', postalPlaceholder: '75001', statePlaceholder: 'e.g. Île-de-France' },
+    };
+    const cfg = map[country] || { state: 'State / Province / Region', postal: 'Postal Code', postalPlaceholder: 'Postal code', statePlaceholder: 'State, province, or region' };
+    stateLabel.innerHTML  = cfg.state + ' <span class="required">*</span>';
+    postalLabel.innerHTML = cfg.postal + ' <span class="required">*</span>';
+    postalInput.placeholder = cfg.postalPlaceholder;
+    stateInput.placeholder  = cfg.statePlaceholder;
   }
 
   // P1#13: promo code state + handlers
@@ -216,7 +319,7 @@
         city:           fd.get('city'),
         state:          fd.get('state'),
         postal_code:    fd.get('postal_code'),
-        country:        'US',
+        country:        fd.get('country') || 'US',
         notes:          fd.get('notes'),
         payment_method: fd.get('payment_method'),
         items: cart.items.map((it) => ({
@@ -338,6 +441,7 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     if (await enforceLoginIfNeeded()) return;  // 守门拦下就不继续 init
+    await loadCountriesAndZones();  // 必须在 renderCart 前,运费需要 zones
     renderCart();
     bindCart();
     bindPaymentNote();

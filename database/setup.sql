@@ -1291,3 +1291,14 @@ VALUES ('WELCOME10', 'percent', 10.00, 0, 1);
 -- ============================================================
 INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 ('require_login_for_checkout', '1');
+
+
+-- ============================================================
+-- 国际下单 MVP
+-- enabled_countries  = JSON array of ISO codes(空 / 不存在 = 仅 US)
+-- shipping_zones     = JSON map of ISO → { price: USD, free_threshold: USD }
+--                      "default" 给未列出的国家用
+-- ============================================================
+INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
+('enabled_countries', '["US","CA","GB","AU","DE","FR","IT","ES","NL","JP","SG","HK","TW","CN","KR"]'),
+('shipping_zones', '{"US":{"price":5.99,"free_threshold":50},"CA":{"price":12.99,"free_threshold":75},"GB":{"price":18.99,"free_threshold":100},"AU":{"price":22.99,"free_threshold":100},"EU":{"price":18.99,"free_threshold":100},"ASIA":{"price":16.99,"free_threshold":100},"default":{"price":29.99,"free_threshold":150}}');
