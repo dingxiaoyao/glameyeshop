@@ -64,6 +64,14 @@
       }
       this.save();
       Notification.show(`Added to cart: ${item.name}`);
+      // GA4: add_to_cart 事件
+      if (window.gtag) {
+        window.gtag('event', 'add_to_cart', {
+          currency: 'USD',
+          value: price * qty,
+          items: [{ item_id: item.sku, item_name: item.name, price: price, quantity: qty }],
+        });
+      }
     },
     setQuantity(sku, qty) {
       const it = this.items.find((i) => i.sku === sku);
@@ -282,6 +290,32 @@
     } catch (e) {}
   }
 
+  // ============== Google Analytics 4 ==============
+  // 从 site_settings 拉 ga_measurement_id,有就动态注入 gtag.js + config
+  // 同时暴露 window.gtag,Cart/checkout 用它发 e-commerce 事件
+  async function initGoogleAnalytics() {
+    try {
+      const r = await fetch('/api/settings.php', { cache: 'force-cache' });
+      const s = await r.json();
+      const gaId = (s.ga_measurement_id || '').trim();
+      if (!gaId || !/^G-[A-Z0-9]+$/i.test(gaId)) return;  // 没配 / 格式错跳过
+
+      // 1. dataLayer + gtag stub(必须在 script 加载前)
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { window.dataLayer.push(arguments); };
+      window.gtag('js', new Date());
+      const cfg = { send_page_view: true };
+      if (s.ga_anonymize_ip === '1') cfg.anonymize_ip = true;
+      window.gtag('config', gaId, cfg);
+
+      // 2. 异步加载 gtag.js
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(gaId);
+      document.head.appendChild(script);
+    } catch (e) { /* 静默 */ }
+  }
+
   // ============== SEO Lock (noindex) ==============
   async function applySeoLock() {
     try {
@@ -302,6 +336,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     Cart.load();
     Cart.updateBadge();
+    initGoogleAnalytics();  // GA4 — 在 trackPageView 前注入,先 ready
     trackPageView();
     applySeoLock();
 

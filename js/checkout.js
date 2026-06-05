@@ -350,6 +350,17 @@
         });
         const j = await r.json();
         if (j.success && j.order_id) {
+          // GA4: purchase 事件(在 cart.clear 前,因为还要取 items)
+          if (window.gtag) {
+            window.gtag('event', 'purchase', {
+              transaction_id: 'order_' + j.order_id,
+              currency: j.currency || 'USD',
+              value: Number(j.amount) || cart.subtotal(),
+              shipping: Number(j.shipping) || 0,
+              tax: Number(j.tax) || 0,
+              items: cart.items.map((it) => ({ item_id: it.sku, item_name: it.name, price: it.price, quantity: it.quantity })),
+            });
+          }
           // P0#1: 存 lookup_token 替代 email — order-success/track 用它查订单
           sessionStorage.setItem('glameye_last_order', JSON.stringify({
             order_id: j.order_id,
@@ -482,5 +493,14 @@
     bindSubmit();
     bindPromo();
     applyPaymentMethodVisibility();
+    // GA4: begin_checkout
+    const cart = window.GlamEye?.Cart;
+    if (window.gtag && cart && cart.items.length > 0) {
+      window.gtag('event', 'begin_checkout', {
+        currency: 'USD',
+        value: cart.subtotal(),
+        items: cart.items.map((it) => ({ item_id: it.sku, item_name: it.name, price: it.price, quantity: it.quantity })),
+      });
+    }
   });
 })();

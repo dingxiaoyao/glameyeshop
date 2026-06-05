@@ -35,6 +35,29 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 </div>
 
 <div class="admin-card">
+  <h3>📈 <?= $lang === 'zh' ? '数据分析(Google Analytics 4)' : 'Analytics (Google Analytics 4)' ?></h3>
+  <p class="muted small" style="margin-bottom:.75rem;">
+    <?= $lang === 'zh'
+        ? '在 <a href="https://analytics.google.com" target="_blank" rel="noopener">analytics.google.com</a> 创建 GA4 资源,Admin → Data streams → Web → 复制 Measurement ID(G- 开头)粘到下方。配置后全站自动追踪页面浏览、加车、结算、购买事件。'
+        : 'Create a GA4 property at <a href="https://analytics.google.com" target="_blank" rel="noopener">analytics.google.com</a> · Admin → Data streams → Web → copy the Measurement ID (starts with G-) here. Once set, all pages auto-track page_view / add_to_cart / begin_checkout / purchase events.' ?>
+  </p>
+  <label><span class="label-text">Measurement ID (G-…)</span>
+    <input type="text" data-key="ga_measurement_id" placeholder="G-XXXXXXXXXX" pattern="G-[A-Z0-9]+" style="font-family:monospace;" />
+  </label>
+  <label style="display:flex;align-items:center;gap:.65rem;cursor:pointer;padding:.5rem 0;margin-top:.5rem;">
+    <input type="checkbox" data-key="ga_anonymize_ip" data-bool="1" />
+    <span>
+      <strong><?= $lang === 'zh' ? '匿名化 IP(推荐)' : 'Anonymize IP (recommended)' ?></strong>
+      <small style="display:block;color:var(--text-muted);font-weight:400;margin-top:.15rem;font-size:.78rem;">
+        <?= $lang === 'zh'
+            ? 'GDPR 合规要求 IP 不存全量。开启后 GA 用客户端 IP 后 octet 全 0。'
+            : 'GDPR-compliant. Last octet of client IP is zeroed before storage.' ?>
+      </small>
+    </span>
+  </label>
+</div>
+
+<div class="admin-card">
   <h3>🛒 <?= $lang === 'zh' ? '结算流程' : 'Checkout' ?></h3>
   <label style="display:flex;align-items:center;gap:.65rem;cursor:pointer;padding:.5rem 0;">
     <input type="checkbox" data-key="require_login_for_checkout" data-bool="1" />

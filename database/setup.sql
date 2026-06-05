@@ -1302,3 +1302,11 @@ INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 ('enabled_countries', '["US","CA","GB","AU","DE","FR","IT","ES","NL","JP","SG","HK","TW","CN","KR"]'),
 ('shipping_zones', '{"US":{"price":5.99,"free_threshold":50},"CA":{"price":12.99,"free_threshold":75},"GB":{"price":18.99,"free_threshold":100},"AU":{"price":22.99,"free_threshold":100},"EU":{"price":18.99,"free_threshold":100},"ASIA":{"price":16.99,"free_threshold":100},"default":{"price":29.99,"free_threshold":150}}');
+
+
+-- ============================================================
+-- Google Analytics 4(可选,admin 在后台配置)
+-- ============================================================
+INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
+('ga_measurement_id', ''),
+('ga_anonymize_ip', '1');

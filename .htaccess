@@ -27,12 +27,12 @@
     # P2: CSP — 防 XSS,允许的源 = self + Stripe + Resend(邮件 tracking pixel)+ TikTok embed + Google Fonts
     # 'unsafe-inline' 是为了 inline <script> 和 <style>(站内还有不少 inline 用法,P3 重构后可去掉)
     Header set Content-Security-Policy "default-src 'self'; \
-        script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.tiktok.com https://www.google-analytics.com https://www.googletagmanager.com; \
+        script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.tiktok.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com; \
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
-        img-src 'self' data: blob: https://images.unsplash.com https://*.tiktokcdn-us.com https://*.tiktokcdn.com https://scontent-*.cdninstagram.com; \
+        img-src 'self' data: blob: https://images.unsplash.com https://*.tiktokcdn-us.com https://*.tiktokcdn.com https://scontent-*.cdninstagram.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com; \
         font-src 'self' https://fonts.gstatic.com; \
         frame-src https://js.stripe.com https://hooks.stripe.com https://www.tiktok.com; \
-        connect-src 'self' https://api.stripe.com https://www.google-analytics.com; \
+        connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; \
         form-action 'self' https://checkout.stripe.com; \
         base-uri 'self'; \
         frame-ancestors 'self'; \
