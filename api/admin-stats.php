@@ -48,12 +48,14 @@ try {
     $sales = $stmt->fetchAll();
 
     // 热销 SKU Top 10
+    // 注意:orders 和 order_items 都有 product_name 字段,必须加 oi. 前缀
+    // 否则 MySQL 报 "Column 'product_name' in field list is ambiguous"
     $stmt = $db->query(
-        "SELECT product_name, SUM(quantity) AS qty, SUM(line_total) AS rev
+        "SELECT oi.product_name, SUM(oi.quantity) AS qty, SUM(oi.line_total) AS rev
          FROM order_items oi
          JOIN orders o ON o.id = oi.order_id
          WHERE o.status IN ('paid','processing','shipped','delivered')
-         GROUP BY product_name
+         GROUP BY oi.product_name
          ORDER BY qty DESC LIMIT 10"
     );
     $topProducts = $stmt->fetchAll();
