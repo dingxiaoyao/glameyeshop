@@ -304,6 +304,19 @@
       }
       if (!form.checkValidity()) { form.reportValidity(); return; }
 
+      // Test 账号二次确认 — 防止用户误以为是真支付
+      if (isTestAccount) {
+        const ok = window.confirm(
+          '⚠️ TEST ORDER CONFIRMATION\n\n' +
+          'Your account is flagged as a test account. This order will:\n' +
+          '  • Skip the real payment gateway\n' +
+          '  • NOT charge any real money\n' +
+          '  • Be marked as paid immediately for testing\n\n' +
+          'Continue with TEST order?'
+        );
+        if (!ok) return;
+      }
+
       btn.disabled = true;
       btn.querySelector('.btn-text').hidden = true;
       btn.querySelector('.btn-loading').hidden = false;
@@ -402,6 +415,26 @@
     }
   }
 
+  // 检测 test 账号 → 显示醒目 banner + 改 Place Order 按钮文字 + 二次确认
+  let isTestAccount = false;
+  async function detectTestAccount() {
+    try {
+      const r = await fetch('/api/auth.php?action=me', { credentials: 'include' });
+      const j = await r.json();
+      if (j.user && j.user.is_test_account == 1) {
+        isTestAccount = true;
+        // 顶部 banner
+        const banner = document.getElementById('test-account-banner');
+        if (banner) banner.hidden = false;
+        // Place Order 按钮文字改成清晰提示
+        const btnText = document.querySelector('.submit-btn .btn-text');
+        if (btnText) btnText.textContent = '🧪 Place TEST Order · No real charge';
+        const btn = document.querySelector('.submit-btn');
+        if (btn) btn.style.background = 'var(--warn, #d49f3a)';
+      }
+    } catch (e) { /* 静默 — 后端最终守门 */ }
+  }
+
   // 强制登录守门 — 未登录 + 需要登录 → 跳 login 带 redirect
   async function enforceLoginIfNeeded() {
     try {
@@ -442,6 +475,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     if (await enforceLoginIfNeeded()) return;  // 守门拦下就不继续 init
     await loadCountriesAndZones();  // 必须在 renderCart 前,运费需要 zones
+    await detectTestAccount();      // test 账号显示醒目 banner + 改按钮
     renderCart();
     bindCart();
     bindPaymentNote();

@@ -28,6 +28,14 @@
 
   <main class="container checkout-page">
     <div>
+      <!-- Test 账号警告横幅(JS 加载用户后,如果 is_test_account=1 就显示) -->
+      <div id="test-account-banner" hidden style="background:rgba(247,185,85,.18);border:2px solid var(--warn,#d49f3a);color:var(--warn,#d49f3a);padding:1rem 1.25rem;border-radius:10px;margin-bottom:1.25rem;font-size:.95rem;">
+        <strong>⚠️ TEST ACCOUNT ACTIVE</strong>
+        <p style="margin:.4rem 0 0;font-size:.85rem;line-height:1.6;color:var(--text);">
+          Your account is flagged as a <strong>test account</strong>. Orders you place will <strong>NOT charge any real money</strong> — they'll skip the payment gateway and be marked as paid for testing.<br>
+          To process a real payment instead, an admin needs to uncheck this account in Admin → Customers.
+        </p>
+      </div>
       <form id="checkout-form" class="checkout-form" novalidate>
         <fieldset class="form-group">
           <legend>Cart</legend>

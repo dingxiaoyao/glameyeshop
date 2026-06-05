@@ -66,13 +66,25 @@
       </tr>`).join('');
     container.innerHTML = `<table class="admin-table">${head}<tbody>${rows}</tbody></table>`;
     container.querySelectorAll('.test-toggle').forEach(el => el.addEventListener('change', async (e) => {
+      // 二次确认 — 防止误勾选导致真用户订单跳过支付
+      const checked = e.target.checked;
+      const userId  = e.target.dataset.id;
+      const row     = e.target.closest('tr');
+      const email   = row ? row.querySelector('td:nth-child(2)')?.textContent?.trim() : '#' + userId;
+      const msg = checked
+        ? `Mark "${email}" as a TEST account?\n\n⚠️ All orders this user places will:\n  • Skip the Stripe payment gateway entirely\n  • Be marked as paid automatically — NO real money charged\n  • Show a TEST badge in admin/orders\n\nOnly use this for your own testing accounts. NEVER mark a real customer.`
+        : `Remove TEST flag from "${email}"?\n\nFuture orders from this user will go through real Stripe payment.`;
+      if (!window.confirm(msg)) {
+        e.target.checked = !checked;  // revert
+        return;
+      }
       const r = await fetch('../api/admin-test-account.php', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: e.target.dataset.id, is_test_account: e.target.checked ? 1 : 0 }),
+        body: JSON.stringify({ user_id: userId, is_test_account: checked ? 1 : 0 }),
       });
       const j = await r.json();
-      if (!j.success) { alert(j.error || 'failed'); e.target.checked = !e.target.checked; }
+      if (!j.success) { alert(j.error || 'failed'); e.target.checked = !checked; }
     }));
 
     // 分页按钮
