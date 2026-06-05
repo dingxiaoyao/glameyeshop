@@ -21,6 +21,10 @@
   </header>
   <main class="container" style="max-width: 700px; padding: 4rem 1rem;">
     <div class="form-card">
+      <!-- Test order banner -->
+      <div id="test-banner" hidden style="background:rgba(247,185,85,.15);border:1px solid rgba(247,185,85,.4);color:var(--warn,#d49f3a);padding:.85rem 1.25rem;border-radius:8px;margin-bottom:1.5rem;text-align:center;font-size:.9rem;">
+        ⚠️ <strong>TEST ORDER</strong> — no real payment was processed. This is for testing only.
+      </div>
       <div style="font-size: 4rem; text-align:center; margin-bottom: 1rem;">✨</div>
       <h1>Thank You!</h1>
       <p class="subtitle">Your order has been received.</p>
@@ -41,6 +45,11 @@
     (function () {
       const params = new URLSearchParams(location.search);
       const orderId = parseInt(params.get('order_id'), 10);
+      // ?test=1 → 显示 TEST 徽章(test 账号订单跳过 Stripe 直接到这里)
+      if (params.get('test') === '1') {
+        const b = document.getElementById('test-banner');
+        if (b) b.hidden = false;
+      }
       const stored = JSON.parse(sessionStorage.getItem('glameye_last_order') || '{}');
       // P0#1: 优先用 token,fallback email
       const token = (params.get('lt') || params.get('token') || stored.lookup_token || '').trim();

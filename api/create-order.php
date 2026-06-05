@@ -341,7 +341,7 @@ try {
         // Test orders skip payment entirely and go straight to confirmation;
         // 真订单的 next URL 带 checkout_token,后端校验 token 防 IDOR(P0#1)
         'next'     => $isTest
-            ? "/order-confirmation.html?order_id=$orderId&test=1&lt=$lookupToken"
+            ? "/order-success.html?order_id=$orderId&test=1&lt=$lookupToken"
             : ($paymentMethod === 'stripe'
                 ? "/api/stripe-checkout.php?order_id=$orderId&t=$checkoutToken"
                 : "/api/paypal-checkout.php?order_id=$orderId&t=$checkoutToken"),
