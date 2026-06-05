@@ -65,24 +65,49 @@
         ? 'order_id=' + orderId + '&token=' + encodeURIComponent(token)
         : 'order_id=' + orderId + '&email=' + encodeURIComponent(email);
 
+      function render(o) {
+        const esc = window.GlamEye.Fmt.escape, m = window.GlamEye.Fmt.money;
+        const items = (o.items || []).map((it) =>
+          `<div class="summary-row"><span>${esc(it.product_name)} × ${it.quantity}</span><span>${m(it.line_total)}</span></div>`
+        ).join('');
+        // pending 状态 + Stripe + 有 token → 显示"等待确认"提示 + 尝试兜底同步
+        const isPending = o.status === 'pending' && o.payment_method === 'stripe' && token;
+        const statusBadge = isPending
+          ? '<span class="product-badge" style="background:rgba(247,185,85,.2);color:var(--warn,#d49f3a);">confirming payment…</span>'
+          : `<span class="product-badge">${esc(o.status)}</span>`;
+        target.innerHTML = `
+          <h3 style="margin-bottom:1rem; color:var(--gold);">Order #${o.id}</h3>
+          <p><strong>Customer:</strong> ${esc(o.customer_name)}</p>
+          <p><strong>Payment:</strong> ${esc(o.payment_method)}</p>
+          <p><strong>Status:</strong> ${statusBadge}</p>
+          <p><strong>Placed:</strong> ${esc(o.created_at)}</p>
+          <hr style="border:none; border-top:1px solid var(--border); margin:1rem 0;" />
+          ${items}
+          <div class="summary-row total"><span>Total</span><span>${m(o.amount)} USD</span></div>
+          ${isPending ? '<p class="muted small" style="margin-top:1rem;text-align:center;">⏳ Confirming your payment with Stripe — this usually takes a few seconds. Refresh in a moment if the status doesn\'t update.</p>' : ''}`;
+        return isPending;
+      }
+
+      async function syncFromStripe() {
+        try {
+          const r = await fetch('api/sync-order-from-stripe.php?order_id=' + orderId + '&token=' + encodeURIComponent(token));
+          const j = await r.json();
+          if (j.status && j.status !== 'pending') {
+            // 状态变了,重新拉一次 order-status 显示
+            const r2 = await fetch('api/order-status.php?' + qs);
+            const j2 = await r2.json();
+            if (j2.order) render(j2.order);
+          }
+        } catch (e) { /* 静默 — 用户刷新页面也会重试 */ }
+      }
+
       fetch('api/order-status.php?' + qs)
         .then((r) => r.json())
         .then((j) => {
           if (j.error) { target.innerHTML = `<p>Could not load order: ${j.error}</p>`; return; }
-          const o = j.order;
-          const esc = window.GlamEye.Fmt.escape, m = window.GlamEye.Fmt.money;
-          const items = (o.items || []).map((it) =>
-            `<div class="summary-row"><span>${esc(it.product_name)} × ${it.quantity}</span><span>${m(it.line_total)}</span></div>`
-          ).join('');
-          target.innerHTML = `
-            <h3 style="margin-bottom:1rem; color:var(--gold);">Order #${o.id}</h3>
-            <p><strong>Customer:</strong> ${esc(o.customer_name)}</p>
-            <p><strong>Payment:</strong> ${esc(o.payment_method)}</p>
-            <p><strong>Status:</strong> <span class="product-badge">${esc(o.status)}</span></p>
-            <p><strong>Placed:</strong> ${esc(o.created_at)}</p>
-            <hr style="border:none; border-top:1px solid var(--border); margin:1rem 0;" />
-            ${items}
-            <div class="summary-row total"><span>Total</span><span>${m(o.amount)} USD</span></div>`;
+          const isPending = render(j.order);
+          // 如果还是 pending,1.5s 后调兜底同步(给 webhook 一点时间先到)
+          if (isPending) setTimeout(syncFromStripe, 1500);
         })
         .catch((e) => { target.innerHTML = `<p>Failed to load: ${e.message}</p>`; });
     })();

@@ -12,7 +12,7 @@ try {
                    product_name, quantity, subtotal, shipping, tax, amount, currency,
                    payment_method, status, notes,
                    carrier, tracking_number, tracking_url, shipped_at, delivered_at, estimated_delivery,
-                   is_test, created_at, updated_at
+                   is_test, lookup_token, payment_session_id, created_at, updated_at
             FROM orders';
     $params = [];
     if ($statusFilter && in_array($statusFilter, ALLOWED_ORDER_STATUSES, true)) {

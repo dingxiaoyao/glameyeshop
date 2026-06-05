@@ -54,6 +54,9 @@
         <td><select class="status-select" data-id="${o.id}">${opts}</select></td>
         <td style="white-space:nowrap;">
           <button class="filter-btn track-btn" data-order='${escape(JSON.stringify(o))}'>📦</button>
+          ${o.status === 'pending' && o.payment_method === 'stripe' && o.lookup_token
+              ? `<button class="filter-btn sync-btn" data-id="${o.id}" data-token="${escape(o.lookup_token)}" title="Pull latest payment status from Stripe (in case webhook was missed)">🔄 Sync</button>`
+              : ''}
           ${['paid','processing','shipped','delivered'].includes(o.status) && o.payment_method === 'stripe'
               ? `<button class="filter-btn refund-btn" data-id="${o.id}" data-amount="${o.amount}" data-name="${escape(o.customer_name)}" title="Issue refund via Stripe">💸 Refund</button>`
               : ''}
@@ -63,6 +66,35 @@
     container.innerHTML = `<table class="admin-table">${head}<tbody>${rows}</tbody></table>`;
     container.querySelectorAll('.track-btn').forEach(b => b.addEventListener('click', () => openTrackingModal(JSON.parse(b.dataset.order))));
     container.querySelectorAll('.refund-btn').forEach(b => b.addEventListener('click', () => issueRefund(b)));
+    container.querySelectorAll('.sync-btn').forEach(b => b.addEventListener('click', () => syncOrder(b)));
+  }
+
+  async function syncOrder(btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳';
+    try {
+      const r = await fetch('../api/sync-order-from-stripe.php?order_id=' + btn.dataset.id + '&token=' + encodeURIComponent(btn.dataset.token));
+      const j = await r.json();
+      if (j.synced) {
+        alert(`✓ Order #${btn.dataset.id} synced from Stripe → status = '${j.status}'`);
+        load();
+      } else if (j.already_synced) {
+        alert(`Order #${btn.dataset.id} is already in a final state (${j.status}). Nothing to sync.`);
+        btn.disabled = false; btn.textContent = '🔄 Sync';
+      } else {
+        alert(
+          `Could not sync from Stripe.\n\n` +
+          `Current order status: ${j.status}\n` +
+          `Stripe checkout status: ${j.stripe_status || 'unknown'}\n` +
+          `Payment status on Stripe: ${j.payment_status || 'unknown'}\n\n` +
+          (j.note || j.reason || j.error || 'Customer may not have completed payment yet.')
+        );
+        btn.disabled = false; btn.textContent = '🔄 Sync';
+      }
+    } catch (e) {
+      alert('Network error: ' + e.message);
+      btn.disabled = false; btn.textContent = '🔄 Sync';
+    }
   }
 
   async function issueRefund(btn) {
