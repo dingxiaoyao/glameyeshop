@@ -42,6 +42,30 @@ jobs:
             find . -maxdepth 2 -name "*.html" -type f -exec sed -i "s/?v=DEPLOYHASH/?v=${DEPLOY_HASH}/g" {} \;
             echo "Cache busting: ?v=${DEPLOY_HASH}"
 
+            # Google Analytics 4:从 DB 拿 ga_measurement_id,替换 <!-- GLAMEYE_GA_TAG --> 占位符
+            # admin 在后台改 ID 后,push 一次空 commit(或直接 push)即可重新部署 GA tag
+            GA_ID=""
+            if [ -f /etc/glameye/db.conf ]; then
+              . /etc/glameye/db.conf
+              GA_ID=$(mysql -h "${DB_HOST:-127.0.0.1}" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" -sN -e "SELECT \`value\` FROM site_settings WHERE \`key\`='ga_measurement_id' LIMIT 1" 2>/dev/null || echo "")
+            fi
+            if [ -n "$GA_ID" ] && echo "$GA_ID" | grep -qE '^G-[A-Z0-9]+$'; then
+              GA_FILE=$(mktemp)
+              printf '<script async src="https://www.googletagmanager.com/gtag/js?id=%s"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","%s");</script>' "$GA_ID" "$GA_ID" > "$GA_FILE"
+              find . -maxdepth 2 -name "*.html" -type f | while read -r f; do
+                if grep -q "GLAMEYE_GA_TAG" "$f"; then
+                  sed -i "/GLAMEYE_GA_TAG/r $GA_FILE" "$f"
+                  sed -i "/GLAMEYE_GA_TAG/d" "$f"
+                fi
+              done
+              rm -f "$GA_FILE"
+              echo "✓ Injected GA tag $GA_ID into HTML files"
+            else
+              # 没配置 → 删除占位符避免泄露
+              find . -maxdepth 2 -name "*.html" -type f -exec sed -i "/GLAMEYE_GA_TAG/d" {} \;
+              echo "✓ GA not configured, placeholders removed"
+            fi
+
             chown -R www-data:www-data "$DEPLOY_PATH"
 
             # Uploads 目录（用户文件持久化，git 不管）

@@ -291,29 +291,13 @@
   }
 
   // ============== Google Analytics 4 ==============
-  // 从 site_settings 拉 ga_measurement_id,有就动态注入 gtag.js + config
-  // 同时暴露 window.gtag,Cart/checkout 用它发 e-commerce 事件
-  async function initGoogleAnalytics() {
-    try {
-      const r = await fetch('/api/settings.php', { cache: 'force-cache' });
-      const s = await r.json();
-      const gaId = (s.ga_measurement_id || '').trim();
-      if (!gaId || !/^G-[A-Z0-9]+$/i.test(gaId)) return;  // 没配 / 格式错跳过
-
-      // 1. dataLayer + gtag stub(必须在 script 加载前)
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = function () { window.dataLayer.push(arguments); };
-      window.gtag('js', new Date());
-      const cfg = { send_page_view: true };
-      if (s.ga_anonymize_ip === '1') cfg.anonymize_ip = true;
-      window.gtag('config', gaId, cfg);
-
-      // 2. 异步加载 gtag.js
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(gaId);
-      document.head.appendChild(script);
-    } catch (e) { /* 静默 */ }
+  // gtag 标签由 deploy.yml 在部署时静态注入到所有 HTML 的 <head>(deploy.yml
+  // 从 site_settings.ga_measurement_id 读 ID 替换 GLAMEYE_GA_TAG 占位符)。
+  // 这样 Google verifier 静态扫描 HTML 就能识别到。
+  // 这里只保证 dataLayer + gtag stub 在事件追踪代码(Cart.add 等)之前已就绪
+  if (!window.gtag) {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
   }
 
   // ============== SEO Lock (noindex) ==============
@@ -336,7 +320,6 @@
   document.addEventListener('DOMContentLoaded', async () => {
     Cart.load();
     Cart.updateBadge();
-    initGoogleAnalytics();  // GA4 — 在 trackPageView 前注入,先 ready
     trackPageView();
     applySeoLock();
 
