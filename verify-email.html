@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Verify Email · GlamEye</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/styles.css?v=DEPLOYHASH" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand"><img src="images/logo.png?v=DEPLOYHASH" alt="GlamEye" class="brand-logo" width="160" height="36" /></a>
+    </div>
+  </header>
+  <main class="container" style="max-width:480px; padding:4rem 1.25rem;">
+    <div class="form-card" id="verify-card">
+      <div style="font-size: 3rem; text-align: center; margin-bottom: 1rem;" id="emoji">⏳</div>
+      <h1 id="title" style="text-align:center;">Verifying email…</h1>
+      <p class="muted text-center" id="message">Please wait a moment.</p>
+      <div style="text-align:center; margin-top: 2rem;" id="actions" hidden>
+        <a href="/" class="button button-primary">Continue to GlamEye →</a>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-bottom container">
+      <p>© 2026 GlamEye, Inc. · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a></p>
+    </div>
+  </footer>
+  <script src="js/app.js?v=DEPLOYHASH"></script>
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.search);
+      const token = (params.get('token') || '').trim();
+      const emoji = document.getElementById('emoji');
+      const title = document.getElementById('title');
+      const msg = document.getElementById('message');
+      const actions = document.getElementById('actions');
+
+      if (!token || !/^[a-f0-9]{48}$/.test(token)) {
+        emoji.textContent = '✗';
+        title.textContent = 'Invalid link';
+        msg.textContent = 'This verification link is malformed.';
+        actions.hidden = false;
+        return;
+      }
+
+      fetch('/api/auth.php?action=verify-email&token=' + encodeURIComponent(token))
+        .then(r => r.json())
+        .then(j => {
+          if (j.success) {
+            emoji.textContent = '✓';
+            title.textContent = j.already ? 'Already verified' : 'Email verified!';
+            msg.textContent = j.message || 'Thanks — your account is fully set up.';
+            actions.hidden = false;
+          } else {
+            emoji.textContent = '✗';
+            title.textContent = 'Verification failed';
+            msg.textContent = j.error || 'Could not verify email.';
+            actions.hidden = false;
+          }
+        })
+        .catch(e => {
+          emoji.textContent = '✗';
+          title.textContent = 'Network error';
+          msg.textContent = e.message;
+          actions.hidden = false;
+        });
+    })();
+  </script>
+</body>
+</html>

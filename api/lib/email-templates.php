@@ -89,6 +89,40 @@ class EmailTemplates
         ];
     }
 
+    /** 密码重置请求邮件 — 1 小时失效 */
+    public static function passwordReset(string $email, string $firstName, string $resetUrl): array
+    {
+        $name = htmlspecialchars($firstName ?: 'there');
+        $emailEsc = htmlspecialchars($email);
+        $content = '<h1 style="font-family:Georgia,serif;font-size:22px;font-weight:500;color:#1a1a1a;margin:0 0 16px;">Reset your password</h1>
+<p>Hi ' . $name . ' — we received a request to reset the password for <strong>' . $emailEsc . '</strong>.</p>
+<p style="text-align:center;margin:32px 0;">
+  <a href="' . $resetUrl . '" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:500;font-size:14px;letter-spacing:1px;">Reset password &rarr;</a>
+</p>
+<p style="font-size:13px;color:#7a7468;">This link expires in <strong>1 hour</strong>. If you did not request a reset, you can safely ignore this email — your password will not change.</p>
+<p style="font-size:13px;color:#7a7468;margin-top:16px;">Trouble clicking? Copy this link into your browser:<br><code style="background:#fafaf6;padding:4px 8px;border-radius:4px;font-size:11px;word-break:break-all;">' . $resetUrl . '</code></p>';
+        return [
+            'subject' => 'Reset your GlamEye password',
+            'html'    => self::wrap($content),
+        ];
+    }
+
+    /** 邮箱验证邮件 — 48 小时失效 */
+    public static function emailVerification(string $email, string $firstName, string $verifyUrl): array
+    {
+        $name = htmlspecialchars($firstName ?: 'there');
+        $content = '<h1 style="font-family:Georgia,serif;font-size:22px;font-weight:500;color:#1a1a1a;margin:0 0 16px;">Welcome to GlamEye, ' . $name . '!</h1>
+<p>Thanks for joining. To finish setting up your account and unlock features like order history and reviews, please verify your email address.</p>
+<p style="text-align:center;margin:32px 0;">
+  <a href="' . $verifyUrl . '" style="display:inline-block;background:#b8924e;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:500;font-size:14px;letter-spacing:1px;">Verify email &rarr;</a>
+</p>
+<p style="font-size:13px;color:#7a7468;">This link expires in 48 hours. If you didn\'t create a GlamEye account, you can ignore this email.</p>';
+        return [
+            'subject' => 'Verify your email — GlamEye',
+            'html'    => self::wrap($content),
+        ];
+    }
+
     /** 退订确认邮件 */
     public static function unsubscribeConfirmation(string $email): array
     {

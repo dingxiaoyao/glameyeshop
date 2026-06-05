@@ -51,7 +51,7 @@ function oauthVerifyState(string $state): bool {
  *
  * Returns the user id and starts a session.
  */
-function linkOrCreateOAuthUser(string $provider, string $providerId, ?string $email, string $first = '', string $last = '', string $avatar = ''): int {
+function linkOrCreateOAuthUser(string $provider, string $providerId, ?string $email, string $first = '', string $last = '', string $avatar = '', bool $emailVerified = false): int {
     $db = getDb();
 
     // 1) Already linked?
@@ -61,21 +61,37 @@ function linkOrCreateOAuthUser(string $provider, string $providerId, ?string $em
     if ($row) {
         $uid = (int)$row['id'];
     } else if ($email) {
-        // 2) Existing account by email — link it
+        // 2) Existing account by email — 仅当 provider 显式标 verified 才自动 link
+        // P1#24: 防"自建 OIDC 伪造未验证邮箱劫持已有账号"
+        if (!$emailVerified) {
+            // Provider 没说邮箱 verified → 不自动 link 到已有账号,直接当作新用户走
+            $stmt = $db->prepare('SELECT id FROM users WHERE email = :e LIMIT 1');
+            $stmt->execute([':e' => $email]);
+            $existing = $stmt->fetch();
+            if ($existing) {
+                // 已有账号但 provider 没认证邮箱 → 拒绝(让用户先去普通账号登录)
+                error_log("[oauth] $provider rejected — email $email exists but provider did not verify");
+                oauthError('This email is already registered. Please sign in with your password and link ' . ucfirst($provider) . ' from account settings.');
+            }
+        }
+        // 走到这里:provider 已 verify,或 email 在 users 里不存在,可以放心 link/create
         $stmt = $db->prepare('SELECT id FROM users WHERE email = :e LIMIT 1');
         $stmt->execute([':e' => $email]);
         $row = $stmt->fetch();
         if ($row) {
             $uid = (int)$row['id'];
-            $stmt = $db->prepare('UPDATE users SET oauth_provider=:p, oauth_id=:id, avatar_url=COALESCE(NULLIF(avatar_url,""), :av) WHERE id=:uid');
+            $stmt = $db->prepare('UPDATE users SET oauth_provider=:p, oauth_id=:id, avatar_url=COALESCE(NULLIF(avatar_url,""), :av),
+                                                   email_verified = 1
+                                  WHERE id=:uid');
             $stmt->execute([':p' => $provider, ':id' => $providerId, ':av' => $avatar, ':uid' => $uid]);
         } else {
-            // 3) Create new user (no password)
-            $stmt = $db->prepare('INSERT INTO users (email, password_hash, first_name, last_name, oauth_provider, oauth_id, avatar_url)
-                                  VALUES (:e, NULL, :f, :l, :p, :id, :av)');
+            // 3) Create new user (no password) — provider-verified 邮箱 → email_verified=1
+            $stmt = $db->prepare('INSERT INTO users (email, password_hash, first_name, last_name, oauth_provider, oauth_id, avatar_url, email_verified)
+                                  VALUES (:e, NULL, :f, :l, :p, :id, :av, :v)');
             $stmt->execute([
                 ':e' => $email, ':f' => $first ?: 'Friend', ':l' => $last,
                 ':p' => $provider, ':id' => $providerId, ':av' => $avatar,
+                ':v' => $emailVerified ? 1 : 0,
             ]);
             $uid = (int)$db->lastInsertId();
         }

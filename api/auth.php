@@ -17,18 +17,52 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 try {
     switch ("$method:$action") {
-        case 'POST:signup':   handleSignup(); break;
-        case 'POST:login':    handleLogin(); break;
-        case 'POST:logout':   handleLogout(); break;
-        case 'GET:me':        handleMe(); break;
-        case 'POST:update':   handleUpdate(); break;
-        case 'POST:change-password': handleChangePassword(); break;
+        case 'POST:signup':           handleSignup(); break;
+        case 'POST:login':            handleLogin(); break;
+        case 'POST:logout':           handleLogout(); break;
+        case 'GET:me':                handleMe(); break;
+        case 'POST:update':           handleUpdate(); break;
+        case 'POST:change-password':  handleChangePassword(); break;
+        // P1#8 + P1#9
+        case 'POST:forgot-password':  handleForgotPassword(); break;
+        case 'POST:reset-password':   handleResetPassword(); break;
+        case 'GET:verify-email':      handleVerifyEmail(); break;
+        case 'POST:resend-verify':    handleResendVerify(); break;
         default: sendJson(['error' => 'Unknown action'], 400);
     }
 } catch (PDOException $e) {
     sendError('Database error', 500, $e);
 } catch (Throwable $e) {
     sendError('Server error', 500, $e);
+}
+
+/** 通用:用 Mailer + EmailTemplates 发邮件,失败 log 但不抛 */
+function sendAuthEmail(string $to, string $name, string $kind, ...$args): bool {
+    try {
+        require_once __DIR__ . '/lib/mailer.php';
+        require_once __DIR__ . '/lib/email-templates.php';
+        $tpl = null;
+        if ($kind === 'reset') {
+            $tpl = EmailTemplates::passwordReset($to, $name, $args[0]);
+        } elseif ($kind === 'verify') {
+            $tpl = EmailTemplates::emailVerification($to, $name, $args[0]);
+        }
+        if ($tpl) {
+            $r = Mailer::send($to, $name, $tpl['subject'], $tpl['html']);
+            return !empty($r['ok']);
+        }
+    } catch (Throwable $e) {
+        error_log('[auth] sendAuthEmail failed: ' . $e->getMessage());
+    }
+    return false;
+}
+
+/** 取站点 base URL */
+function siteBaseUrl(): string {
+    require_once __DIR__ . '/payment-config.php';
+    $base = getPaymentConfig('site_base_url', '');
+    if ($base && preg_match('#^https?://#', $base)) return rtrim($base, '/');
+    return 'https://glameyeshop.com';
 }
 
 function handleSignup(): void {
@@ -69,6 +103,19 @@ function handleSignup(): void {
     if ($sub) {
         $stmt = $db->prepare('INSERT IGNORE INTO newsletter_subscribers (email, source) VALUES (:e, :s)');
         $stmt->execute([':e' => $email, ':s' => 'signup']);
+    }
+
+    // P1#9: 自动发送邮箱验证邮件
+    try {
+        $verifyToken = bin2hex(random_bytes(24));
+        $verifyExp   = date('Y-m-d H:i:s', time() + 86400 * 2);  // 48h
+        $db->prepare(
+            'UPDATE users SET email_verify_token = :t, email_verify_expires_at = :exp WHERE id = :id'
+        )->execute([':t' => $verifyToken, ':exp' => $verifyExp, ':id' => $uid]);
+        $verifyUrl = siteBaseUrl() . '/api/auth.php?action=verify-email&token=' . urlencode($verifyToken);
+        sendAuthEmail($email, $first, 'verify', $verifyUrl);
+    } catch (Throwable $e) {
+        error_log('[signup] verify email failed: ' . $e->getMessage());
     }
 
     startUserSession();
@@ -151,6 +198,162 @@ function handleUpdate(): void {
         ':f' => $first, ':l' => $last, ':p' => $phone ?: null, ':s' => $sub, ':id' => $u['id'],
     ]);
     sendJson(['success' => true]);
+}
+
+/**
+ * P1#8: 忘记密码 — 发重置邮件
+ * 不论邮箱是否存在都返回成功(防枚举)
+ */
+function handleForgotPassword(): void {
+    $in = readInput();
+    $email = filter_var($in['email'] ?? '', FILTER_VALIDATE_EMAIL);
+    if (!$email) sendJson(['error' => 'Invalid email'], 422);
+
+    // 限频:同 email + IP 5 次/小时
+    $ip = rateLimitClientIp();
+    $bucket = "forgot:$ip:" . mb_substr($email, 0, 80);
+    rateLimitGuard($bucket, 5, 3600, 'Too many password reset requests for this email. Wait an hour.');
+
+    $db = getDb();
+    $stmt = $db->prepare('SELECT id, email, first_name FROM users WHERE email = :email LIMIT 1');
+    $stmt->execute([':email' => $email]);
+    $user = $stmt->fetch();
+
+    if ($user) {
+        // 1 小时过期
+        $token = bin2hex(random_bytes(24));
+        $expires = date('Y-m-d H:i:s', time() + 3600);
+        $db->prepare(
+            'INSERT INTO password_reset_tokens (token, user_id, expires_at, requested_ip)
+             VALUES (:t, :uid, :exp, :ip)'
+        )->execute([':t' => $token, ':uid' => $user['id'], ':exp' => $expires, ':ip' => $ip]);
+
+        // 用 base URL + reset-password.html?token=xxx
+        $resetUrl = siteBaseUrl() . '/reset-password.html?token=' . urlencode($token);
+        sendAuthEmail($user['email'], $user['first_name'] ?? '', 'reset', $resetUrl);
+    }
+    rateLimitFail($bucket);  // 不论用户是否存在都消耗一次配额(防枚举)
+
+    sendJson(['success' => true, 'message' => 'If an account exists for this email, a reset link has been sent.']);
+}
+
+/**
+ * P1#8: 重置密码 — 用 token 校验后改密码
+ */
+function handleResetPassword(): void {
+    $in = readInput();
+    $token = trim((string)($in['token'] ?? ''));
+    $pwd   = (string)($in['new_password'] ?? '');
+
+    if (!preg_match('/^[a-f0-9]{48}$/', $token)) sendJson(['error' => 'Invalid token'], 400);
+    if (strlen($pwd) < 8) sendJson(['error' => 'Password must be at least 8 characters'], 422);
+
+    // 同 IP 重置 token 校验失败 10 次/小时(防爆破)
+    $ip = rateLimitClientIp();
+    $bucket = "reset:$ip";
+    rateLimitGuard($bucket, 10, 3600, 'Too many reset attempts');
+
+    $db = getDb();
+    $stmt = $db->prepare(
+        "SELECT prt.token, prt.user_id, prt.expires_at, prt.used_at, u.email
+         FROM password_reset_tokens prt
+         JOIN users u ON u.id = prt.user_id
+         WHERE prt.token = :t LIMIT 1"
+    );
+    $stmt->execute([':t' => $token]);
+    $row = $stmt->fetch();
+
+    if (!$row || $row['used_at'] !== null) {
+        rateLimitFail($bucket);
+        sendJson(['error' => 'Reset link is invalid or already used'], 400);
+    }
+    if (strtotime($row['expires_at']) < time()) {
+        rateLimitFail($bucket);
+        sendJson(['error' => 'Reset link has expired. Please request a new one.'], 400);
+    }
+
+    // 改密码 + 标 token used
+    $hash = password_hash($pwd, PASSWORD_BCRYPT);
+    $db->beginTransaction();
+    try {
+        $db->prepare('UPDATE users SET password_hash = :h WHERE id = :id')
+           ->execute([':h' => $hash, ':id' => $row['user_id']]);
+        $db->prepare('UPDATE password_reset_tokens SET used_at = NOW() WHERE token = :t')
+           ->execute([':t' => $token]);
+        // 也清掉该 user 的其他未用 token(一次性策略)
+        $db->prepare('UPDATE password_reset_tokens SET used_at = NOW()
+                      WHERE user_id = :uid AND used_at IS NULL AND token != :t')
+           ->execute([':uid' => $row['user_id'], ':t' => $token]);
+        $db->commit();
+    } catch (Throwable $e) {
+        $db->rollBack();
+        throw $e;
+    }
+
+    // 清掉该用户的登录限频(因为已经证明拥有邮箱控制权)
+    rateLimitClear("login:$ip:" . mb_substr($row['email'], 0, 80));
+
+    sendJson(['success' => true, 'message' => 'Password updated. You can now log in.']);
+}
+
+/**
+ * P1#9: 验证邮箱 — GET ?token=...
+ */
+function handleVerifyEmail(): void {
+    $token = trim((string)($_GET['token'] ?? ''));
+    if (!preg_match('/^[a-f0-9]{48}$/', $token)) {
+        sendJson(['error' => 'Invalid verification link'], 400);
+    }
+
+    $db = getDb();
+    $stmt = $db->prepare(
+        'SELECT id, email, email_verified, email_verify_expires_at
+         FROM users WHERE email_verify_token = :t LIMIT 1'
+    );
+    $stmt->execute([':t' => $token]);
+    $user = $stmt->fetch();
+    if (!$user) sendJson(['error' => 'Verification link is invalid or already used'], 400);
+
+    if (intval($user['email_verified']) === 1) {
+        sendJson(['success' => true, 'already' => true, 'message' => 'Email was already verified.']);
+    }
+    if ($user['email_verify_expires_at'] && strtotime($user['email_verify_expires_at']) < time()) {
+        sendJson(['error' => 'Verification link has expired. Please request a new one.', 'expired' => true], 400);
+    }
+
+    $db->prepare(
+        'UPDATE users SET email_verified = 1, email_verify_token = NULL, email_verify_expires_at = NULL
+         WHERE id = :id'
+    )->execute([':id' => $user['id']]);
+
+    sendJson(['success' => true, 'message' => 'Email verified! You can close this tab.']);
+}
+
+/**
+ * P1#9: 重发验证邮件
+ */
+function handleResendVerify(): void {
+    $u = requireUser();
+    if (intval($u['email_verified'] ?? 0) === 1) {
+        sendJson(['success' => true, 'already' => true]);
+    }
+
+    $ip = rateLimitClientIp();
+    $bucket = "resend-verify:" . $u['id'];
+    rateLimitGuard($bucket, 3, 3600, 'Too many resend requests. Try again later.');
+
+    $token = bin2hex(random_bytes(24));
+    $expires = date('Y-m-d H:i:s', time() + 86400 * 2);  // 48h
+    $db = getDb();
+    $db->prepare(
+        'UPDATE users SET email_verify_token = :t, email_verify_expires_at = :exp WHERE id = :id'
+    )->execute([':t' => $token, ':exp' => $expires, ':id' => $u['id']]);
+
+    $verifyUrl = siteBaseUrl() . '/api/auth.php?action=verify-email&token=' . urlencode($token);
+    sendAuthEmail($u['email'], $u['first_name'] ?? '', 'verify', $verifyUrl);
+    rateLimitFail($bucket);
+
+    sendJson(['success' => true, 'message' => 'Verification email sent.']);
 }
 
 function handleChangePassword(): void {

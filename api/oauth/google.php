@@ -56,13 +56,16 @@ if (empty($ui['sub'])) {
     oauthError('Could not fetch Google profile');
 }
 
+// P1#24: Google OIDC userinfo 返回 email_verified bool — 必须为 true 才信任并 link 到已有账号
+$emailVerified = !empty($ui['email_verified']) && $ui['email_verified'] === true;
 linkOrCreateOAuthUser(
     'google',
     (string)$ui['sub'],
     $ui['email'] ?? null,
     (string)($ui['given_name'] ?? ''),
     (string)($ui['family_name'] ?? ''),
-    (string)($ui['picture'] ?? '')
+    (string)($ui['picture'] ?? ''),
+    $emailVerified
 );
 
 oauthRedirect('/account.html');

@@ -1201,3 +1201,47 @@ CREATE TABLE IF NOT EXISTS email_log (
 -- Resend API key 配置项
 INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 ('resend_api_key', '');
+
+
+-- ============================================================
+-- P1#8 密码重置 + P1#9 邮箱验证(Batch B)
+-- ============================================================
+
+-- 密码重置 token 表(token 一次性,使用后标 used_at;过期 1 小时)
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token       VARCHAR(48) PRIMARY KEY,
+    user_id     INT NOT NULL,
+    expires_at  TIMESTAMP NOT NULL,
+    used_at     TIMESTAMP NULL DEFAULT NULL,
+    requested_ip VARCHAR(45) DEFAULT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user (user_id),
+    INDEX idx_expires (expires_at),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- users 表加 email_verified + email_verify_token + email_verify_expires_at
+DROP PROCEDURE IF EXISTS add_email_verify_cols;
+DELIMITER //
+CREATE PROCEDURE add_email_verify_cols()
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'users'
+                   AND column_name = 'email_verified') THEN
+    ALTER TABLE users ADD COLUMN email_verified TINYINT(1) NOT NULL DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'users'
+                   AND column_name = 'email_verify_token') THEN
+    ALTER TABLE users ADD COLUMN email_verify_token VARCHAR(48) DEFAULT NULL;
+    ALTER TABLE users ADD INDEX idx_email_verify_token (email_verify_token);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'users'
+                   AND column_name = 'email_verify_expires_at') THEN
+    ALTER TABLE users ADD COLUMN email_verify_expires_at TIMESTAMP NULL DEFAULT NULL;
+  END IF;
+END //
+DELIMITER ;
+CALL add_email_verify_cols();
+DROP PROCEDURE add_email_verify_cols;
