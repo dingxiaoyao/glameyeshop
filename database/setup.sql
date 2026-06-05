@@ -1245,3 +1245,14 @@ END //
 DELIMITER ;
 CALL add_email_verify_cols();
 DROP PROCEDURE add_email_verify_cols;
+
+
+-- ============================================================
+-- P1#15: 服务端购物车(跨设备 + 登录后合并)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_carts (
+    user_id    INT PRIMARY KEY,
+    items_json TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -77,6 +77,28 @@
       this.save();
     },
     clear() { this.items = []; this.save(); },
+    /**
+     * P1#15: 登录后跨设备合并 cart
+     * 把 localStorage 现有 items 上传 → 服务器合并(同 sku 取较大 quantity)→
+     * 用合并结果覆盖 localStorage。失败静默,不阻塞用户。
+     */
+    async mergeWithServer() {
+      try {
+        const r = await fetch('/api/cart.php', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: this.items }),
+        });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (j.success && Array.isArray(j.items)) {
+          // 用合并后的服务器 cart 覆盖本地(load() 会再做一次清洗)
+          this.items = j.items.filter(i => i && typeof i === 'object' && i.sku);
+          this.save();
+        }
+      } catch (e) { /* 静默 */ }
+    },
     subtotal() {
       return this.items.reduce((s, i) => s + i.price * i.quantity, 0);
     },
@@ -360,6 +382,10 @@
 
     // Auth state in header
     await Auth.fetchMe();
+    // P1#15: 已登录 → 跨设备合并 cart(并行,不阻塞)
+    if (Auth.isLoggedIn()) {
+      Cart.mergeWithServer();
+    }
     const accountLink = document.getElementById('account-link');
     if (accountLink && Auth.isLoggedIn()) {
       accountLink.title = `Hi, ${Auth.user.first_name}`;

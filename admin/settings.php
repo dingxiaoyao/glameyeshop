@@ -22,6 +22,19 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 <!-- ───── Branding ───── -->
 <div class="settings-section" data-section="branding">
 <div class="admin-card">
+  <h3><?= $lang === 'zh' ? '站点地址' : 'Site Base URL' ?></h3>
+  <p class="muted small" style="margin-bottom:.75rem;">
+    <?= $lang === 'zh'
+        ? '所有外部链接(Stripe success/cancel、订单邮件 link、退订 link、sitemap)都用这个 URL。换域名/迁移时来这里改。<strong>必须包含 https://</strong>。'
+        : 'All external links (Stripe success/cancel URLs, order emails, unsubscribe links, sitemap) use this base. <strong>Must include https://</strong>.' ?>
+  </p>
+  <label>
+    <span class="label-text">Site Base URL</span>
+    <input type="url" data-key="site_base_url" placeholder="https://glameyeshop.com" required />
+  </label>
+</div>
+
+<div class="admin-card">
   <h3>Social Media URLs</h3>
   <div class="form-group" id="settings-form">
     <label><span class="label-text">TikTok</span><input type="url" data-key="social_tiktok" placeholder="https://www.tiktok.com/@glameye" /></label>

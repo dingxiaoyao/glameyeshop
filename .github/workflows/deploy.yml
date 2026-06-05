@@ -208,6 +208,14 @@ jobs:
               nginx -t && systemctl reload nginx 2>/dev/null || true
             fi
 
+            # P1#17: nginx 把 /sitemap.xml 重写到 /sitemap.php(动态从 DB 拿产品)
+            if ! grep -q 'rewrite ^/sitemap.xml' /etc/nginx/sites-enabled/glameye 2>/dev/null; then
+              sed -i '/server_name.*\b173\.199\b.*;/a\    rewrite ^/sitemap\\.xml$ /sitemap.php last;' /etc/nginx/sites-enabled/glameye 2>/dev/null || true
+              nginx -t && systemctl reload nginx 2>/dev/null || true
+            fi
+            # 删除老 sitemap.xml(若存在)— nginx try_files 会用静态文件覆盖 rewrite
+            rm -f "$DEPLOY_PATH/sitemap.xml" 2>/dev/null || true
+
             # ============================================================
             # P0#3: PHP-FPM env 注入 DB 凭据 + APP_ENV=production
             # PHP 进程读 getenv() 拿不到 secret,只能等 PHP-FPM 重启
