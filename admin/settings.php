@@ -311,9 +311,37 @@ charge.refunded</div>
 
       // 监听输入变化(typed + ping 后)
       [pkInput, skInput, whsecInput, modeSel].forEach(function (el) {
-        if (el) el.addEventListener('input', updateUI);
-        if (el) el.addEventListener('change', updateUI);
+        if (el) el.addEventListener('input', function () { updateUI(); checkPrefixMatch(); });
+        if (el) el.addEventListener('change', function () { updateUI(); checkPrefixMatch(); });
       });
+
+      // 实时 prefix 匹配检查:Mode=test 但 key=sk_live_ 或反之 → 警告
+      function checkPrefixMatch() {
+        var mode = modeSel.value;
+        var pk = pkInput.value.trim();
+        var sk = skInput.value.trim();
+        var msgs = [];
+        if (pk) {
+          var pkExpected = (mode === 'live') ? 'pk_live_' : 'pk_test_';
+          if (pk.indexOf(pkExpected) !== 0) {
+            msgs.push('Publishable key should start with <code>' + pkExpected + '</code> for ' + mode.toUpperCase() + ' mode');
+          }
+        }
+        if (sk) {
+          var skExpected = (mode === 'live') ? 'sk_live_' : 'sk_test_';
+          if (sk.indexOf(skExpected) !== 0) {
+            msgs.push('Secret key should start with <code>' + skExpected + '</code> for ' + mode.toUpperCase() + ' mode');
+          }
+        }
+        if (msgs.length > 0) {
+          statusBar.className = 'stripe-status-bar warn';
+          statusIcon.textContent = '⚠';
+          statusTitle.textContent = 'Mode / key prefix mismatch';
+          statusSub.innerHTML = msgs.join('<br>');
+        }
+      }
+      // 初始也跑一次(load 后)
+      setTimeout(checkPrefixMatch, 900);
 
       // P1#5: 当后端返回 has_value=true(secret 已配置但不返回明文),
       // 在 input 上加 placeholder ●●●● configured 提示
