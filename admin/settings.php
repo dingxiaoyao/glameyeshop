@@ -372,6 +372,36 @@ charge.refunded</div>
       // ── Test connection 按钮 ──
       if (pingBtn) {
         pingBtn.addEventListener('click', async function () {
+          // 前置检查 — 必须先 Save 才能测试
+          //   场景 A: input 是空 + 后端也没 has_value → 完全没配置过
+          //   场景 B: input 有值但 has_value 还不是 1 → 填了但还没 Save
+          var skTyped     = skInput.value.trim() !== '';
+          var skSaved     = skInput.dataset.hasValue === '1';
+          var whsecTyped  = whsecInput.value.trim() !== '';
+          var whsecSaved  = whsecInput.dataset.hasValue === '1';
+
+          if (!skSaved && !skTyped) {
+            statusBar.className = 'stripe-status-bar warn';
+            statusIcon.textContent = '⚠';
+            statusTitle.textContent = 'No Secret key yet';
+            statusSub.innerHTML = 'Paste your <code>sk_test_…</code> in the Secret Key field below first, then click <strong>💾 Save All Settings</strong> at the top of the page.';
+            return;
+          }
+          if (skTyped && !skSaved) {
+            statusBar.className = 'stripe-status-bar warn';
+            statusIcon.textContent = '⚠';
+            statusTitle.textContent = 'Save first';
+            statusSub.innerHTML = 'You pasted a Secret key but haven\'t saved it yet. Click <strong>💾 Save All Settings</strong> at the top, then try again.';
+            // 主动滚到 Save 按钮 + 闪烁高亮
+            var saveBtn = document.getElementById('save-all-btn');
+            if (saveBtn) {
+              saveBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              saveBtn.style.boxShadow = '0 0 0 4px rgba(184,146,78,.45)';
+              setTimeout(function () { saveBtn.style.boxShadow = ''; }, 2400);
+            }
+            return;
+          }
+
           pingBtn.disabled = true;
           var origText = pingBtn.innerHTML;
           pingBtn.innerHTML = '⏳';
