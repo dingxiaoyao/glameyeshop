@@ -92,11 +92,42 @@ foreach ($items as $it) {
 }
 $subtotal = round($subtotal, 2);
 
-// 简化运费：subtotal >= $50 免邮，否则 $5.99
-$shipping = $subtotal >= 50 ? 0.00 : 5.99;
+// P1#13: 服务端权威校验 promo code(前端传的 discount 不可信)
+$promoCodeInput = strtoupper(trim((string)($input['promo_code'] ?? '')));
+$discountAmount = 0.0;
+$discountCode   = null;
+$discountCodeId = null;
+if ($promoCodeInput !== '' && mb_strlen($promoCodeInput) <= 64) {
+    $promoStmt = $db->prepare(
+        'SELECT id, code, type, value, min_subtotal, max_uses, used_count, expires_at, is_active
+         FROM discount_codes WHERE code = :c LIMIT 1'
+    );
+    $promoStmt->execute([':c' => $promoCodeInput]);
+    $promo = $promoStmt->fetch();
+    if ($promo
+        && intval($promo['is_active']) === 1
+        && (!$promo['expires_at'] || strtotime($promo['expires_at']) >= time())
+        && ($promo['max_uses'] === null || intval($promo['used_count']) < intval($promo['max_uses']))
+        && $subtotal >= floatval($promo['min_subtotal'])
+    ) {
+        if ($promo['type'] === 'percent') {
+            $discountAmount = round($subtotal * (floatval($promo['value']) / 100), 2);
+        } else {
+            $discountAmount = round(min(floatval($promo['value']), $subtotal), 2);
+        }
+        $discountCode   = $promo['code'];
+        $discountCodeId = intval($promo['id']);
+    }
+    // 静默忽略无效 code(前端已经在 validate-promo 校验过,但用户可能改 payload)
+}
+
+$subtotalAfterDiscount = round($subtotal - $discountAmount, 2);
+
+// 简化运费：折后 subtotal >= $50 免邮，否则 $5.99
+$shipping = $subtotalAfterDiscount >= 50 ? 0.00 : 5.99;
 // 税费暂为 0（下一步可接 TaxJar 等）
 $tax = 0.00;
-$total = round($subtotal + $shipping + $tax, 2);
+$total = round($subtotalAfterDiscount + $shipping + $tax, 2);
 
 try {
     // P0#1: 生成一次性 checkout_token(15min,防 Stripe checkout 入口 IDOR)
@@ -152,13 +183,15 @@ try {
             city, state, postal_code, country,
             product_name, quantity, subtotal, shipping, tax, amount, currency,
             payment_method, status, notes, is_test, checkout_token,
-            checkout_token_expires_at, lookup_token, created_at)
+            checkout_token_expires_at, lookup_token,
+            discount_code, discount_amount, created_at)
          VALUES
            (:user_id, :customer_name, :email, :phone, :address_line, :address_line2,
             :city, :state, :postal_code, :country,
             :product_name, :quantity, :subtotal, :shipping, :tax, :amount, :currency,
             :payment_method, :status, :notes, :is_test, :checkout_token,
-            :token_exp, :lookup_token, NOW())'
+            :token_exp, :lookup_token,
+            :discount_code, :discount_amount, NOW())'
     );
     $first = $resolvedItems[0];
     $stmt->execute([
@@ -186,8 +219,16 @@ try {
         ':checkout_token' => $checkoutToken,
         ':token_exp'      => $isTest ? null : date('Y-m-d H:i:s', time() + 900), // 15min
         ':lookup_token'   => $lookupToken,
+        ':discount_code'  => $discountCode,
+        ':discount_amount' => $discountAmount,
     ]);
     $orderId = (int)$db->lastInsertId();
+
+    // P1#13: promo 成功用上 → used_count 累加(在 transaction 内)
+    if ($discountCodeId) {
+        $db->prepare('UPDATE discount_codes SET used_count = used_count + 1 WHERE id = :id')
+           ->execute([':id' => $discountCodeId]);
+    }
 
     $itemStmt = $db->prepare(
         'INSERT INTO order_items (order_id, product_id, product_name, sku, unit_price, quantity, line_total)

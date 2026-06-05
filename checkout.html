@@ -126,8 +126,30 @@
     <aside class="checkout-summary">
       <h2>Order Summary</h2>
       <div id="summary-items" class="summary-items"></div>
+
+      <!-- P1#13: Promo code -->
+      <div class="summary-promo" style="margin: 1rem 0; padding: 1rem 0; border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft);">
+        <div id="promo-applied" hidden style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;">
+          <span style="color:var(--success,#2c9);font-size:.85rem;">
+            ✓ <strong id="promo-code-display">—</strong>
+          </span>
+          <button type="button" id="promo-remove" style="background:none;border:0;color:var(--text-muted);font-size:.8rem;cursor:pointer;text-decoration:underline;">remove</button>
+        </div>
+        <div id="promo-form-wrap">
+          <div style="display:flex;gap:.5rem;">
+            <input type="text" id="promo-input" placeholder="Promo code (e.g. WELCOME10)" maxlength="64" style="flex:1;text-transform:uppercase;" autocomplete="off" />
+            <button type="button" id="promo-apply" class="button button-outline" style="padding:.5rem 1rem;">Apply</button>
+          </div>
+          <p id="promo-feedback" style="font-size:.78rem;margin:.4rem 0 0;min-height:1em;"></p>
+        </div>
+      </div>
+
       <div>
         <div class="summary-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+        <div class="summary-row" id="discount-row" hidden style="color:var(--success,#2c9);">
+          <span>Discount <small id="discount-code-label"></small></span>
+          <span id="discount-amount">-$0.00</span>
+        </div>
         <div class="summary-row"><span>Shipping <small>(free over $50)</small></span><span id="shipping">$0.00</span></div>
         <div class="summary-row"><span>Tax</span><span id="tax">$0.00</span></div>
         <div class="summary-row total"><span>Total</span><span id="total">$0.00</span></div>

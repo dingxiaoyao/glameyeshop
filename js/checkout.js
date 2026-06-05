@@ -45,13 +45,92 @@
       </div>`).join('');
 
     const subtotal = cart.subtotal();
-    const shipping = subtotal >= 50 ? 0 : 5.99;
+    // P1#13: 应用 promo discount(如有)— discountedSubtotal 用于运费判定
+    const discount = appliedPromo ? Number(appliedPromo.discount) || 0 : 0;
+    const discountedSubtotal = Math.max(0, subtotal - discount);
+    const shipping = discountedSubtotal >= 50 ? 0 : 5.99;
     const tax = 0;
-    const total = subtotal + shipping + tax;
+    const total = Math.max(0, discountedSubtotal + shipping + tax);
     $('#subtotal').textContent = fmt(subtotal);
-    $('#shipping').textContent = subtotal >= 50 ? 'FREE' : fmt(shipping);
+    $('#shipping').textContent = discountedSubtotal >= 50 ? 'FREE' : fmt(shipping);
     $('#tax').textContent = fmt(tax);
     $('#total').textContent = fmt(total);
+
+    const discountRow = $('#discount-row');
+    if (discount > 0 && appliedPromo) {
+      discountRow.hidden = false;
+      $('#discount-code-label').textContent = '(' + appliedPromo.code + ')';
+      $('#discount-amount').textContent = '-' + fmt(discount);
+    } else {
+      discountRow.hidden = true;
+    }
+  }
+
+  // P1#13: promo code state + handlers
+  let appliedPromo = null;  // { code, type, value, discount }
+
+  function bindPromo() {
+    const input = $('#promo-input');
+    const btn   = $('#promo-apply');
+    const fb    = $('#promo-feedback');
+    const applied = $('#promo-applied');
+    const formWrap = $('#promo-form-wrap');
+    const codeDisplay = $('#promo-code-display');
+    const removeBtn = $('#promo-remove');
+    if (!input || !btn) return;
+
+    async function applyCode() {
+      const cart = window.GlamEye?.Cart;
+      if (!cart) return;
+      const code = input.value.trim().toUpperCase();
+      if (!code) {
+        fb.textContent = 'Enter a code first';
+        fb.style.color = 'var(--error,#c33)';
+        return;
+      }
+      btn.disabled = true;
+      const origText = btn.textContent;
+      btn.textContent = '…';
+      try {
+        const r = await fetch('/api/validate-promo.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, subtotal: cart.subtotal() }),
+        });
+        const j = await r.json();
+        if (j.valid) {
+          appliedPromo = { code: j.code, type: j.type, value: j.value, discount: j.discount };
+          fb.textContent = j.message;
+          fb.style.color = 'var(--success,#2c9)';
+          codeDisplay.textContent = j.code + ' · ' + j.message;
+          applied.hidden = false;
+          formWrap.style.display = 'none';
+          renderCart();
+        } else {
+          fb.textContent = j.message || 'Invalid code';
+          fb.style.color = 'var(--error,#c33)';
+        }
+      } catch (e) {
+        fb.textContent = 'Network error';
+        fb.style.color = 'var(--error,#c33)';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    }
+
+    btn.addEventListener('click', applyCode);
+    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyCode(); } });
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        appliedPromo = null;
+        applied.hidden = true;
+        formWrap.style.display = 'block';
+        input.value = '';
+        fb.textContent = '';
+        renderCart();
+      });
+    }
   }
 
   function esc(s) { return window.GlamEye.Fmt.escape(s); }
@@ -143,6 +222,8 @@
         items: cart.items.map((it) => ({
           sku: it.sku, product_name: it.name, quantity: it.quantity,
         })),
+        // P1#13: promo code(后端会重新校验,前端值不可信)
+        promo_code: appliedPromo ? appliedPromo.code : null,
       };
 
       try {
@@ -223,6 +304,7 @@
     bindCart();
     bindPaymentNote();
     bindSubmit();
+    bindPromo();
     applyPaymentMethodVisibility();
   });
 })();

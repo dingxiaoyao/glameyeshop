@@ -1256,3 +1256,31 @@ CREATE TABLE IF NOT EXISTS user_carts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ============================================================
+-- P1#13: promo code 启用 — orders 加 discount_code + discount_amount
+-- ============================================================
+DROP PROCEDURE IF EXISTS add_discount_cols;
+DELIMITER //
+CREATE PROCEDURE add_discount_cols()
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'orders'
+                   AND column_name = 'discount_code') THEN
+    ALTER TABLE orders ADD COLUMN discount_code VARCHAR(64) DEFAULT NULL;
+    ALTER TABLE orders ADD INDEX idx_discount_code (discount_code);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'orders'
+                   AND column_name = 'discount_amount') THEN
+    ALTER TABLE orders ADD COLUMN discount_amount DECIMAL(10,2) NOT NULL DEFAULT 0;
+  END IF;
+END //
+DELIMITER ;
+CALL add_discount_cols();
+DROP PROCEDURE add_discount_cols;
+
+-- 种子一个欢迎折扣码,方便测试 + 提前给营销用
+INSERT IGNORE INTO discount_codes (code, type, value, min_subtotal, is_active)
+VALUES ('WELCOME10', 'percent', 10.00, 0, 1);
