@@ -48,7 +48,7 @@ class EmailTemplates
     {
         $cfg = Mailer::loadConfig();
         $base = rtrim($cfg['site_base_url'] ?? 'https://glameyeshop.com', '/');
-        $statusUrl = $base . '/order-success.html?order_id=' . intval($order['id']) . '&lt=' . urlencode($lookupToken);
+        $statusUrl = $base . '/track-order.html?order_id=' . intval($order['id']) . '&lt=' . urlencode($lookupToken);
 
         $itemRows = '';
         foreach ($items as $it) {

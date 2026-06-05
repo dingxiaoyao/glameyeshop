@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Track your GlamEye order status and shipping." />
+  <title>Track Your Order · GlamEye</title>
+  <link rel="canonical" href="https://glameyeshop.com/track-order.html" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/styles.css?v=DEPLOYHASH" />
+  <style>
+    .track-card { max-width:680px; margin:3rem auto; padding:2rem; background:var(--bg-card); border:1px solid var(--border-soft); border-radius:12px; }
+    .track-timeline { margin-top:1.5rem; }
+    .timeline-event { display:grid; grid-template-columns:1.2rem 1fr; gap:1rem; padding:1rem 0; border-bottom:1px solid var(--border-soft); }
+    .timeline-event:last-child { border-bottom:0; }
+    .timeline-event .dot { width:.7rem; height:.7rem; background:var(--gold); border-radius:50%; margin-top:.4rem; }
+    .timeline-event.muted .dot { background:var(--text-dim); }
+    .timeline-event .status { color:var(--cream); font-weight:600; text-transform:capitalize; }
+    .timeline-event .meta { font-size:.85rem; color:var(--text-muted); }
+    .status-pill { display:inline-block; padding:.25rem .75rem; border-radius:6px; font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:1px; }
+    .status-pill.pending { background:rgba(247,185,85,.18); color:var(--warn,#d49f3a); }
+    .status-pill.paid, .status-pill.processing { background:rgba(95,207,128,.18); color:var(--success,#2c9); }
+    .status-pill.shipped, .status-pill.delivered { background:rgba(185,146,78,.18); color:var(--gold); }
+    .status-pill.refunded, .status-pill.partial_refund, .status-pill.expired, .status-pill.cancelled, .status-pill.payment_failed, .status-pill.payment_amount_mismatch { background:rgba(238,90,90,.18); color:var(--error,#c33); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="/" class="brand"><img src="images/logo.png?v=DEPLOYHASH" alt="GlamEye" class="brand-logo" width="160" height="36" /></a>
+      <nav class="site-nav"><a href="/">Home</a> <a href="shop.html">Shop</a> <a href="contact.html">Contact</a></nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="track-card">
+      <h1 id="t-title">Track your order</h1>
+
+      <!-- 输入表单(没 token 时显示) -->
+      <form id="lookup-form" class="form-group" hidden>
+        <p class="muted small">Enter your order number and the email you used at checkout. (If you came from a shipping email, you should land here automatically.)</p>
+        <div class="form-row">
+          <label><span class="label-text">Order #</span>
+            <input type="number" name="order_id" required min="1" />
+          </label>
+          <label><span class="label-text">Email</span>
+            <input type="email" name="email" required autocomplete="email" />
+          </label>
+        </div>
+        <button type="submit" class="button button-primary">Track</button>
+        <p class="form-feedback" id="lookup-fb"></p>
+      </form>
+
+      <!-- 订单详情 -->
+      <div id="order-detail" hidden>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h2 style="margin:0;font-size:1.5rem;" id="d-id">Order #—</h2>
+            <p class="muted small" id="d-meta">—</p>
+          </div>
+          <span class="status-pill" id="d-status">—</span>
+        </div>
+        <div id="d-tracking" style="margin-top:1.5rem;"></div>
+        <div class="track-timeline" id="d-timeline"></div>
+      </div>
+
+      <div id="t-error" hidden style="margin-top:1rem;color:var(--error,#c33);"></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom container">
+      <p>© 2026 GlamEye, Inc. · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/refund.html">Refunds</a> · <a href="/shipping.html">Shipping</a></p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.search);
+      const orderId = parseInt(params.get('order_id'), 10) || 0;
+      const token   = (params.get('token') || params.get('lt') || '').trim();
+      const emailQS = (params.get('email') || '').trim();
+      const form = document.getElementById('lookup-form');
+      const detail = document.getElementById('order-detail');
+      const errBox = document.getElementById('t-error');
+
+      function esc(s) { return String(s ?? '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+      function fmtDate(s) { try { return new Date(s).toLocaleString(); } catch { return s; } }
+
+      async function lookup(orderId, query) {
+        try {
+          const r = await fetch('/api/order-tracking.php?order_id=' + orderId + '&' + query);
+          const j = await r.json();
+          if (j.error) {
+            errBox.hidden = false;
+            errBox.textContent = j.error;
+            return;
+          }
+          renderOrder(j.order, j.events || []);
+        } catch (e) {
+          errBox.hidden = false;
+          errBox.textContent = 'Network error: ' + e.message;
+        }
+      }
+
+      function renderOrder(o, events) {
+        detail.hidden = false;
+        document.getElementById('d-id').textContent = 'Order #' + o.id;
+        document.getElementById('d-meta').textContent = 'Placed ' + fmtDate(o.created_at) + ' · for ' + (o.customer_name || '—');
+        const pill = document.getElementById('d-status');
+        pill.textContent = (o.status || '').replace(/_/g, ' ');
+        pill.className = 'status-pill ' + (o.status || '');
+
+        const tracking = document.getElementById('d-tracking');
+        if (o.tracking_number) {
+          tracking.innerHTML = '<p><strong>Shipping:</strong> ' + esc(o.carrier || 'Carrier') + ' · ' + esc(o.tracking_number) +
+            (o.tracking_url ? ' · <a href="' + esc(o.tracking_url) + '" target="_blank" rel="noopener">Track package &rarr;</a>' : '') +
+            (o.estimated_delivery ? '<br><small class="muted">ETA: ' + esc(o.estimated_delivery) + '</small>' : '') + '</p>';
+        } else {
+          tracking.innerHTML = '<p class="muted">Tracking number will appear here once your order ships (usually 1–2 business days).</p>';
+        }
+
+        const timeline = document.getElementById('d-timeline');
+        if (!events.length) {
+          timeline.innerHTML = '<p class="muted small">No activity yet — your order was just placed.</p>';
+        } else {
+          timeline.innerHTML = events.map(e =>
+            '<div class="timeline-event"><div class="dot"></div><div>' +
+            '<div class="status">' + esc((e.status || '').replace(/_/g, ' ')) + '</div>' +
+            (e.description ? '<div>' + esc(e.description) + '</div>' : '') +
+            '<div class="meta">' + esc(fmtDate(e.occurred_at)) +
+            (e.location ? ' · ' + esc(e.location) : '') + '</div>' +
+            '</div></div>'
+          ).join('');
+        }
+      }
+
+      // 自动模式:URL 带 token 或 email → 自动查询
+      if (orderId > 0 && token && /^[a-f0-9]{48}$/.test(token)) {
+        lookup(orderId, 'token=' + encodeURIComponent(token));
+      } else if (orderId > 0 && emailQS) {
+        lookup(orderId, 'email=' + encodeURIComponent(emailQS));
+      } else {
+        // 手动模式:显示输入表单
+        form.hidden = false;
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const oid = parseInt(form.order_id.value, 10);
+          const em  = form.email.value.trim();
+          if (oid <= 0 || !em) return;
+          form.hidden = true;
+          lookup(oid, 'email=' + encodeURIComponent(em));
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

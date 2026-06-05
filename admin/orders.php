@@ -52,11 +52,65 @@
         <td><small>${escape(o.payment_method)}</small></td>
         <td>${tracking}</td>
         <td><select class="status-select" data-id="${o.id}">${opts}</select></td>
-        <td><button class="filter-btn track-btn" data-order='${escape(JSON.stringify(o))}'>📦 Tracking</button></td>
+        <td style="white-space:nowrap;">
+          <button class="filter-btn track-btn" data-order='${escape(JSON.stringify(o))}'>📦</button>
+          ${['paid','processing','shipped','delivered'].includes(o.status) && o.payment_method === 'stripe'
+              ? `<button class="filter-btn refund-btn" data-id="${o.id}" data-amount="${o.amount}" data-name="${escape(o.customer_name)}" title="Issue refund via Stripe">💸 Refund</button>`
+              : ''}
+        </td>
       </tr>`;
     }).join('');
     container.innerHTML = `<table class="admin-table">${head}<tbody>${rows}</tbody></table>`;
     container.querySelectorAll('.track-btn').forEach(b => b.addEventListener('click', () => openTrackingModal(JSON.parse(b.dataset.order))));
+    container.querySelectorAll('.refund-btn').forEach(b => b.addEventListener('click', () => issueRefund(b)));
+  }
+
+  async function issueRefund(btn) {
+    const orderId   = parseInt(btn.dataset.id, 10);
+    const fullAmount = parseFloat(btn.dataset.amount);
+    const customer  = btn.dataset.name;
+    const partial = prompt(
+      `Refund order #${orderId} (${customer})\n\nFull refund: leave empty\nPartial refund: enter dollar amount (max $${fullAmount.toFixed(2)})\n\nAmount (USD):`,
+      ''
+    );
+    if (partial === null) return;  // cancelled
+    const reason = prompt('Reason (optional, max 500 chars — saved to Stripe metadata):', '');
+    if (reason === null) return;
+
+    const body = { order_id: orderId };
+    if (partial.trim() !== '') {
+      const usd = parseFloat(partial);
+      if (!Number.isFinite(usd) || usd <= 0 || usd > fullAmount) {
+        alert('Invalid amount. Must be between $0.01 and $' + fullAmount.toFixed(2));
+        return;
+      }
+      body.amount_cents = Math.round(usd * 100);
+    }
+    if (reason.trim() !== '') body.reason = reason.trim();
+
+    btn.disabled = true;
+    btn.textContent = '⏳';
+    try {
+      const r = await fetch('../api/admin-refund.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const j = await r.json();
+      if (j.success) {
+        alert(`✓ Refunded $${j.amount_refunded.toFixed(2)} — order is now '${j.new_status}'.\n\nStripe refund: ${j.refund_id}`);
+        load();  // 重新加载列表
+      } else {
+        alert('Refund failed: ' + (j.error || 'unknown'));
+        btn.disabled = false;
+        btn.textContent = '💸 Refund';
+      }
+    } catch (e) {
+      alert('Network error: ' + e.message);
+      btn.disabled = false;
+      btn.textContent = '💸 Refund';
+    }
   }
 
   function openTrackingModal(o) {
