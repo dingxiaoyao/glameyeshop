@@ -114,51 +114,113 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 
 <!-- ───── Payments ───── -->
 <div class="settings-section" data-section="payments">
-<div class="admin-card">
-  <h3>💳 Payment Gateway · Stripe</h3>
-
+<div class="admin-card" id="stripe-card">
   <?php
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host   = $_SERVER['HTTP_HOST'] ?? 'glameyeshop.com';
     $webhookUrl = $scheme . '://' . $host . '/api/stripe-webhook.php';
   ?>
 
-  <details style="margin-bottom: 1.25rem; background: var(--bg-soft); padding: 1rem 1.25rem; border-radius: var(--radius); border-left: 3px solid var(--gold);" open>
-    <summary style="cursor:pointer; font-weight:600; color:var(--gold); margin-bottom:.5rem;">
-      <?= $lang === 'zh' ? '📋 Stripe 配置 3 步指引' : '📋 Stripe Setup · 3 Steps' ?>
-    </summary>
-    <ol style="margin: .75rem 0 .25rem 1.25rem; padding-left: 0; font-size: .88rem; line-height: 1.75;">
-      <li>
-        <strong><?= $lang === 'zh' ? '拿到 API 密钥' : 'Get your API keys' ?></strong> —
-        <a href="https://dashboard.stripe.com/test/apikeys" target="_blank" rel="noopener">dashboard.stripe.com/test/apikeys</a>
-        <?= $lang === 'zh' ? '。复制 Publishable key 和 Secret key,粘贴到下方对应字段,Mode 选 Test。' : '. Copy the Publishable key and Secret key, paste into the fields below, set Mode = Test.' ?>
-      </li>
-      <li>
-        <strong><?= $lang === 'zh' ? '注册 Webhook 端点' : 'Add a webhook endpoint' ?></strong> —
-        <a href="https://dashboard.stripe.com/test/webhooks/create" target="_blank" rel="noopener"><?= $lang === 'zh' ? '点这里直接打开' : 'open this link' ?></a>
-        <?= $lang === 'zh' ? ' · Endpoint URL 粘贴:' : ' · paste this Endpoint URL:' ?>
-        <div style="display:flex; gap:.5rem; align-items:center; margin:.4rem 0; flex-wrap:wrap;">
-          <code id="webhook-url" style="background:var(--bg); padding:.4rem .65rem; border-radius:4px; border:1px solid var(--border); flex:1; min-width:0; overflow-x:auto; white-space:nowrap; font-size:.78rem;"><?= htmlspecialchars($webhookUrl) ?></code>
-          <button type="button" id="copy-webhook-url" class="button button-outline" style="padding:.4rem .85rem; font-size:.75rem; white-space:nowrap;">
-            <?= $lang === 'zh' ? '复制' : 'Copy' ?>
-          </button>
-        </div>
-        <?= $lang === 'zh' ? 'Events to send 选这 5 个:' : 'Events to send — select these 5:' ?>
-        <code style="display:block; background:var(--bg); padding:.4rem .65rem; border-radius:4px; border:1px solid var(--border); margin:.4rem 0; font-size:.75rem; line-height:1.7;">checkout.session.completed<br>checkout.session.async_payment_succeeded<br>checkout.session.async_payment_failed<br>checkout.session.expired<br>charge.refunded</code>
-      </li>
-      <li>
-        <strong><?= $lang === 'zh' ? '复制 Signing secret' : 'Copy the Signing secret' ?></strong> —
-        <?= $lang === 'zh' ? '注册完 Webhook 后,Stripe 给你一个 whsec_… 开头的 Signing secret,粘到下方 Webhook Signing Secret 字段。' : 'After creating the webhook, Stripe shows a whsec_… signing secret. Paste it into the Webhook Signing Secret field below.' ?>
-      </li>
-    </ol>
-    <p style="margin: 0.75rem 0 .25rem; font-size: .82rem; color: var(--text-muted);">
-      <?= $lang === 'zh' ? '⚙️ 测试模式用测试卡 ' : '⚙️ Test mode card: ' ?>
-      <code style="font-size:.78rem;">4242 4242 4242 4242</code>
-      <?= $lang === 'zh' ? '(任意未来日期 + 任意 CVC + 任意 ZIP)。' : ' (any future date · any CVC · any ZIP).' ?>
-    </p>
-  </details>
+  <style>
+    /* Stripe wizard 样式 */
+    .stripe-status-bar { display:flex; align-items:center; gap:1rem; padding:.85rem 1.1rem; border-radius:10px; margin-bottom:1.25rem; font-weight:500; }
+    .stripe-status-bar.ok    { background:rgba(95,207,128,.12);  color:var(--success,#2c9); border:1px solid rgba(95,207,128,.3); }
+    .stripe-status-bar.warn  { background:rgba(247,185,85,.12);  color:var(--warn,#d49f3a); border:1px solid rgba(247,185,85,.3); }
+    .stripe-status-bar.empty { background:var(--bg-soft);         color:var(--text-muted);    border:1px solid var(--border-soft); }
 
-  <div class="form-group">
+    .stripe-steps { display:flex; gap:.5rem; margin-bottom:1.5rem; }
+    .stripe-step  { flex:1; padding:.85rem .75rem; background:var(--bg-soft); border:1px solid var(--border-soft); border-radius:8px; text-align:center; font-size:.85rem; color:var(--text-muted); position:relative; cursor:pointer; transition:all .2s; }
+    .stripe-step.done  { background:rgba(95,207,128,.08); color:var(--success,#2c9); border-color:rgba(95,207,128,.3); }
+    .stripe-step.done::before { content:"✓ "; }
+    .stripe-step.current { background:var(--bg-card); color:var(--gold); border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,146,78,.15); }
+    .stripe-step.current::before { content:"● "; }
+    .stripe-step .step-num { display:block; font-size:.65rem; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:.1rem; opacity:.7; }
+
+    .stripe-panel { padding:1.25rem; background:var(--bg-soft); border-radius:10px; border-left:4px solid var(--gold); margin-bottom:1rem; }
+    .stripe-panel h4 { margin:0 0 .85rem; font-size:1rem; color:var(--cream); display:flex; align-items:center; gap:.5rem; }
+    .stripe-panel .panel-cta { display:inline-flex; align-items:center; gap:.4rem; background:var(--gold); color:#fff; padding:.5rem 1rem; border-radius:6px; text-decoration:none; font-size:.85rem; font-weight:500; margin:.25rem 0; }
+    .stripe-panel .panel-cta:hover { background:var(--gold-dark); color:#fff; }
+
+    .url-copy-row { display:flex; gap:.5rem; align-items:center; margin:.65rem 0; flex-wrap:wrap; }
+    .url-copy-row code { background:var(--bg); padding:.5rem .75rem; border-radius:6px; border:1px solid var(--border); flex:1; min-width:0; overflow-x:auto; white-space:nowrap; font-size:.78rem; }
+    .url-copy-row .copy-btn { padding:.5rem 1rem; font-size:.75rem; white-space:nowrap; background:var(--bg-card); color:var(--cream); border:1px solid var(--border); border-radius:6px; cursor:pointer; }
+    .url-copy-row .copy-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+    .stripe-events { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:.65rem .8rem; margin:.5rem 0; font-family:var(--mono,monospace); font-size:.72rem; line-height:1.85; }
+
+    .stripe-collapsed-form { background:var(--bg-soft); padding:1rem 1.25rem; border-radius:8px; margin-top:1rem; }
+    .stripe-collapsed-form summary { cursor:pointer; font-size:.85rem; color:var(--text-muted); padding:.25rem 0; }
+    .stripe-collapsed-form summary:hover { color:var(--cream); }
+    .stripe-collapsed-form[open] summary { color:var(--cream); margin-bottom:.85rem; }
+  </style>
+
+  <h3 style="margin-bottom:.85rem;">💳 Stripe Payment Gateway</h3>
+
+  <!-- 顶部状态(JS 动态填充) -->
+  <div class="stripe-status-bar empty" id="stripe-status">
+    <span style="font-size:1.4rem;" id="stripe-status-icon">⏳</span>
+    <div style="flex:1;">
+      <div id="stripe-status-title">Loading status…</div>
+      <small id="stripe-status-sub" style="opacity:.75;font-weight:400;font-size:.78rem;"></small>
+    </div>
+    <button type="button" id="stripe-ping-btn" class="button button-outline" style="padding:.45rem 1rem; font-size:.85rem;">
+      🔌 Test connection
+    </button>
+  </div>
+
+  <!-- 3 步进度条 -->
+  <div class="stripe-steps" id="stripe-steps">
+    <div class="stripe-step" data-step="1"><span class="step-num">Step 1</span>API keys</div>
+    <div class="stripe-step" data-step="2"><span class="step-num">Step 2</span>Webhook</div>
+    <div class="stripe-step" data-step="3"><span class="step-num">Step 3</span>Verify</div>
+  </div>
+
+  <!-- 当前步骤的提示卡(JS 动态显示哪一个) -->
+  <div class="stripe-panel" id="stripe-panel-1" hidden>
+    <h4>🔑 Step 1 — Get your API keys from Stripe</h4>
+    <p style="margin:0 0 .5rem;font-size:.88rem;">Go to Stripe Dashboard, copy your <strong>Publishable key</strong> (pk_…) and <strong>Secret key</strong> (sk_…), paste them below.</p>
+    <a href="https://dashboard.stripe.com/test/apikeys" target="_blank" rel="noopener" class="panel-cta">
+      Open Stripe API keys page ↗
+    </a>
+  </div>
+
+  <div class="stripe-panel" id="stripe-panel-2" hidden>
+    <h4>🪝 Step 2 — Create a webhook endpoint</h4>
+    <p style="margin:0 0 .5rem;font-size:.88rem;">1. Open the page below. 2. Paste this URL in <em>Endpoint URL</em>. 3. Select the 5 events. 4. Click Add endpoint. 5. Copy the <strong>Signing secret</strong> (whsec_…) and paste in the field below.</p>
+    <a href="https://dashboard.stripe.com/test/webhooks/create" target="_blank" rel="noopener" class="panel-cta">
+      Open Stripe webhook creation page ↗
+    </a>
+    <div style="margin-top:.85rem;">
+      <small style="font-weight:600;color:var(--cream);">Webhook URL:</small>
+      <div class="url-copy-row">
+        <code id="webhook-url"><?= htmlspecialchars($webhookUrl) ?></code>
+        <button type="button" class="copy-btn" id="copy-webhook-url">📋 Copy</button>
+      </div>
+    </div>
+    <div style="margin-top:.5rem;">
+      <small style="font-weight:600;color:var(--cream);">Events to subscribe (all 5):</small>
+      <div class="stripe-events" id="stripe-events">checkout.session.completed
+checkout.session.async_payment_succeeded
+checkout.session.async_payment_failed
+checkout.session.expired
+charge.refunded</div>
+      <button type="button" class="copy-btn" id="copy-events" style="font-size:.7rem;">📋 Copy all events</button>
+    </div>
+  </div>
+
+  <div class="stripe-panel" id="stripe-panel-3" hidden style="border-left-color:var(--success,#2c9);">
+    <h4>✓ Step 3 — Verify everything works</h4>
+    <p style="margin:0 0 .65rem;font-size:.88rem;">All keys are saved. Click <strong>Test connection</strong> above to confirm Stripe accepts them. Then run a test order with this card:</p>
+    <div class="url-copy-row" style="margin:.3rem 0;">
+      <code><strong>4242 4242 4242 4242</strong> · any future date · any CVC · any ZIP</code>
+    </div>
+    <p style="margin:.5rem 0 0;font-size:.78rem;color:var(--text-muted);">
+      Place a test order → check <a href="stripe-logs.php">📜 Webhook Logs</a> for the event → order should turn <strong>paid</strong>.
+    </p>
+  </div>
+
+  <!-- 字段(在 panel 之外,但显隐受 JS 控制) -->
+  <div class="form-group" id="stripe-form" style="margin-top:1.25rem;">
     <div class="form-row">
       <label><span class="label-text">Mode</span>
         <select data-key="stripe_mode" id="stripe-mode-select">
@@ -167,97 +229,196 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
         </select>
       </label>
       <label><span class="label-text">Publishable Key (pk_…)</span>
-        <input type="text" data-key="stripe_publishable_key" placeholder="pk_test_… or pk_live_…" />
+        <input type="text" data-key="stripe_publishable_key" id="stripe-pk-input" placeholder="pk_test_… or pk_live_…" />
       </label>
     </div>
     <label><span class="label-text">Secret Key (sk_…) <small style="color:var(--warn);">— never shared with frontend</small></span>
-      <input type="password" data-key="stripe_secret_key" autocomplete="new-password" placeholder="sk_test_… or sk_live_…" />
+      <input type="password" data-key="stripe_secret_key" id="stripe-sk-input" autocomplete="new-password" placeholder="sk_test_… or sk_live_…" />
     </label>
     <label><span class="label-text">Webhook Signing Secret (whsec_…)</span>
-      <input type="password" data-key="stripe_webhook_secret" autocomplete="new-password" placeholder="whsec_…" />
+      <input type="password" data-key="stripe_webhook_secret" id="stripe-whsec-input" autocomplete="new-password" placeholder="whsec_…" />
     </label>
-  </div>
-
-  <!-- P1#2: Test Connection 按钮 + 上次测试反馈 -->
-  <div style="display:flex; gap:.75rem; align-items:center; margin-top:1rem; flex-wrap:wrap;">
-    <button type="button" id="stripe-ping-btn" class="button button-outline" style="padding:.5rem 1rem;">
-      🔌 <?= $lang === 'zh' ? '测试连接' : 'Test Stripe Connection' ?>
-    </button>
-    <span id="stripe-ping-result" style="font-size:.85rem; color:var(--text-muted); flex:1 1 240px;">
-      <?= $lang === 'zh' ? '配置完后点这里验证密钥可用。' : 'Click to verify keys are valid before going live.' ?>
-    </span>
   </div>
 
   <script>
     (function () {
-      // Webhook URL Copy 按钮
-      var copyBtn = document.getElementById('copy-webhook-url');
-      var code = document.getElementById('webhook-url');
-      if (copyBtn && code) {
-        copyBtn.addEventListener('click', function () {
-          var url = code.textContent.trim();
-          var done = function () { copyBtn.textContent = '✓ <?= $lang === 'zh' ? '已复制' : 'Copied' ?>'; setTimeout(function () { copyBtn.textContent = '<?= $lang === 'zh' ? '复制' : 'Copy' ?>'; }, 1600); };
-          if (navigator.clipboard) {
-            navigator.clipboard.writeText(url).then(done).catch(function () {
-              var r = document.createRange(); r.selectNode(code); window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
-            });
-          } else {
-            var r = document.createRange(); r.selectNode(code); window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+      var statusBar    = document.getElementById('stripe-status');
+      var statusIcon   = document.getElementById('stripe-status-icon');
+      var statusTitle  = document.getElementById('stripe-status-title');
+      var statusSub    = document.getElementById('stripe-status-sub');
+      var stepEls      = Array.from(document.querySelectorAll('.stripe-step'));
+      var panel1       = document.getElementById('stripe-panel-1');
+      var panel2       = document.getElementById('stripe-panel-2');
+      var panel3       = document.getElementById('stripe-panel-3');
+      var pkInput      = document.getElementById('stripe-pk-input');
+      var skInput      = document.getElementById('stripe-sk-input');
+      var whsecInput   = document.getElementById('stripe-whsec-input');
+      var modeSel      = document.getElementById('stripe-mode-select');
+      var pingBtn      = document.getElementById('stripe-ping-btn');
+      var lastSafeMode = modeSel ? modeSel.value : 'test';
+      var pingResult   = null;  // 测试结果显示在状态条上
+
+      // 状态计算
+      function calcStep() {
+        var hasPk    = !!(pkInput.value.trim() || pkInput.placeholder.indexOf('●') > -1);  // 后端 mask 显示成 placeholder
+        var hasSk    = !!(skInput.value.trim() || skInput.dataset.hasValue === '1');
+        var hasWhsec = !!(whsecInput.value.trim() || whsecInput.dataset.hasValue === '1');
+        if (!hasPk || !hasSk) return 1;
+        if (!hasWhsec) return 2;
+        return 3;  // 全配齐
+      }
+
+      function updateUI(pingState) {
+        var step = calcStep();
+        // 步骤进度条
+        stepEls.forEach(function (el) {
+          var n = parseInt(el.dataset.step, 10);
+          el.classList.remove('done', 'current');
+          if (n < step) el.classList.add('done');
+          else if (n === step) el.classList.add('current');
+        });
+        // 显示当前步骤的 panel,隐藏其他
+        panel1.hidden = step !== 1;
+        panel2.hidden = step !== 2;
+        panel3.hidden = step !== 3;
+
+        // 状态条
+        var mode = modeSel ? modeSel.value : 'test';
+        if (pingState === 'ok') {
+          statusBar.className = 'stripe-status-bar ok';
+          statusIcon.textContent = '✓';
+          statusTitle.textContent = 'Stripe connected · ' + mode.toUpperCase() + ' mode';
+          statusSub.textContent = pingState.message || 'Ready to accept payments';
+        } else if (pingState === 'error') {
+          statusBar.className = 'stripe-status-bar warn';
+          statusIcon.textContent = '⚠';
+          statusTitle.textContent = 'Connection failed';
+          statusSub.textContent = pingState.message || 'Check keys';
+        } else if (step === 3) {
+          statusBar.className = 'stripe-status-bar warn';
+          statusIcon.textContent = '⚠';
+          statusTitle.textContent = 'All keys saved — click Test connection';
+          statusSub.textContent = mode === 'live' ? 'LIVE mode · real cards will be charged' : 'Test mode';
+        } else {
+          statusBar.className = 'stripe-status-bar empty';
+          statusIcon.textContent = '○';
+          statusTitle.textContent = 'Not configured (Step ' + step + ' of 3)';
+          statusSub.textContent = step === 1
+            ? 'Get pk_… and sk_… from Stripe Dashboard'
+            : 'Add a webhook endpoint and paste the signing secret';
+        }
+      }
+
+      // 监听输入变化(typed + ping 后)
+      [pkInput, skInput, whsecInput, modeSel].forEach(function (el) {
+        if (el) el.addEventListener('input', updateUI);
+        if (el) el.addEventListener('change', updateUI);
+      });
+
+      // P1#5: 当后端返回 has_value=true(secret 已配置但不返回明文),
+      // 在 input 上加 placeholder ●●●● configured 提示
+      function applyPlaceholders() {
+        // load() 后端会标记 input[data-has-value]=true,这里读
+        [skInput, whsecInput].forEach(function (el) {
+          if (el && el.dataset.hasValue === '1' && !el.value) {
+            el.placeholder = '●●●●●●●● configured — leave empty to keep';
           }
         });
       }
+      // settings load 由外面 JS 加载所有 [data-key],我们在加载后稍延迟调用
+      setTimeout(applyPlaceholders, 800);
+      setTimeout(updateUI, 850);
+      updateUI();
 
-      // P1#4: Mode 切换到 Live 时弹窗警告
-      var modeSel = document.getElementById('stripe-mode-select');
-      var lastSafeMode = modeSel ? modeSel.value : 'test';
+      // ── Webhook URL Copy ──
+      function bindCopy(btnId, srcId) {
+        var btn = document.getElementById(btnId);
+        var src = document.getElementById(srcId);
+        if (!btn || !src) return;
+        btn.addEventListener('click', function () {
+          var text = src.textContent.trim();
+          var done = function () {
+            var orig = btn.textContent;
+            btn.textContent = '✓ Copied';
+            setTimeout(function () { btn.textContent = orig.indexOf('events') > -1 ? '📋 Copy all events' : '📋 Copy'; }, 1500);
+          };
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(done).catch(function () {
+              var r = document.createRange(); r.selectNode(src); window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+            });
+          } else {
+            var r = document.createRange(); r.selectNode(src); window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
+          }
+        });
+      }
+      bindCopy('copy-webhook-url', 'webhook-url');
+      bindCopy('copy-events', 'stripe-events');
+
+      // ── Mode 切换到 Live 时弹窗警告 ──
       if (modeSel) {
         modeSel.addEventListener('focus', function () { lastSafeMode = modeSel.value; });
         modeSel.addEventListener('change', function () {
           if (modeSel.value === 'live' && lastSafeMode !== 'live') {
             var confirmed = window.confirm(
-              <?= $lang === 'zh'
-                  ? "'⚠️ 切换到 LIVE 模式将使用真实信用卡处理付款!\\n\\n确认前请确保:\\n  1. 已用 Test 模式跑通了完整下单流程\\n  2. 已在 Stripe Dashboard 注册了 LIVE 模式的 webhook 端点\\n  3. 准备好把 sk_live_/pk_live_/whsec_ 密钥粘到下方字段\\n\\n继续切到 LIVE 模式吗?'"
-                  : "'⚠️ Switching to LIVE mode means real credit cards will be charged.\\n\\nBefore confirming:\\n  1. You should have tested the full checkout in TEST mode\\n  2. You should have registered a separate LIVE webhook endpoint in Stripe Dashboard\\n  3. You should be ready to paste your live sk_live_/pk_live_/whsec_ keys below\\n\\nContinue switching to LIVE mode?'"
-              ?>
+              '⚠️ Switching to LIVE mode means real credit cards will be charged.\n\nBefore confirming:\n  1. You should have tested the full checkout in TEST mode\n  2. You should have registered a separate LIVE webhook endpoint in Stripe Dashboard\n  3. You should be ready to paste your live sk_live_/pk_live_/whsec_ keys below\n\nContinue?'
             );
-            if (!confirmed) { modeSel.value = lastSafeMode; return; }
+            if (!confirmed) { modeSel.value = lastSafeMode; updateUI(); return; }
           }
           lastSafeMode = modeSel.value;
+          updateUI();
         });
       }
 
-      // P1#2: Test Connection 按钮
-      var pingBtn = document.getElementById('stripe-ping-btn');
-      var pingResult = document.getElementById('stripe-ping-result');
-      if (pingBtn && pingResult) {
+      // ── Test connection 按钮 ──
+      if (pingBtn) {
         pingBtn.addEventListener('click', async function () {
           pingBtn.disabled = true;
           var origText = pingBtn.innerHTML;
-          pingBtn.textContent = '⏳ Testing…';
-          pingResult.style.color = 'var(--text-muted)';
-          pingResult.textContent = '<?= $lang === 'zh' ? '正在调用 Stripe…' : 'Calling Stripe…' ?>';
+          pingBtn.innerHTML = '⏳';
+          statusBar.className = 'stripe-status-bar empty';
+          statusIcon.textContent = '⏳';
+          statusTitle.textContent = 'Calling Stripe…';
+          statusSub.textContent = '';
           try {
             var r = await fetch('../api/admin-stripe-ping.php', { credentials: 'include' });
             var j = await r.json();
             if (j.ok) {
-              pingResult.style.color = 'var(--success, #2c9)';
-              pingResult.innerHTML = '✓ ' + j.message;
+              statusBar.className = 'stripe-status-bar ok';
+              statusIcon.textContent = '✓';
+              statusTitle.textContent = 'Connected · ' + (j.mode || 'test').toUpperCase() + ' mode';
+              statusSub.textContent = j.message;
               if (j.webhook_secret_warning) {
-                pingResult.innerHTML += '<br><span style="color:var(--warn);">⚠ ' + j.webhook_secret_warning + '</span>';
+                statusBar.className = 'stripe-status-bar warn';
+                statusIcon.textContent = '⚠';
+                statusSub.textContent = j.webhook_secret_warning;
               }
             } else {
-              pingResult.style.color = 'var(--error, #c33)';
-              pingResult.textContent = '✗ ' + j.message;
+              statusBar.className = 'stripe-status-bar warn';
+              statusIcon.textContent = '✗';
+              statusTitle.textContent = 'Connection failed';
+              statusSub.textContent = j.message;
             }
           } catch (err) {
-            pingResult.style.color = 'var(--error, #c33)';
-            pingResult.textContent = '✗ Network error: ' + err.message;
+            statusBar.className = 'stripe-status-bar warn';
+            statusIcon.textContent = '✗';
+            statusTitle.textContent = 'Network error';
+            statusSub.textContent = err.message;
           } finally {
             pingBtn.disabled = false;
             pingBtn.innerHTML = origText;
           }
         });
       }
+
+      // Step 点击 → 显示对应 panel(即使该步骤已完成,允许回顾)
+      stepEls.forEach(function (el) {
+        el.addEventListener('click', function () {
+          var n = parseInt(el.dataset.step, 10);
+          panel1.hidden = n !== 1;
+          panel2.hidden = n !== 2;
+          panel3.hidden = n !== 3;
+        });
+      });
     })();
   </script>
 </div>
@@ -548,9 +709,15 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
     const r = await fetch('../api/admin-settings.php', { credentials: 'include' });
     const j = await r.json();
     const map = {};
-    (j.settings || []).forEach(s => map[s.key] = s.value);
+    const hasValueMap = {};  // P1#23: secret 字段后端只回 has_value 不回明文
+    (j.settings || []).forEach(s => {
+      map[s.key] = s.value;
+      if (s.has_value) hasValueMap[s.key] = true;
+    });
     document.querySelectorAll('[data-key]').forEach(el => {
       const v = map[el.dataset.key] || '';
+      // 把 has_value 标记暴露到 dataset 给 Stripe wizard 等 UI 读
+      if (hasValueMap[el.dataset.key]) el.dataset.hasValue = '1';
       if (el.dataset.bool) {
         el.checked = (v === '1');
       } else if (el.id === 'hero-images-json') {
