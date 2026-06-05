@@ -17,9 +17,19 @@ $referer = trim((string)($input['referer'] ?? ''));
 if (!$path || strlen($path) > 500) sendJson(['ok' => false]);
 if (preg_match('#^/(admin/|api/|uploads/)#', $path)) sendJson(['ok' => false]);
 
-$ip = $_SERVER['HTTP_X_REAL_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
-$ip = explode(',', $ip)[0]; // 取首个
-$ip = trim($ip);
+// P2: 只在 REMOTE_ADDR 是 trusted proxy 时才信任 forwarded header,防伪造 IP 绕开 60s dedup
+$remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+$trustedProxies = ['127.0.0.1', '::1'];  // 本机反代(nginx → php-fpm)
+$ip = $remoteAddr;
+if (in_array($remoteAddr, $trustedProxies, true)) {
+    $forwarded = $_SERVER['HTTP_CF_CONNECTING_IP']  // Cloudflare 优先
+              ?? $_SERVER['HTTP_X_REAL_IP']         // nginx real_ip
+              ?? $_SERVER['HTTP_X_FORWARDED_FOR']   // 通用
+              ?? '';
+    if ($forwarded) {
+        $ip = trim(explode(',', $forwarded)[0]);
+    }
+}
 if (strlen($ip) > 45) $ip = substr($ip, 0, 45);
 
 $ua = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
