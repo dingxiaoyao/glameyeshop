@@ -299,7 +299,45 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  // 强制登录守门 — 未登录 + 需要登录 → 跳 login 带 redirect
+  async function enforceLoginIfNeeded() {
+    try {
+      const r = await fetch('/api/settings.php');
+      const s = await r.json();
+      const requireLogin = s.require_login_for_checkout === '1';
+      if (!requireLogin) return false;  // 允许 guest
+
+      // 检查是否已登录
+      const me = await fetch('/api/auth.php?action=me', { credentials: 'include' });
+      const mj = await me.json();
+      if (mj.user && mj.user.id) return false;  // 已登录,放行
+
+      // 未登录 + 需要登录 → 用全屏 banner 引导,不直接跳转(让用户看清原因)
+      const main = document.querySelector('main') || document.body;
+      main.innerHTML = `
+        <div class="container" style="max-width:480px;padding:5rem 1.25rem;text-align:center;">
+          <div style="font-size:3.5rem;margin-bottom:1rem;">🔒</div>
+          <h1 style="margin-bottom:.5rem;">Sign in to check out</h1>
+          <p class="muted" style="margin-bottom:2rem;line-height:1.7;">
+            To track your order, save your shipping address, and earn rewards on future purchases,
+            please sign in or create a free account.
+          </p>
+          <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+            <a href="/login.html?redirect=%2Fcheckout.html" class="button button-primary">Sign in</a>
+            <a href="/signup.html?redirect=%2Fcheckout.html" class="button button-outline">Create account</a>
+          </div>
+          <p class="muted small" style="margin-top:2rem;">
+            Your cart items are saved — you'll come right back here after signing in.
+          </p>
+        </div>`;
+      return true;  // 阻止后续 init
+    } catch (e) {
+      return false;  // 网络出错时不阻塞(后端守门兜底)
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (await enforceLoginIfNeeded()) return;  // 守门拦下就不继续 init
     renderCart();
     bindCart();
     bindPaymentNote();

@@ -8,6 +8,26 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $user = currentUser();   // 可能为 null（guest checkout）
 $input = readInput();
 
+// ============================================================
+// 强制登录下单 — site_settings.require_login_for_checkout = '1' 时
+// admin 可在后台关闭(改为 '0')允许 guest checkout
+// ============================================================
+try {
+    $db = getDb();
+    $reqStmt = $db->prepare("SELECT `value` FROM site_settings WHERE `key` = 'require_login_for_checkout' LIMIT 1");
+    $reqStmt->execute();
+    $requireLogin = ($reqStmt->fetchColumn() === '0') ? false : true;  // 默认要求登录
+} catch (Throwable $e) {
+    $requireLogin = true;  // DB 出错时安全默认 = 要求登录
+}
+if ($requireLogin && !$user) {
+    sendJson([
+        'error'        => 'Please sign in or create an account to complete your purchase.',
+        'login_required' => true,
+        'login_url'    => '/login.html?redirect=' . urlencode('/checkout.html'),
+    ], 401);
+}
+
 // 1. Customer info
 $customerName = trim((string)($input['customer_name'] ?? ''));
 $email        = filter_var($input['email'] ?? '', FILTER_VALIDATE_EMAIL);

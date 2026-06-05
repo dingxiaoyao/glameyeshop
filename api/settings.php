@@ -10,6 +10,7 @@ const PUBLIC_SETTING_KEYS = [
     'stripe_publishable_key',  // pk_xxx 是公开的，不是 secret
     'stripe_mode', 'paypal_mode',
     'paypal_client_id',        // PayPal SDK init 需要 (公开)
+    'require_login_for_checkout',  // checkout 客户端守门用
 ];
 
 // Internal keys used to derive boolean "enabled" flags (not exposed)

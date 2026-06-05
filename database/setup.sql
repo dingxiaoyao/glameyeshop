@@ -1284,3 +1284,10 @@ DROP PROCEDURE add_discount_cols;
 -- 种子一个欢迎折扣码,方便测试 + 提前给营销用
 INSERT IGNORE INTO discount_codes (code, type, value, min_subtotal, is_active)
 VALUES ('WELCOME10', 'percent', 10.00, 0, 1);
+
+
+-- ============================================================
+-- 强制登录下单 toggle(默认开启)
+-- ============================================================
+INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
+('require_login_for_checkout', '1');

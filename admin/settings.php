@@ -35,6 +35,21 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 </div>
 
 <div class="admin-card">
+  <h3>🛒 <?= $lang === 'zh' ? '结算流程' : 'Checkout' ?></h3>
+  <label style="display:flex;align-items:center;gap:.65rem;cursor:pointer;padding:.5rem 0;">
+    <input type="checkbox" data-key="require_login_for_checkout" data-bool="1" />
+    <span>
+      <strong><?= $lang === 'zh' ? '必须登录才能下单' : 'Require login before checkout' ?></strong>
+      <small style="display:block;color:var(--text-muted);font-weight:400;margin-top:.15rem;">
+        <?= $lang === 'zh'
+            ? '关闭后允许 guest checkout(转化率高,但失去客户数据 + 复购联系方式)。'
+            : 'Turn off to allow guest checkout (higher conversion, but lose customer email + repeat-purchase contact).' ?>
+      </small>
+    </span>
+  </label>
+</div>
+
+<div class="admin-card">
   <h3>Social Media URLs</h3>
   <div class="form-group" id="settings-form">
     <label><span class="label-text">TikTok</span><input type="url" data-key="social_tiktok" placeholder="https://www.tiktok.com/@glameye" /></label>

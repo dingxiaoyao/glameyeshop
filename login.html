@@ -54,7 +54,7 @@
       </form>
       <div class="divider">OR</div>
       <p class="text-center muted small">
-        New to GlamEye? <a href="signup.html">Create an account</a>
+        New to GlamEye? <a href="signup.html" id="signup-link">Create an account</a>
       </p>
     </div>
   </main>
@@ -66,6 +66,21 @@
       const eEl = document.getElementById('oauth-error');
       eEl.textContent = '⚠ ' + params.get('error');
       eEl.style.display = 'block';
+    }
+    // 把 ?redirect=… 也透传给 Sign-up 链接(checkout 跳过来时,用户点 Create account 也应跳回 checkout)
+    const redirectParam = params.get('redirect');
+    if (redirectParam) {
+      const signupLink = document.getElementById('signup-link');
+      if (signupLink) signupLink.href = 'signup.html?redirect=' + encodeURIComponent(redirectParam);
+      // 顶部加一个友好 banner 解释为什么需要登录
+      const fb = document.getElementById('login-feedback');
+      if (fb && (redirectParam.indexOf('/checkout') === 0 || redirectParam.indexOf('checkout') > -1)) {
+        const banner = document.createElement('p');
+        banner.className = 'form-feedback';
+        banner.style.cssText = 'background:rgba(184,146,78,.12);border-left:3px solid var(--gold);padding:.75rem 1rem;border-radius:6px;margin-bottom:1rem;';
+        banner.innerHTML = '🛒 Sign in to complete your purchase. New here? <a href="' + 'signup.html?redirect=' + encodeURIComponent(redirectParam) + '" style="color:var(--gold);">Create an account</a> — your cart is saved.';
+        fb.parentNode.insertBefore(banner, fb.parentNode.firstChild);
+      }
     }
     // Show social login buttons only if configured
     fetch('api/settings.php').then(r => r.json()).then(s => {

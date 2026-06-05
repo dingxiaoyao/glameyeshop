@@ -109,7 +109,9 @@
         if (j.success) {
           fb.textContent = '✨ Welcome! Redirecting…';
           fb.className = 'form-feedback success';
-          setTimeout(() => window.location.href = '/account.html', 600);
+          // 支持 ?redirect=… 跳回 checkout 等(同 login.html)
+          const redirect = new URLSearchParams(location.search).get('redirect') || '/account.html';
+          setTimeout(() => window.location.href = redirect, 600);
         } else {
           fb.textContent = j.error || 'Sign up failed';
           fb.className = 'form-feedback error';
