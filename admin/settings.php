@@ -50,27 +50,215 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 </div>
 
 <div class="admin-card">
-  <h3>🌍 <?= $lang === 'zh' ? '国际下单' : 'International Shipping' ?></h3>
-  <label><span class="label-text">
-    <?= $lang === 'zh' ? '可送达国家(ISO 2 字母代码,JSON 数组)' : 'Enabled countries (ISO 2-letter codes, JSON array)' ?>
-  </span>
-    <textarea data-key="enabled_countries" rows="2" placeholder='["US","CA","GB","AU","DE","FR","JP","CN","SG","HK","TW","KR"]' style="font-family:monospace;font-size:.85rem;"></textarea>
-  </label>
-  <small class="muted" style="display:block;margin:-.4rem 0 .85rem;font-size:.78rem;">
+  <h3>🌍 <?= $lang === 'zh' ? '国际下单 & 运费' : 'International Shipping' ?></h3>
+
+  <style>
+    .country-chip-wrap { display:flex; flex-wrap:wrap; gap:.35rem; padding:.5rem; background:var(--bg); border:1px solid var(--border); border-radius:6px; min-height:42px; align-items:center; }
+    .country-chip { display:inline-flex; align-items:center; gap:.25rem; background:var(--bg-soft); padding:.2rem .5rem; border-radius:999px; font-size:.78rem; font-weight:500; color:var(--cream); border:1px solid var(--border-soft); }
+    .country-chip .remove { cursor:pointer; opacity:.5; padding:0 .2rem; }
+    .country-chip .remove:hover { opacity:1; color:var(--error,#c33); }
+    .country-chip-input { border:0; background:transparent; outline:none; font-size:.85rem; flex:1; min-width:120px; padding:.2rem; color:var(--cream); }
+
+    .zone-table { width:100%; border-collapse:collapse; margin:.5rem 0; }
+    .zone-table th { font-size:.7rem; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-muted); padding:.55rem .65rem; text-align:left; border-bottom:1px solid var(--border-soft); font-weight:600; }
+    .zone-table td { padding:.4rem .55rem; border-bottom:1px solid var(--border-soft); vertical-align:middle; }
+    .zone-table tr:last-child td { border-bottom:0; }
+    .zone-table input[type="text"], .zone-table input[type="number"] { padding:.4rem .6rem; font-size:.85rem; width:100%; }
+    .zone-table input[type="text"] { font-family:monospace; }
+    .zone-table .zone-key { color:var(--gold); font-weight:600; font-family:monospace; font-size:.85rem; }
+    .zone-remove-btn { background:transparent; border:0; cursor:pointer; color:var(--text-muted); font-size:1rem; padding:.25rem .5rem; }
+    .zone-remove-btn:hover { color:var(--error,#c33); }
+    .zone-default-row { background:rgba(184,146,78,.05); }
+    .zone-default-row .zone-key { color:var(--text-muted); }
+  </style>
+
+  <h4 style="margin:1rem 0 .5rem;font-size:.95rem;color:var(--cream);">
+    <?= $lang === 'zh' ? '🌐 可送达国家' : '🌐 Enabled countries' ?>
+  </h4>
+  <p class="muted small" style="margin:0 0 .5rem;">
     <?= $lang === 'zh'
-        ? '常见:US CA GB AU DE FR IT ES NL JP SG HK TW CN KR MX BR AE IN MY TH PH VN ID NZ。完整代码见 ISO 3166-1。'
-        : 'Common: US CA GB AU DE FR IT ES NL JP SG HK TW CN KR MX BR AE IN MY TH PH VN ID NZ. Full list: ISO 3166-1.' ?>
-  </small>
-  <label><span class="label-text">
-    <?= $lang === 'zh' ? '运费分区(JSON)' : 'Shipping zones (JSON)' ?>
-  </span>
-    <textarea data-key="shipping_zones" rows="5" placeholder='{"US":{"price":5.99,"free_threshold":50},"CA":{"price":12.99,"free_threshold":75},"EU":{...},"ASIA":{...},"default":{...}}' style="font-family:monospace;font-size:.78rem;"></textarea>
-  </label>
-  <small class="muted" style="display:block;margin-top:-.4rem;font-size:.78rem;">
+        ? '点击下方常见国家添加,或在输入框输入 ISO 2 字母代码(如 MX、AE)按 Enter。已添加的国家会在 checkout 国家下拉里出现。'
+        : 'Click presets below to add, or type an ISO 2-letter code (e.g. MX, AE) and press Enter. Added countries appear in the checkout country dropdown.' ?>
+  </p>
+  <div class="country-chip-wrap" id="country-chip-wrap">
+    <span class="muted small" id="country-empty-hint" hidden>Click a preset or type a code →</span>
+    <input type="text" class="country-chip-input" id="country-input" placeholder="Type ISO code (US, CA, GB…) + Enter" maxlength="2" autocomplete="off" />
+  </div>
+  <input type="hidden" data-key="enabled_countries" id="enabled-countries-hidden" />
+
+  <div style="margin-top:.65rem;display:flex;flex-wrap:wrap;gap:.3rem;">
+    <small class="muted" style="margin-right:.5rem;align-self:center;font-size:.75rem;">Quick add:</small>
+    <?php
+    $presets = [
+      'US'=>'🇺🇸','CA'=>'🇨🇦','GB'=>'🇬🇧','AU'=>'🇦🇺','DE'=>'🇩🇪','FR'=>'🇫🇷',
+      'IT'=>'🇮🇹','ES'=>'🇪🇸','NL'=>'🇳🇱','JP'=>'🇯🇵','SG'=>'🇸🇬','HK'=>'🇭🇰',
+      'TW'=>'🇹🇼','CN'=>'🇨🇳','KR'=>'🇰🇷','MX'=>'🇲🇽','BR'=>'🇧🇷','AE'=>'🇦🇪',
+      'IN'=>'🇮🇳','MY'=>'🇲🇾','TH'=>'🇹🇭','VN'=>'🇻🇳','ID'=>'🇮🇩','PH'=>'🇵🇭','NZ'=>'🇳🇿',
+    ];
+    foreach ($presets as $code => $emoji): ?>
+      <button type="button" class="country-preset-btn" data-code="<?= $code ?>"
+              style="font-size:.75rem;padding:.2rem .5rem;background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:4px;cursor:pointer;color:var(--cream);">
+        <?= $emoji ?> <?= $code ?>
+      </button>
+    <?php endforeach; ?>
+  </div>
+
+  <hr style="border:0;border-top:1px solid var(--border-soft);margin:1.5rem 0;">
+
+  <h4 style="margin:0 0 .5rem;font-size:.95rem;color:var(--cream);">
+    <?= $lang === 'zh' ? '🚚 运费分区' : '🚚 Shipping rates by zone' ?>
+  </h4>
+  <p class="muted small" style="margin:0 0 .5rem;">
     <?= $lang === 'zh'
-        ? '特定国家用 ISO 代码 key(如 US/CA/GB),EU/ASIA 是通用 zone(欧盟/亚洲国家未单列时走 zone),default 是兜底。price 单位 USD,free_threshold 满包邮门槛。'
-        : 'Use ISO code (US/CA/GB…) for country-specific rates. EU/ASIA are fallback zones. default catches the rest. price in USD, free_threshold = free shipping over.' ?>
-  </small>
+        ? '每个国家用 ISO 代码(US/CA…)做 key。EU 和 ASIA 是通用 zone(具体国家未单列时走通用)。default 是最后兜底,所有未匹配国家走它。'
+        : 'Key = country ISO code (US/CA…) for country-specific rates. EU and ASIA are fallback zones. default catches everything else.' ?>
+  </p>
+
+  <table class="zone-table" id="zone-table">
+    <thead>
+      <tr>
+        <th style="width:25%;">Zone / Country</th>
+        <th style="width:25%;">Shipping price (USD)</th>
+        <th style="width:35%;">Free over (USD)</th>
+        <th style="width:15%;"></th>
+      </tr>
+    </thead>
+    <tbody id="zone-tbody"></tbody>
+  </table>
+
+  <button type="button" id="add-zone-btn" class="button button-outline" style="font-size:.8rem;padding:.4rem 1rem;margin-top:.5rem;">
+    + Add zone or country
+  </button>
+
+  <input type="hidden" data-key="shipping_zones" id="shipping-zones-hidden" />
+
+  <script>
+    (function () {
+      // ============ Country chip input ============
+      const chipWrap = document.getElementById('country-chip-wrap');
+      const chipInput = document.getElementById('country-input');
+      const countriesHidden = document.getElementById('enabled-countries-hidden');
+      const emptyHint = document.getElementById('country-empty-hint');
+      let enabledCountries = [];
+
+      function renderChips() {
+        chipWrap.querySelectorAll('.country-chip').forEach(el => el.remove());
+        const map = {US:'🇺🇸',CA:'🇨🇦',GB:'🇬🇧',AU:'🇦🇺',DE:'🇩🇪',FR:'🇫🇷',IT:'🇮🇹',ES:'🇪🇸',NL:'🇳🇱',JP:'🇯🇵',SG:'🇸🇬',HK:'🇭🇰',TW:'🇹🇼',CN:'🇨🇳',KR:'🇰🇷',MX:'🇲🇽',BR:'🇧🇷',AE:'🇦🇪',IN:'🇮🇳',MY:'🇲🇾',TH:'🇹🇭',VN:'🇻🇳',ID:'🇮🇩',PH:'🇵🇭',NZ:'🇳🇿',BE:'🇧🇪',AT:'🇦🇹',CH:'🇨🇭',IE:'🇮🇪',PT:'🇵🇹',PL:'🇵🇱',SE:'🇸🇪',NO:'🇳🇴',DK:'🇩🇰',FI:'🇫🇮',IL:'🇮🇱',SA:'🇸🇦',ZA:'🇿🇦'};
+        emptyHint.hidden = enabledCountries.length > 0;
+        enabledCountries.forEach(code => {
+          const chip = document.createElement('span');
+          chip.className = 'country-chip';
+          chip.innerHTML = (map[code] || '🌐') + ' ' + code + ' <span class="remove" data-code="' + code + '">×</span>';
+          chipWrap.insertBefore(chip, chipInput);
+        });
+        countriesHidden.value = JSON.stringify(enabledCountries);
+      }
+
+      function addCountry(code) {
+        code = (code || '').trim().toUpperCase();
+        if (!/^[A-Z]{2}$/.test(code)) return;
+        if (enabledCountries.indexOf(code) === -1) {
+          enabledCountries.push(code);
+          renderChips();
+        }
+      }
+
+      chipInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
+          e.preventDefault();
+          addCountry(chipInput.value);
+          chipInput.value = '';
+        } else if (e.key === 'Backspace' && chipInput.value === '' && enabledCountries.length > 0) {
+          enabledCountries.pop();
+          renderChips();
+        }
+      });
+      chipWrap.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove')) {
+          const code = e.target.dataset.code;
+          enabledCountries = enabledCountries.filter(c => c !== code);
+          renderChips();
+        } else if (e.target === chipWrap) {
+          chipInput.focus();
+        }
+      });
+      document.querySelectorAll('.country-preset-btn').forEach(b => b.addEventListener('click', () => addCountry(b.dataset.code)));
+
+      // ============ Zone table ============
+      const zonesTbody = document.getElementById('zone-tbody');
+      const zonesHidden = document.getElementById('shipping-zones-hidden');
+      let zones = {};  // { US: {price, free_threshold}, ... }
+
+      function renderZones() {
+        zonesTbody.innerHTML = '';
+        const keys = Object.keys(zones).sort((a, b) => {
+          if (a === 'default') return 1;  // default 排末尾
+          if (b === 'default') return -1;
+          return a.localeCompare(b);
+        });
+        keys.forEach(k => {
+          const z = zones[k] || {};
+          const tr = document.createElement('tr');
+          if (k === 'default') tr.className = 'zone-default-row';
+          tr.innerHTML = `
+            <td><span class="zone-key">${k}</span>${k === 'default' ? '<br><small class="muted" style="font-size:.7rem;">catches any country not listed</small>' : ''}</td>
+            <td><input type="number" min="0" step="0.01" value="${Number(z.price || 0).toFixed(2)}" data-zone="${k}" data-field="price" /></td>
+            <td><input type="number" min="0" step="0.01" value="${Number(z.free_threshold || 0).toFixed(2)}" data-zone="${k}" data-field="free_threshold" placeholder="0 = no free shipping" /></td>
+            <td>${k === 'default' ? '' : `<button type="button" class="zone-remove-btn" data-zone="${k}" title="Remove zone">🗑️</button>`}</td>`;
+          zonesTbody.appendChild(tr);
+        });
+        zonesHidden.value = JSON.stringify(zones);
+      }
+
+      zonesTbody.addEventListener('input', (e) => {
+        const inp = e.target;
+        if (inp.dataset.zone && inp.dataset.field) {
+          const k = inp.dataset.zone;
+          if (!zones[k]) zones[k] = { price: 0, free_threshold: 0 };
+          zones[k][inp.dataset.field] = Number(inp.value) || 0;
+          zonesHidden.value = JSON.stringify(zones);
+        }
+      });
+      zonesTbody.addEventListener('click', (e) => {
+        const btn = e.target.closest('.zone-remove-btn');
+        if (btn) {
+          if (confirm('Remove zone "' + btn.dataset.zone + '"?')) {
+            delete zones[btn.dataset.zone];
+            renderZones();
+          }
+        }
+      });
+
+      document.getElementById('add-zone-btn').addEventListener('click', () => {
+        const k = prompt('Zone key — use:\n  • Country ISO code (US, CA, JP…) for country-specific\n  • EU for European Union fallback\n  • ASIA for Asia-Pacific fallback\n  • A custom name like "NORTH_AMERICA"\n\nKey:', '');
+        if (!k) return;
+        const key = k.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '');
+        if (!key) { alert('Invalid key'); return; }
+        if (zones[key]) { alert('Zone "' + key + '" already exists'); return; }
+        zones[key] = { price: 9.99, free_threshold: 75 };
+        renderZones();
+      });
+
+      // ============ Load from settings.php ============
+      // 等外面的 load() 跑完后,读 hidden input 反序列化(load 会填 value)
+      function tryParse() {
+        try { enabledCountries = JSON.parse(countriesHidden.value || '[]'); } catch { enabledCountries = []; }
+        try { zones = JSON.parse(zonesHidden.value || '{}'); } catch { zones = {}; }
+        // 兜底:没有 default zone 时补一个
+        if (!zones.default) zones.default = { price: 29.99, free_threshold: 150 };
+        renderChips();
+        renderZones();
+      }
+      // load() 在大 admin 里是 async,我们 polling 等它填值
+      let polls = 0;
+      const pollLoad = setInterval(() => {
+        if (countriesHidden.value || polls++ > 30) {
+          clearInterval(pollLoad);
+          tryParse();
+        }
+      }, 100);
+    })();
+  </script>
 </div>
 
 <div class="admin-card">
