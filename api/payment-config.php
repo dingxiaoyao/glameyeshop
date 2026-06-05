@@ -8,7 +8,17 @@ function getPaymentConfig(string $key, string $default = ''): string {
     if ($cache === null) {
         try {
             $db = getDb();
-            $stmt = $db->query("SELECT `key`, `value` FROM site_settings WHERE `key` LIKE 'stripe_%' OR `key` LIKE 'paypal_%'");
+            // P1#14: LIKE 之前漏掉 site_base_url(stripe-checkout success_url 永远走 fallback,
+            // 换域名会全断)。这里把所有 PHP 后端需要的非敏感 + 敏感配置一次性都缓存。
+            $stmt = $db->query(
+                "SELECT `key`, `value` FROM site_settings
+                 WHERE `key` LIKE 'stripe_%'
+                    OR `key` LIKE 'paypal_%'
+                    OR `key` = 'site_base_url'
+                    OR `key` LIKE 'resend_%'
+                    OR `key` LIKE 'email_%'
+                    OR `key` LIKE 'smtp_%'"
+            );
             $cache = [];
             foreach ($stmt->fetchAll() as $r) $cache[$r['key']] = $r['value'];
         } catch (Throwable $e) { $cache = []; }

@@ -39,6 +39,18 @@ try {
         if (mb_strlen($caption) > 500)  sendJson(['error' => 'Caption too long'], 422);
         if (mb_strlen($handle) > 100)   sendJson(['error' => 'Handle too long'], 422);
 
+        // P1#25: 防 SSRF / 钓鱼 — image_url 必须是站内 /uploads/ 路径或允许的 CDN
+        // 已知合法来源:站内上传 + IG CDN(用户分享 IG 照片)+ TikTok CDN
+        $isAllowed = false;
+        if (preg_match('#^/uploads/[a-zA-Z0-9_\-./]+\.(jpg|jpeg|png|webp|gif)$#i', $imageUrl)) {
+            $isAllowed = true;
+        } elseif (preg_match('#^https://(scontent[\w\-.]*\.cdninstagram\.com|instagram\.f[a-z0-9]+-[0-9]+\.fna\.fbcdn\.net|p[0-9]+-sign[\w\-]*\.tiktokcdn[\w\-.]*\.com)/[^\s<>"]+\.(jpg|jpeg|png|webp)(\?[^\s<>"]*)?$#i', $imageUrl)) {
+            $isAllowed = true;
+        }
+        if (!$isAllowed) {
+            sendJson(['error' => 'Image URL must be a site upload (/uploads/...) or an Instagram/TikTok CDN link'], 422);
+        }
+
         $stmt = $db->prepare(
             "INSERT INTO ugc_submissions (user_id, image_url, caption, instagram_handle, related_product_id, status)
              VALUES (:uid, :img, :cap, :h, :rp, 'pending')"

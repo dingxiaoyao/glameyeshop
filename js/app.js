@@ -12,16 +12,20 @@
       try {
         const raw = localStorage.getItem(this.storageKey);
         const arr = raw ? JSON.parse(raw) : [];
-        // 清洗:剔除 sku/price/quantity 不合法的脏条目(防止旧版 bug 残留导致 subtotal=0)
-        this.items = (Array.isArray(arr) ? arr : []).filter((i) =>
-          i && typeof i === 'object'
-          && typeof i.sku === 'string' && i.sku.length > 0
-          && Number(i.price) > 0
-          && Number(i.quantity) > 0
-        ).map((i) => ({
+        // 清洗:剔除 schema 完全坏掉的条目。P1#16: 不再因 price 严格 > 0 而误删
+        // (赠品 / 100% 优惠 / 后续 promo code 会让某 line 价格变 0,允许)。
+        // 真正的脏数据(NaN price / 负数 / 缺 sku)仍然被 reject
+        this.items = (Array.isArray(arr) ? arr : []).filter((i) => {
+          if (!i || typeof i !== 'object') return false;
+          if (typeof i.sku !== 'string' || i.sku.length === 0) return false;
+          const p = Number(i.price), q = Number(i.quantity);
+          if (!Number.isFinite(p) || p < 0) return false;   // 允许 0 (赠品),拒绝 NaN/负
+          if (!Number.isFinite(q) || q <= 0) return false;
+          return true;
+        }).map((i) => ({
           sku: String(i.sku),
           name: String(i.name || ''),
-          price: Number(i.price),
+          price: Math.max(0, Number(i.price)),
           image: String(i.image || ''),
           quantity: Math.max(1, Math.min(50, parseInt(i.quantity, 10) || 1)),
         }));
