@@ -62,6 +62,7 @@ $activeNav  = $activeNav  ?? 'dashboard';
         <a href="videos.php"    class="<?= $activeNav === 'videos' ? 'active' : '' ?>">🎬 <?= $lang === 'zh' ? 'TikTok 视频' : 'TikTok Videos' ?></a>
         <a href="media.php"     class="<?= $activeNav === 'media' ? 'active' : '' ?>">🖼 <?= $lang === 'zh' ? '媒体库' : 'Media Library' ?></a>
         <a href="settings.php"  class="<?= $activeNav === 'settings' ? 'active' : '' ?>">⚙️ <?= $lang === 'zh' ? '站点设置' : 'Settings' ?></a>
+        <a href="stripe-logs.php" class="<?= $activeNav === 'stripe-logs' ? 'active' : '' ?>" style="font-size:.85em;padding-left:1.5em;opacity:.9;">📜 <?= $lang === 'zh' ? 'Webhook 日志' : 'Webhook Logs' ?></a>
       </nav>
     </aside>
     <main class="admin-main">

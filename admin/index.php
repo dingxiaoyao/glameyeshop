@@ -1,6 +1,34 @@
 <?php $pageTitle = 'Dashboard'; $activeNav = 'dashboard'; require __DIR__ . '/_layout.php'; ?>
 <h1>📊 <?= htmlspecialchars(t('dashboard')) ?></h1>
 
+<?php
+// 低库存预警 banner (P2): is_active 产品 stock < 10
+try {
+    $db = getDb();
+    $lowStockStmt = $db->query(
+        "SELECT id, sku, name, stock FROM products
+         WHERE is_active = 1 AND stock < 10
+         ORDER BY stock ASC, sort_order ASC LIMIT 20"
+    );
+    $lowStock = $lowStockStmt->fetchAll();
+} catch (Throwable $e) { $lowStock = []; }
+if (!empty($lowStock)):
+?>
+<div class="admin-card" style="border-left:4px solid var(--warn,#d49f3a);margin-bottom:1.5rem;background:rgba(247,185,85,.04);">
+  <h3 style="margin:0 0 .5rem;color:var(--warn,#d49f3a);">⚠️ Low Stock — <?= count($lowStock) ?> product<?= count($lowStock) === 1 ? '' : 's' ?> below 10 units</h3>
+  <p class="muted small" style="margin:0 0 .75rem;">Reorder or mark out of stock to avoid overselling.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
+    <?php foreach ($lowStock as $p): ?>
+      <a href="products.php#product-<?= intval($p['id']) ?>" style="background:var(--bg-soft);padding:.4rem .75rem;border-radius:6px;font-size:.8rem;color:var(--text);text-decoration:none;border:1px solid var(--border-soft);">
+        <strong style="color:<?= intval($p['stock']) === 0 ? 'var(--error,#c33)' : 'var(--gold)' ?>;"><?= intval($p['stock']) ?></strong>
+        × <?= htmlspecialchars($p['name']) ?>
+        <small class="muted" style="font-size:.7rem;">(<?= htmlspecialchars($p['sku']) ?>)</small>
+      </a>
+    <?php endforeach; ?>
+  </div>
+</div>
+<?php endif; ?>
+
 <div class="kpi-grid">
   <div class="kpi-card">
     <div class="kpi-label"><?= htmlspecialchars(t('today_sales')) ?></div>

@@ -24,7 +24,9 @@ try {
             sendJson(['error' => 'Order not found'], 404);  // 统一 404 防枚举
         }
         $stmt = $db->prepare(
-            'SELECT id, customer_name, product_name, quantity, amount, currency, payment_method, status, created_at
+            'SELECT id, customer_name, product_name, quantity, subtotal, shipping, tax,
+                    discount_code, discount_amount, amount, currency,
+                    payment_method, status, created_at
              FROM orders WHERE id = :id AND lookup_token = :token LIMIT 1'
         );
         $stmt->execute([':id' => $orderId, ':token' => $token]);
@@ -36,14 +38,16 @@ try {
         rateLimitGuard($bucket, 5, 900, 'Too many lookup attempts. Please wait 15 minutes or use the order link from your confirmation email.');
 
         $stmt = $db->prepare(
-            'SELECT id, customer_name, product_name, quantity, amount, currency, payment_method, status, created_at
+            'SELECT id, customer_name, product_name, quantity, subtotal, shipping, tax,
+                    discount_code, discount_amount, amount, currency,
+                    payment_method, status, created_at
              FROM orders WHERE id = :id AND email = :email LIMIT 1'
         );
         $stmt->execute([':id' => $orderId, ':email' => $email]);
         $order = $stmt->fetch();
 
         if (!$order) {
-            rateLimitFail($bucket);  // 记一次失败,5 次进 429
+            rateLimitFail($bucket);
         }
     }
 
