@@ -76,7 +76,13 @@
       this.items = this.items.filter((i) => i.sku !== sku);
       this.save();
     },
-    clear() { this.items = []; this.save(); },
+    clear() {
+      this.items = [];
+      this.save();
+      // 同时清服务端(已登录用户)— 防止下次 mergeWithServer 把旧 cart 拉回
+      // 失败静默(create-order.php 也会清,双保险)
+      fetch('/api/cart.php', { method: 'DELETE', credentials: 'include' }).catch(() => {});
+    },
     /**
      * P1#15: 登录后跨设备合并 cart
      * 把 localStorage 现有 items 上传 → 服务器合并(同 sku 取较大 quantity)→

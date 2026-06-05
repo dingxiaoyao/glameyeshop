@@ -306,6 +306,17 @@ try {
 
     $db->commit();
 
+    // 订单创建成功 → 清空服务端 user_carts(消费了)
+    // 防止下一次 Cart.mergeWithServer 把旧 cart 拉回前端
+    if (!empty($user['id'])) {
+        try {
+            $db->prepare('DELETE FROM user_carts WHERE user_id = :uid')
+               ->execute([':uid' => $user['id']]);
+        } catch (Throwable $e) {
+            error_log('[create-order] failed to clear user_carts for user ' . $user['id'] . ': ' . $e->getMessage());
+        }
+    }
+
     // P0#7: 发订单确认邮件(不阻塞响应,失败不影响下单)
     try {
         require_once __DIR__ . '/lib/mailer.php';

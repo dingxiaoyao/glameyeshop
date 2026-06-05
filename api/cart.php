@@ -26,6 +26,13 @@ try {
         sendJson(['items' => $items]);
     }
 
+    // DELETE → 清空服务端 cart(支付成功后 Cart.clear() 调用)
+    if ($method === 'DELETE') {
+        $db->prepare('DELETE FROM user_carts WHERE user_id = :uid')
+           ->execute([':uid' => $user['id']]);
+        sendJson(['success' => true, 'cleared' => true]);
+    }
+
     if ($method === 'POST') {
         $in = readInput();
         $clientItems = is_array($in['items'] ?? null) ? $in['items'] : [];
