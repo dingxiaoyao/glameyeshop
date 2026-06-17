@@ -8,6 +8,22 @@
 // ============================================================
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/image-processor.php';
+
+// 全局兜底 — 文件上传场景常见的 fatal(GD 缺失、目录不可写、move 失败...)
+// 不希望直接 500 HTML 让前端解不出 JSON
+set_exception_handler(function ($e) {
+    error_log(sprintf('[admin-upload] %s | %s | %s:%d',
+        get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()));
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+    }
+    echo json_encode([
+        'error' => sprintf('%s: %s', get_class($e), $e->getMessage()),
+        'hint'  => 'See PHP error log for full stack trace.',
+    ], JSON_UNESCAPED_UNICODE);
+});
+
 requireAdminAuth();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

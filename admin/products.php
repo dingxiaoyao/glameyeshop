@@ -275,28 +275,41 @@
   imgInput.addEventListener('change', async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    let done = 0;
+    let done = 0, failed = 0, lastErr = '';
     for (const f of files) {
-      imgStatus.textContent = `Uploading ${++done}/${files.length}…`;
+      imgStatus.textContent = `Uploading ${++done}/${files.length} (${f.name})…`;
       imgStatus.style.color = '';
       const fd = new FormData(); fd.append('file', f);
+      let r, txt = '', j = null;
       try {
-        const r = await fetch('../api/admin-upload.php', { method:'POST', credentials:'include', body: fd });
-        const j = await r.json();
-        if (j.success) {
-          imageList.push(j.url);
-          renderTiles();
-        } else {
-          imgStatus.textContent = '✗ ' + (j.error || 'failed');
-          imgStatus.style.color = 'var(--error)';
-        }
-      } catch (err) {
-        imgStatus.textContent = '✗ ' + (err.message || 'Network error');
-        imgStatus.style.color = 'var(--error)';
+        r = await fetch('../api/admin-upload.php', { method:'POST', credentials:'include', body: fd });
+        txt = await r.text();
+        try { j = JSON.parse(txt); } catch (_) {}
+      } catch (netErr) {
+        failed++; lastErr = 'Network: ' + (netErr.message || String(netErr));
+        continue;
+      }
+      if (!r.ok || !j) {
+        failed++;
+        lastErr = `HTTP ${r.status} — ${(txt || '(empty)').slice(0, 300)}`;
+        continue;
+      }
+      if (j.success) {
+        imageList.push(j.url);
+        renderTiles();
+        if (j.process_error) console.warn('[upload] image processed with warnings:', j.process_error);
+      } else {
+        failed++;
+        lastErr = j.error || 'Upload failed';
       }
     }
-    imgStatus.textContent = `✓ ${imageList.length} image(s) total. Drag to reorder · first = main`;
-    imgStatus.style.color = 'var(--gold)';
+    if (failed > 0) {
+      imgStatus.innerHTML = `✗ ${failed}/${files.length} failed — <code style="font-size:.78rem;background:rgba(238,90,90,.1);padding:.2rem .4rem;border-radius:3px;">${lastErr.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</code>`;
+      imgStatus.style.color = 'var(--error)';
+    } else {
+      imgStatus.textContent = `✓ ${imageList.length} image(s) total. Drag to reorder · first = main`;
+      imgStatus.style.color = 'var(--gold)';
+    }
     e.target.value = '';
   });
 
@@ -364,14 +377,26 @@
     const delBtn = e.target.closest('.del-btn');
     if (delBtn) {
       if (!confirm(T.confirm_delete)) return;
+      let r, txt = '', j = null;
       try {
-        const r = await fetch('../api/admin-products.php?id=' + delBtn.dataset.id, {
+        r = await fetch('../api/admin-products.php?id=' + delBtn.dataset.id, {
           method: 'DELETE', credentials: 'include',
         });
-        const j = await r.json();
-        if (j.success) load();
-        else alert(j.error || 'Delete failed');
-      } catch (err) { alert('Delete failed'); }
+        txt = await r.text();
+        try { j = JSON.parse(txt); } catch (_) {}
+      } catch (err) {
+        alert('Delete failed — Network: ' + (err.message || String(err)));
+        return;
+      }
+      if (!r.ok || !j) {
+        alert(`Delete failed — HTTP ${r.status}\n\n${(txt || '(empty)').slice(0, 600)}`);
+        return;
+      }
+      if (j.success) {
+        load();
+      } else {
+        alert('Delete failed — ' + (j.error || 'unknown'));
+      }
     }
   });
 

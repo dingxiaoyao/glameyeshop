@@ -122,6 +122,12 @@ try {
     }
 
     sendJson(['error' => 'Method not allowed'], 405);
-} catch (PDOException $e) {
-    sendError('Database error', 500, $e);
+} catch (Throwable $e) {
+    // admin endpoint — 把异常 class + message 回吐,方便定位
+    error_log(sprintf('[admin-products] %s | %s | %s:%d',
+        get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()));
+    sendJson([
+        'error' => sprintf('%s: %s', get_class($e), $e->getMessage()),
+        'hint'  => 'See PHP error log for full stack trace.',
+    ], 500);
 }
