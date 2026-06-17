@@ -61,7 +61,9 @@ try {
         if ($galleryJson === '') $galleryJson = null;
 
         if (!$sku || mb_strlen($sku) > 64)              sendJson(['error' => 'Invalid SKU'], 422);
-        if (!in_array($category, ['mink','faux','magnetic','tools','bundle'], true)) sendJson(['error' => 'Invalid category'], 422);
+        // category 白名单(必须与 admin/products.php 下拉框保持同步)
+        // cluster-kit 是当前主力 SKU 类型,mink/faux/magnetic/tools/bundle 保留兼容
+        if (!in_array($category, ['cluster-kit','mink','faux','magnetic','tools','bundle'], true)) sendJson(['error' => 'Invalid category'], 422);
         if (!$name || mb_strlen($name) > 200)            sendJson(['error' => 'Invalid name'], 422);
         if ($price <= 0)                                 sendJson(['error' => 'Invalid price'], 422);
         if ($stock < 0)                                  sendJson(['error' => 'Invalid stock'], 422);

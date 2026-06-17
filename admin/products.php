@@ -33,6 +33,7 @@
           </label>
           <label><span class="label-text"><?= htmlspecialchars(t('category')) ?> *</span>
             <select name="category" required id="p-category">
+              <option value="cluster-kit">Cluster Kit (current line)</option>
               <option value="mink">Mink</option>
               <option value="faux">Faux Mink</option>
               <option value="magnetic">Magnetic</option>
