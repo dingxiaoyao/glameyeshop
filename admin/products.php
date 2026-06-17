@@ -125,9 +125,24 @@
   function escape(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function money(n) { return '$' + Number(n || 0).toFixed(2); }
 
+  let showHidden = false;
   function render() {
-    const list = currentCat ? allProducts.filter((p) => p.category === currentCat) : allProducts;
-    if (!list.length) { container.innerHTML = '<p class="muted">No products.</p>'; return; }
+    let list = currentCat ? allProducts.filter((p) => p.category === currentCat) : allProducts.slice();
+    const hiddenCount = list.filter((p) => p.is_active != 1).length;
+    if (!showHidden) list = list.filter((p) => p.is_active == 1);
+    const toggleHtml = hiddenCount > 0
+      ? `<div style="margin:.5rem 0 1rem;padding:.5rem .75rem;background:var(--bg-soft);border-radius:6px;font-size:.85rem;">
+          <label style="cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;">
+            <input type="checkbox" id="toggle-hidden" ${showHidden ? 'checked' : ''} />
+            <span class="muted">${showHidden ? 'Hiding' : 'Show'} ${hiddenCount} deleted/inactive product${hiddenCount>1?'s':''}</span>
+          </label>
+        </div>`
+      : '';
+    if (!list.length) {
+      container.innerHTML = toggleHtml + '<p class="muted">' + (hiddenCount > 0 ? 'No active products in this view. Toggle above to show deleted.' : 'No products.') + '</p>';
+      bindToggle();
+      return;
+    }
     const head = `<thead><tr>
       <th></th><th>${T.sku}</th><th>${T.name}</th><th>${T.category}</th>
       <th>${T.price}</th><th>${T.stock}</th><th>${T.status}</th><th></th>
@@ -154,7 +169,12 @@
           <button class="filter-btn del-btn" data-id="${p.id}" style="color: var(--error); border-color: var(--error)">${T.delete}</button>
         </td>
       </tr>`).join('');
-    container.innerHTML = `<table class="admin-table">${head}<tbody>${rows}</tbody></table>`;
+    container.innerHTML = toggleHtml + `<table class="admin-table">${head}<tbody>${rows}</tbody></table>`;
+    bindToggle();
+  }
+  function bindToggle() {
+    const t = document.getElementById('toggle-hidden');
+    if (t) t.addEventListener('change', (e) => { showHidden = e.target.checked; render(); });
   }
 
   async function load() {
@@ -394,6 +414,13 @@
         return;
       }
       if (j.success) {
+        // 小 toast 反馈 — 让用户明确知道删了哪个
+        const productName = (allProducts.find((p) => p.id == delBtn.dataset.id) || {}).name || ('#' + delBtn.dataset.id);
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:var(--success,#2c9);color:#fff;padding:.75rem 1rem;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:9999;font-size:.9rem;';
+        toast.textContent = '✓ Deleted: ' + productName;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
         load();
       } else {
         alert('Delete failed — ' + (j.error || 'unknown'));
