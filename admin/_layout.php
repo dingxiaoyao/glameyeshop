@@ -20,7 +20,9 @@ $activeNav  = $activeNav  ?? 'dashboard';
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex,nofollow" />
   <title><?= htmlspecialchars($pageTitle) ?> · GlamEye Admin</title>
-  <link rel="icon" href="../favicon.ico" />
+  <link rel="icon" href="../favicon.ico?v=2026-06-18" sizes="any" />
+  <link rel="icon" href="../images/favicon-32.png?v=2026-06-18" type="image/png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="../images/favicon-180.png?v=2026-06-18" sizes="180x180" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <link rel="stylesheet" href="../css/styles.css" />
   <link rel="stylesheet" href="admin.css" />
