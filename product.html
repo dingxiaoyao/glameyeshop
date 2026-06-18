@@ -15,8 +15,15 @@
   <style>
     .pdp { display: grid; grid-template-columns: 1.1fr 1fr; gap: 4rem; padding: 3rem 1.25rem; max-width: 1320px; margin: 0 auto; }
     .pdp-gallery { position: sticky; top: 5rem; align-self: start; }
-    .pdp-main-img { aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-card); margin-bottom: 1rem; }
+    .pdp-main-img { aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-card); margin-bottom: 1rem; position: relative; }
     .pdp-main-img img { width:100%; height:100%; object-fit: cover; }
+    /* hover 自动切第二张图 — 仅当主图区有备用图(非视频)时启用 */
+    .pdp-main-layer { position: absolute; inset: 0; display: block; transition: opacity .4s ease; }
+    .pdp-main-layer-main  { opacity: 1; z-index: 1; }
+    .pdp-main-layer-hover { opacity: 0; z-index: 2; }
+    .pdp-main-img.has-hover:hover .pdp-main-layer-main  { opacity: 0; }
+    .pdp-main-img.has-hover:hover .pdp-main-layer-hover { opacity: 1; }
+    @media (hover: none) { .pdp-main-layer-hover { display: none; } }
     .pdp-thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
     .pdp-thumb { aspect-ratio: 1; border-radius: var(--radius); overflow: hidden; background: var(--bg-card); border: 1px solid var(--border-soft); cursor: pointer; transition: border-color .2s; }
     .pdp-thumb img { width:100%; height:100%; object-fit: cover; }
@@ -270,17 +277,38 @@
         const isVideo = (url) => /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url || '');
         const allMedia = [p.image_url].concat(p.gallery_urls || []).filter(Boolean);
 
+        // hover 切第二张图:仅在主图区显示 allMedia[0] 时启用 — 用户点过缩略图后视为
+        // 主动选择,关掉 hover swap 避免打扰
+        function findHoverImageFor(url) {
+          if (isVideo(url)) return '';
+          // 找当前 url 之后第一张「图」(跳过视频),回绕到第一张
+          const idx = allMedia.indexOf(url);
+          if (idx < 0) return '';
+          for (let i = 1; i < allMedia.length; i++) {
+            const cand = allMedia[(idx + i) % allMedia.length];
+            if (cand && !isVideo(cand)) return cand;
+          }
+          return '';
+        }
         function renderMain(url) {
           const mainWrap = document.getElementById('p-main-img-wrap');
           if (!mainWrap || !url) return;
           if (isVideo(url)) {
             mainWrap.classList.add('is-video');
+            mainWrap.classList.remove('has-hover');
             mainWrap.innerHTML = `<video src="${fmt.escape(url)}" controls playsinline preload="metadata" style="width:100%;height:100%;"></video>`;
           } else {
             mainWrap.classList.remove('is-video');
-            mainWrap.innerHTML = Img.picture(url, 'detail', {
-              alt: p.name, loading: 'eager', fetchpriority: 'high'
-            });
+            const hoverUrl = findHoverImageFor(url);
+            const mainPic  = Img.picture(url, 'detail', { alt: p.name, loading: 'eager', fetchpriority: 'high' });
+            const hoverPic = hoverUrl
+              ? Img.picture(hoverUrl, 'detail', { alt: p.name + ' alternate', loading: 'lazy' })
+              : '';
+            mainWrap.classList.toggle('has-hover', !!hoverPic);
+            mainWrap.innerHTML = `
+              <span class="pdp-main-layer pdp-main-layer-main">${mainPic}</span>
+              ${hoverPic ? `<span class="pdp-main-layer pdp-main-layer-hover">${hoverPic}</span>` : ''}
+            `;
           }
         }
         renderMain(allMedia[0]);

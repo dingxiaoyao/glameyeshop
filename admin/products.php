@@ -1,4 +1,9 @@
 <?php $pageTitle = 'Products'; $activeNav = 'products'; require __DIR__ . '/_layout.php'; ?>
+<style>
+  /* 列表缩略图 hover 切第二张(gallery_urls[0]) — 给运营快速预览替代图 */
+  .admin-thumb-hover:hover .t-main  { opacity: 0; }
+  .admin-thumb-hover:hover .t-hover { opacity: 1; }
+</style>
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
   <h1 style="margin:0;">💄 <?= htmlspecialchars(t('product_management')) ?></h1>
   <button id="new-product-btn" class="button button-primary">+ <?= htmlspecialchars(t('add_product')) ?></button>
@@ -147,17 +152,36 @@
       <th></th><th>${T.sku}</th><th>${T.name}</th><th>${T.category}</th>
       <th>${T.price}</th><th>${T.stock}</th><th>${T.status}</th><th></th>
     </tr></thead>`;
-    function thumbCell(url) {
+    function thumbCell(url, p) {
       if (!url) {
         return `<td><div style="width:48px;height:36px;background:var(--bg-soft);border:1px dashed var(--border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-muted);">no img</div></td>`;
       }
-      // url 是 /uploads/... 或 /images/... 的绝对路径,从 admin/ 目录看要加 ".."
       const src = url.startsWith('http') ? url : '..' + url;
-      return `<td><img src="${escape(src)}" title="${escape(url)}" style="width:48px;height:36px;object-fit:cover;border-radius:4px;background:var(--bg-soft);" onerror="this.outerHTML='<div title=&quot;404: ${escape(url)}&quot; style=&quot;width:48px;height:36px;background:rgba(238,90,90,.08);border:1px solid var(--error);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--error);&quot;>404</div>';" /></td>`;
+      // 取 gallery 第二张图作为 hover 预览
+      let hoverSrc = '';
+      if (p && p.gallery_urls) {
+        try {
+          const gal = (typeof p.gallery_urls === 'string') ? JSON.parse(p.gallery_urls) : p.gallery_urls;
+          if (Array.isArray(gal) && gal[0]) {
+            const u = gal[0];
+            hoverSrc = u.startsWith('http') ? u : '..' + u;
+          }
+        } catch {}
+      }
+      const onerr = `this.outerHTML='<div title=&quot;404: ${escape(url)}&quot; style=&quot;width:48px;height:36px;background:rgba(238,90,90,.08);border:1px solid var(--error);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--error);&quot;>404</div>'`;
+      if (hoverSrc) {
+        return `<td>
+          <div class="admin-thumb-hover" style="position:relative;width:48px;height:36px;border-radius:4px;overflow:hidden;background:var(--bg-soft);">
+            <img src="${escape(src)}" title="${escape(url)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .25s;" onerror="${onerr}" class="t-main" />
+            <img src="${escape(hoverSrc)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s;" class="t-hover" />
+          </div>
+        </td>`;
+      }
+      return `<td><img src="${escape(src)}" title="${escape(url)}" style="width:48px;height:36px;object-fit:cover;border-radius:4px;background:var(--bg-soft);" onerror="${onerr}" /></td>`;
     }
     const rows = list.map((p) => `
       <tr style="opacity: ${p.is_active == 1 ? 1 : 0.5}">
-        ${thumbCell(p.image_url)}
+        ${thumbCell(p.image_url, p)}
         <td><small style="color:var(--gold);">${escape(p.sku)}</small></td>
         <td><strong>${escape(p.name)}</strong><br><small class="muted">${escape(p.short_description || '')}</small></td>
         <td>${escape(p.category)}</td>
