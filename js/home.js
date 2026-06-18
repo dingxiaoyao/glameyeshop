@@ -313,7 +313,8 @@
     const section = document.getElementById('ba-section');
     if (!section) return;
     try {
-      const r = await fetch('api/before-after.php');
+      // cache buster — 防浏览器在运营删/改后还显示旧版本
+      const r = await fetch('api/before-after.php?t=' + Date.now());
       const j = await r.json();
       const pairs = (j.pairs || []).filter(p => p.before_image_url && p.after_image_url);
       if (!pairs.length) { section.hidden = true; return; }

@@ -28,9 +28,13 @@ function ensureBeforeAfterSchema(PDO $db): void {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         ");
 
-        // 只有表为空时塞 2 条种子(防用户手动改/删后又被覆盖)
-        $cnt = (int)$db->query("SELECT COUNT(*) FROM before_after_pairs")->fetchColumn();
-        if ($cnt === 0) {
+        // ⚠️ 重要:只在「首次部署」种入,以后无论用户怎么删都不复活
+        // 用 site_settings 里 ba_seeded sentinel 标记,COUNT==0 不再触发种子
+        // (修复:之前用 COUNT==0 判断 → 用户全删后下次访问 API 又种回来 → 删不掉)
+        $seeded = (int)$db->query(
+            "SELECT COUNT(*) FROM site_settings WHERE `key` = 'ba_seeded'"
+        )->fetchColumn();
+        if (!$seeded) {
             $stmt = $db->prepare(
                 "INSERT IGNORE INTO before_after_pairs
                    (id, before_image_url, before_label, after_image_url, after_label, alt_text, sort_order, is_active)
@@ -54,6 +58,9 @@ function ensureBeforeAfterSchema(PDO $db): void {
                 ':alt' => 'Diamond 25mm day-to-night',
                 ':sort' => 2,
             ]);
+            // 标记已 seed,以后不再触发(即使用户全删也不会复活)
+            $db->exec("INSERT INTO site_settings (`key`, `value`) VALUES ('ba_seeded', '1')
+                       ON DUPLICATE KEY UPDATE `value` = '1'");
         }
 
         // 文案默认值(只在 key 不存在时插入)

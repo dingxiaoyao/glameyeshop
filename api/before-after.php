@@ -3,9 +3,13 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/lib/before-after-schema.php';
 
+// 防浏览器/CDN 缓存 — 运营改图后立刻见效
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+
 try {
     $db = getDb();
-    ensureBeforeAfterSchema($db);  // self-healing: 表不存在自动建 + 种子
+    ensureBeforeAfterSchema($db);  // self-healing: 表不存在自动建 + 首次部署种 2 条
     $stmt = $db->query(
         "SELECT id, before_image_url, before_label, after_image_url, after_label, alt_text
          FROM before_after_pairs
