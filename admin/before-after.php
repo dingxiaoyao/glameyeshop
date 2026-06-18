@@ -11,26 +11,26 @@
   .ba-controls label { font-size: .7rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
 </style>
 
-<h1 style="margin-top:0">📸 Before & After</h1>
-<p class="muted">Homepage "Real Results" comparison pairs. Drag-and-drop won't work yet — use sort_order numbers.</p>
+<h1 style="margin-top:0">📸 <?= $lang === "zh" ? "对比图" : "Before & After" ?></h1>
+<p class="muted"><?= $lang === "zh" ? "首页 “Real Results” 区块的对照图。暂不支持拖拽排序,改 sort_order 数字即可。" : "Homepage &quot;Real Results&quot; comparison pairs. Drag-and-drop won&apos;t work yet — use sort_order numbers." ?></p>
 
 <div class="admin-card" style="margin-bottom:2rem;">
-  <h3 style="margin-top:0;font-size:1rem">Section copy</h3>
+  <h3 style="margin-top:0;font-size:1rem"><?= $lang === "zh" ? "区块文案" : "Section copy" ?></h3>
   <div style="display:grid;gap:.75rem">
-    <label>Subtitle (shown under "Before & After" title)
+    <label><?= $lang === "zh" ? "副标题(显示在 Before & After 标题下)" : "Subtitle (shown under &quot;Before & After&quot; title)" ?>
       <input type="text" id="copy-subtitle" style="width:100%;background:var(--bg);border:1px solid var(--border-soft);color:var(--text);padding:.5rem;border-radius:4px;" />
     </label>
-    <label>Footer disclaimer (shown below the pairs)
+    <label><?= $lang === "zh" ? "底部说明(显示在对照下方)" : "Footer disclaimer (shown below the pairs)" ?>
       <input type="text" id="copy-footer" style="width:100%;background:var(--bg);border:1px solid var(--border-soft);color:var(--text);padding:.5rem;border-radius:4px;" />
     </label>
-    <button id="save-copy" class="button button-primary" style="justify-self:start">Save copy</button>
+    <button id="save-copy" class="button button-primary" style="justify-self:start"><?= $lang === "zh" ? "保存文案" : "Save copy" ?></button>
     <span id="copy-fb" class="form-feedback"></span>
   </div>
 </div>
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-  <h2 style="margin:0;font-size:1.2rem">Pairs</h2>
-  <button id="new-pair-btn" class="button button-primary">+ Add pair</button>
+  <h2 style="margin:0;font-size:1.2rem"><?= $lang === "zh" ? "对照列表" : "Pairs" ?></h2>
+  <button id="new-pair-btn" class="button button-primary">+ <?= $lang === "zh" ? "添加对照" : "Add pair" ?></button>
 </div>
 
 <div id="pairs-list">
@@ -74,32 +74,32 @@
   function pairRow(p, idx) {
     return `
       <div class="ba-row" data-idx="${idx}">
-        <div class="ba-thumb" data-side="before" data-idx="${idx}" style="cursor:pointer" title="Click to upload new image">
+        <div class="ba-thumb" data-side="before" data-idx="${idx}" style="cursor:pointer" title="<?= $lang === "zh" ? "点击上传新图" : "Click to upload new image" ?>">
           ${p.before_image_url ? `<img src="${esc(imgSrc(p.before_image_url))}" onerror="this.outerHTML='<div style=padding:1rem;text-align:center;font-size:.7rem;color:var(--error)>404</div>'" />` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:.8rem">+ Upload</div>'}
           <div class="ba-thumb-label">${esc(p.before_label || 'Before')}</div>
         </div>
-        <div class="ba-thumb" data-side="after" data-idx="${idx}" style="cursor:pointer" title="Click to upload new image">
+        <div class="ba-thumb" data-side="after" data-idx="${idx}" style="cursor:pointer" title="<?= $lang === 'zh' ? '点击上传新图' : 'Click to upload new image' ?>">
           ${p.after_image_url ? `<img src="${esc(imgSrc(p.after_image_url))}" onerror="this.outerHTML='<div style=padding:1rem;text-align:center;font-size:.7rem;color:var(--error)>404</div>'" />` : '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:.8rem">+ Upload</div>'}
           <div class="ba-thumb-label">${esc(p.after_label || 'After')}</div>
         </div>
         <div class="ba-controls">
-          <label>Before label
-            <input type="text" data-field="before_label" data-idx="${idx}" value="${esc(p.before_label || '')}" placeholder="e.g. Before" />
+          <label><?= $lang === "zh" ? "Before 标签" : "Before label" ?>
+            <input type="text" data-field="before_label" data-idx="${idx}" value="${esc(p.before_label || '')}" placeholder="<?= $lang === 'zh' ? '例:Before' : 'e.g. Before' ?>" />
           </label>
-          <label>After label
-            <input type="text" data-field="after_label" data-idx="${idx}" value="${esc(p.after_label || '')}" placeholder="e.g. After · Naked 18mm" />
+          <label><?= $lang === "zh" ? "After 标签" : "After label" ?>
+            <input type="text" data-field="after_label" data-idx="${idx}" value="${esc(p.after_label || '')}" placeholder="<?= $lang === 'zh' ? '例:After · 真客户名 18mm' : 'e.g. After · Naked 18mm' ?>" />
           </label>
-          <label>Sort order
+          <label><?= $lang === "zh" ? "排序" : "Sort order" ?>
             <input type="number" data-field="sort_order" data-idx="${idx}" value="${(p.sort_order ?? 0)}" style="max-width:80px" />
           </label>
           <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
             <input type="checkbox" data-field="is_active" data-idx="${idx}" ${p.is_active == 1 ? 'checked' : ''} />
-            <span>Active (show on homepage)</span>
+            <span><?= $lang === "zh" ? "上架(显示在首页)" : "Active (show on homepage)" ?></span>
           </label>
         </div>
         <div style="display:grid;gap:.4rem">
-          <button class="button button-primary save-btn" data-idx="${idx}" style="font-size:.8rem">Save</button>
-          <button class="button button-outline del-btn" data-idx="${idx}" style="font-size:.8rem;color:var(--error);border-color:var(--error)">Delete</button>
+          <button class="button button-primary save-btn" data-idx="${idx}" style="font-size:.8rem"><?= $lang === "zh" ? "保存" : "Save" ?></button>
+          <button class="button button-outline del-btn" data-idx="${idx}" style="font-size:.8rem;color:var(--error);border-color:var(--error)"><?= $lang === "zh" ? "删除" : "Delete" ?></button>
         </div>
       </div>
     `;

@@ -41,7 +41,7 @@
 
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem; flex-wrap: wrap; gap: .75rem;">
   <h1 style="margin:0;">📸 UGC Wall</h1>
-  <button class="button button-primary" id="ugc-add-btn">+ Add Submission</button>
+  <button class="button button-primary" id="ugc-add-btn">+ <?= $lang === "zh" ? "添加 UGC" : "Add Submission" ?></button>
 </div>
 <p class="muted small" style="margin-bottom: 1.5rem;">Customer photos that show on the homepage. Upload them on behalf of customers (e.g. from Instagram tags), or approve user-submitted ones here.</p>
 
@@ -60,7 +60,7 @@
 <div class="modal-backdrop" id="ugc-modal" style="display:none;">
   <div class="modal" style="max-width: 540px;">
     <div class="modal-header">
-      <h3>Add UGC Submission</h3>
+      <h3><?= $lang === "zh" ? "添加 UGC 投稿" : "Add UGC Submission" ?></h3>
       <button class="modal-close" id="ugc-modal-close">×</button>
     </div>
     <div class="modal-body">
@@ -72,16 +72,16 @@
           </div>
         </label>
         <label><span class="label-text">Image URL (or paste)</span>
-          <input type="text" name="image_url" id="ugc-image-url" placeholder="/uploads/xxx.jpg" required />
+          <input type="text" name="image_url" id="ugc-image-url" placeholder="<?= $lang === 'zh' ? '/uploads/xxx.jpg' : '/uploads/xxx.jpg' ?>" required />
         </label>
         <div id="ugc-preview" style="display:none; aspect-ratio:1; max-width:200px; border-radius:6px; overflow:hidden; background:var(--bg-soft); border:1px solid var(--border-soft);">
           <img id="ugc-preview-img" alt="" style="width:100%;height:100%;object-fit:cover;" />
         </div>
         <label><span class="label-text">Instagram handle <span class="muted small">(no @)</span></span>
-          <input type="text" name="instagram_handle" maxlength="100" placeholder="customer_username" />
+          <input type="text" name="instagram_handle" maxlength="100" placeholder="<?= $lang === 'zh' ? '用户名' : 'customer_username' ?>" />
         </label>
         <label><span class="label-text">Caption <span class="muted small">(optional)</span></span>
-          <textarea name="caption" rows="2" maxlength="500" placeholder="What product? Why they love it?"></textarea>
+          <textarea name="caption" rows="2" maxlength="500" placeholder="<?= $lang === 'zh' ? '什么产品?为什么喜欢?' : 'What product? Why they love it?' ?>"></textarea>
         </label>
         <label><span class="label-text">Related product</span>
           <select name="related_product_id" id="ugc-product-select">
@@ -92,7 +92,7 @@
       </form>
     </div>
     <div class="modal-footer">
-      <button class="button button-ghost" id="ugc-cancel-btn">Cancel</button>
+      <button class="button button-ghost" id="ugc-cancel-btn"><?= $lang === "zh" ? "取消" : "Cancel" ?></button>
       <button class="button button-primary" id="ugc-save-btn">Save & Approve</button>
     </div>
   </div>

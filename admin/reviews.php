@@ -58,14 +58,14 @@
   }
 </style>
 
-<h1>★ Reviews</h1>
+<h1>★ <?= $lang === "zh" ? "评论" : "Reviews" ?></h1>
 <p class="muted small" style="margin-bottom: 1.5rem;">Approve customer reviews to show them on the site. Feature the best ones for the homepage.</p>
 
 <div class="admin-card">
   <div class="rv-toolbar" id="rv-tabs">
-    <button class="rv-tab active" data-status="pending">Pending</button>
-    <button class="rv-tab" data-status="approved">Approved</button>
-    <button class="rv-tab" data-status="rejected">Rejected</button>
+    <button class="rv-tab active" data-status="pending"><?= $lang === "zh" ? "待审核" : "Pending" ?></button>
+    <button class="rv-tab" data-status="approved"><?= $lang === "zh" ? "已通过" : "Approved" ?></button>
+    <button class="rv-tab" data-status="rejected"><?= $lang === "zh" ? "已拒绝" : "Rejected" ?></button>
     <button class="rv-tab" data-status="all">All</button>
     <span class="rv-count" id="rv-count"></span>
   </div>
@@ -119,12 +119,12 @@
       : '';
 
     const actions = [];
-    if (r.status !== 'approved') actions.push(`<button class="primary" data-id="${r.id}" data-action="approve">Approve</button>`);
-    if (r.status !== 'rejected') actions.push(`<button data-id="${r.id}" data-action="reject">Reject</button>`);
+    if (r.status !== 'approved') actions.push(`<button class="primary" data-id="${r.id}" data-action="approve"><?= $lang === "zh" ? "通过" : "Approve" ?></button>`);
+    if (r.status !== 'rejected') actions.push(`<button data-id="${r.id}" data-action="reject"><?= $lang === "zh" ? "拒绝" : "Reject" ?></button>`);
     if (r.is_featured == 1) {
-      actions.push(`<button data-id="${r.id}" data-action="unfeature">Unfeature</button>`);
+      actions.push(`<button data-id="${r.id}" data-action="unfeature"><?= $lang === "zh" ? "取消精选" : "Unfeature" ?></button>`);
     } else {
-      actions.push(`<button data-id="${r.id}" data-action="feature">Feature ★</button>`);
+      actions.push(`<button data-id="${r.id}" data-action="feature"><?= $lang === "zh" ? "设为精选 ★" : "Feature ★" ?></button>`);
     }
     actions.push(`<button class="danger" data-id="${r.id}" data-action="delete">Delete</button>`);
 

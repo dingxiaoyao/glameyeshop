@@ -19,18 +19,18 @@
   .log-payload { font-family: var(--mono, monospace); font-size: .72rem; color: var(--text-muted); background: var(--bg-soft); padding: .5rem .65rem; border-radius: 4px; margin-top: .5rem; max-height: 8em; overflow: auto; word-break: break-all; white-space: pre-wrap; }
 </style>
 
-<h1>📜 Stripe Webhook Logs</h1>
+<h1>📜 <?= $lang === "zh" ? "Stripe Webhook 日志" : "Stripe Webhook Logs" ?></h1>
 <p class="muted small" style="margin-bottom:1.25rem;">
   All Stripe webhook events received,with their processing result. Use this when an order is stuck in pending and you want to know whether the webhook actually arrived.
 </p>
 
 <div class="log-tabs" id="log-tabs">
   <button class="log-tab active" data-status="all">All</button>
-  <button class="log-tab" data-status="processed">Processed</button>
-  <button class="log-tab" data-status="duplicate">Duplicate</button>
-  <button class="log-tab" data-status="error">Error</button>
-  <button class="log-tab" data-status="amount_mismatch">Amount mismatch</button>
-  <button class="log-tab" data-status="ignored">Ignored</button>
+  <button class="log-tab" data-status="processed"><?= $lang === "zh" ? "已处理" : "Processed" ?></button>
+  <button class="log-tab" data-status="duplicate"><?= $lang === "zh" ? "重复" : "Duplicate" ?></button>
+  <button class="log-tab" data-status="error"><?= $lang === "zh" ? "错误" : "Error" ?></button>
+  <button class="log-tab" data-status="amount_mismatch"><?= $lang === "zh" ? "金额不符" : "Amount mismatch" ?></button>
+  <button class="log-tab" data-status="ignored"><?= $lang === "zh" ? "已忽略" : "Ignored" ?></button>
 </div>
 
 <div id="log-list"><p class="muted">Loading…</p></div>
@@ -84,7 +84,7 @@
   function renderPagination(p) {
     if (!p || p.total_pages <= 1) { pagination.innerHTML = ''; return; }
     const btns = [];
-    btns.push(`<button class="filter-btn" data-p="${Math.max(1, p.page - 1)}" ${p.page <= 1 ? 'disabled' : ''}>← Prev</button>`);
+    btns.push(`<button class="filter-btn" data-p="${Math.max(1, p.page - 1)}" ${p.page <= 1 ? 'disabled' : ''}>← <?= $lang === "zh" ? "上一页" : "Prev" ?></button>`);
     const start = Math.max(1, p.page - 3);
     const end = Math.min(p.total_pages, p.page + 3);
     for (let i = start; i <= end; i++) {

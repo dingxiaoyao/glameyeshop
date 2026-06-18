@@ -31,7 +31,7 @@
     const head = `<thead><tr>
       <th>${T.order_id}</th><th>${T.date}</th><th>${T.customer}</th>
       <th>${T.items}</th><th>${T.amount}</th><th>${T.payment}</th>
-      <th>Tracking</th><th>${T.status}</th><th></th>
+      <th><?= $lang === "zh" ? "物流" : "Tracking" ?></th><th>${T.status}</th><th></th>
     </tr></thead>`;
     const rows = orders.map((o) => {
       const items = (o.items || []).length
@@ -55,10 +55,10 @@
         <td style="white-space:nowrap;">
           <button class="filter-btn track-btn" data-order='${escape(JSON.stringify(o))}'>📦</button>
           ${o.status === 'pending' && o.payment_method === 'stripe' && o.lookup_token
-              ? `<button class="filter-btn sync-btn" data-id="${o.id}" data-token="${escape(o.lookup_token)}" title="Pull latest payment status from Stripe (in case webhook was missed)">🔄 Sync</button>`
+              ? `<button class="filter-btn sync-btn" data-id="${o.id}" data-token="${escape(o.lookup_token)}" title="Pull latest payment status from Stripe (in case webhook was missed)">🔄 <?= $lang === "zh" ? "同步" : "Sync" ?></button>`
               : ''}
           ${['paid','processing','shipped','delivered'].includes(o.status) && o.payment_method === 'stripe'
-              ? `<button class="filter-btn refund-btn" data-id="${o.id}" data-amount="${o.amount}" data-name="${escape(o.customer_name)}" title="Issue refund via Stripe">💸 Refund</button>`
+              ? `<button class="filter-btn refund-btn" data-id="${o.id}" data-amount="${o.amount}" data-name="${escape(o.customer_name)}" title="<?= $lang === "zh" ? "通过 Stripe 退款" : "Issue refund via Stripe" ?>">💸 <?= $lang === "zh" ? "退款" : "Refund" ?></button>`
               : ''}
         </td>
       </tr>`;
@@ -183,7 +183,7 @@
         <label><span class="label-text">Estimated Delivery (optional)</span>
           <input type="date" id="tm-estimated" value="${escape(o.estimated_delivery || '')}" />
         </label>
-        <button class="button button-primary button-sm" id="tm-save-info">💾 Save Carrier Info</button>
+        <button class="button button-primary button-sm" id="tm-save-info">💾 <?= $lang === "zh" ? "保存物流信息" : "Save Carrier Info" ?></button>
         <hr style="border:none; border-top:1px solid var(--border); margin: 1.5rem 0;">
         <h4 style="color:var(--cream); margin-bottom:.75rem;">Add Tracking Event</h4>
         <div class="form-row">
@@ -200,13 +200,13 @@
             </select>
           </label>
           <label><span class="label-text">Location</span>
-            <input type="text" id="tm-event-loc" placeholder="e.g. Los Angeles, CA" />
+            <input type="text" id="tm-event-loc" placeholder="<?= $lang === "zh" ? "例:Los Angeles, CA" : "e.g. Los Angeles, CA" ?>" />
           </label>
         </div>
         <label><span class="label-text">Description</span>
-          <input type="text" id="tm-event-desc" placeholder="e.g. Package picked up by carrier" />
+          <input type="text" id="tm-event-desc" placeholder="<?= $lang === "zh" ? "例:已被快递员揽件" : "e.g. Package picked up by carrier" ?>" />
         </label>
-        <button class="button button-primary button-sm" id="tm-add-event">+ Add Event</button>
+        <button class="button button-primary button-sm" id="tm-add-event">+ <?= $lang === "zh" ? "添加事件" : "Add Event" ?></button>
         <hr style="border:none; border-top:1px solid var(--border); margin: 1.5rem 0;">
         <h4 style="color:var(--cream); margin-bottom:.75rem;">Event History</h4>
         <div id="tm-events"><p class="muted">Loading…</p></div>

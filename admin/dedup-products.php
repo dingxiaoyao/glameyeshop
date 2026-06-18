@@ -66,8 +66,8 @@ foreach ($dupGroups as $g) {
 }
 ?>
 
-<h1 style="margin-top:0">🧹 Dedup Products</h1>
-<p class="muted">Find and clean duplicate products caused by setup.sql re-inserting after SKU was changed manually.</p>
+<h1 style="margin-top:0">🧹 <?= $lang === "zh" ? "清理重复产品" : "Dedup Products" ?></h1>
+<p class="muted"><?= $lang === "zh" ? "查找 + 清理因 setup.sql 在 SKU 改后重新插入造成的重复产品。" : "Find and clean duplicate products caused by setup.sql re-inserting after SKU was changed manually." ?></p>
 
 <?php if ($flash): ?>
 <div class="admin-card" style="border:1px solid var(--gold);background:rgba(185,146,78,.1);margin-bottom:1rem;">
@@ -77,7 +77,7 @@ foreach ($dupGroups as $g) {
 
 <?php if (empty($dupGroups)): ?>
 <div class="admin-card">
-  <p style="color:var(--success,#2c9)"><strong>✓ No duplicates found</strong></p>
+  <p style="color:var(--success,#2c9)"><strong><?= $lang === "zh" ? "✓ 未发现重复产品" : "✓ No duplicates found" ?></strong></p>
   <p class="muted small">All active product names are unique. If you still see odd records, check by image_url or SKU pattern manually in <a href="products.php">/admin/products.php</a>.</p>
 </div>
 <?php else: ?>
@@ -98,14 +98,14 @@ foreach ($dupGroups as $g) {
     <input type="hidden" name="group_ids[<?= htmlspecialchars($key) ?>]" value='<?= htmlspecialchars(json_encode(array_column($rows, 'id'))) ?>' />
     <table class="admin-table">
       <thead><tr>
-        <th style="width:60px;">Keep?</th>
+        <th style="width:60px;"><?= $lang === "zh" ? "保留?" : "Keep?" ?></th>
         <th style="width:40px;">ID</th>
         <th>SKU</th>
-        <th>Category</th>
-        <th>Price</th>
-        <th>Stock</th>
-        <th>Image</th>
-        <th>Last Updated</th>
+        <th><?= $lang === "zh" ? "分类" : "Category" ?></th>
+        <th><?= $lang === "zh" ? "价格" : "Price" ?></th>
+        <th><?= $lang === "zh" ? "库存" : "Stock" ?></th>
+        <th><?= $lang === "zh" ? "图片" : "Image" ?></th>
+        <th><?= $lang === "zh" ? "最近更新" : "Last Updated" ?></th>
       </tr></thead>
       <tbody>
         <?php foreach ($rows as $idx => $p): ?>
@@ -140,7 +140,7 @@ foreach ($dupGroups as $g) {
     <button type="submit" class="button button-primary" style="background:var(--error);border-color:var(--error);">
       🧹 Dedup Now (<?= array_sum(array_map(fn($g) => $g['cnt'] - 1, $dupGroups)) ?> to deactivate)
     </button>
-    <a href="products.php" class="button button-outline">Cancel</a>
+    <a href="products.php" class="button button-outline"><?= $lang === "zh" ? "取消" : "Cancel" ?></a>
   </div>
 </form>
 <?php endif; ?>

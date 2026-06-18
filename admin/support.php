@@ -187,10 +187,10 @@
           `).join('')}
         </div>
         <form class="reply-form" id="reply-form">
-          <textarea name="body" placeholder="Type your reply…" required maxlength="8000"></textarea>
+          <textarea name="body" placeholder="<?= $lang === "zh" ? "输入你的回复…" : "Type your reply…" ?>" required maxlength="8000"></textarea>
           <div class="reply-form-actions">
             <label><input type="checkbox" name="close"> Close thread after sending</label>
-            <button type="submit" class="button button-primary button-sm">Send reply &amp; email</button>
+            <button type="submit" class="button button-primary button-sm"><?= $lang === "zh" ? "发送回复并通知邮件" : "Send reply &amp; email" ?></button>
           </div>
           <p class="muted small" id="reply-fb"></p>
         </form>

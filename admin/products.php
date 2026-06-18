@@ -11,11 +11,11 @@
 
 <div class="filter-bar">
   <button class="filter-btn active" data-cat=""><?= htmlspecialchars(t('all')) ?></button>
-  <button class="filter-btn" data-cat="mink">Mink</button>
-  <button class="filter-btn" data-cat="faux">Faux Mink</button>
-  <button class="filter-btn" data-cat="magnetic">Magnetic</button>
-  <button class="filter-btn" data-cat="tools">Tools</button>
-  <button class="filter-btn" data-cat="bundle">📦 Bundles</button>
+  <button class="filter-btn" data-cat="mink"><?= $lang === "zh" ? "Mink (貂毛)" : "Mink" ?></button>
+  <button class="filter-btn" data-cat="faux"><?= $lang === "zh" ? "Faux (素貂)" : "Faux Mink" ?></button>
+  <button class="filter-btn" data-cat="magnetic"><?= $lang === "zh" ? "磁吸款" : "Magnetic" ?></button>
+  <button class="filter-btn" data-cat="tools"><?= $lang === "zh" ? "工具" : "Tools" ?></button>
+  <button class="filter-btn" data-cat="bundle">📦 <?= $lang === "zh" ? "套装" : "Bundles" ?></button>
 </div>
 
 <div class="admin-card" style="overflow-x: auto;">
@@ -38,12 +38,12 @@
           </label>
           <label><span class="label-text"><?= htmlspecialchars(t('category')) ?> *</span>
             <select name="category" required id="p-category">
-              <option value="cluster-kit">Cluster Kit (current line)</option>
+              <option value="cluster-kit"><?= $lang === "zh" ? "Cluster Kit(当前在售)" : "Cluster Kit (current line)" ?></option>
               <option value="mink">Mink</option>
               <option value="faux">Faux Mink</option>
               <option value="magnetic">Magnetic</option>
               <option value="tools">Tools</option>
-              <option value="bundle">📦 Bundle (set)</option>
+              <option value="bundle">📦 <?= $lang === "zh" ? "Bundle(套装)" : "Bundle (set)" ?></option>
             </select>
           </label>
         </div>
@@ -214,7 +214,7 @@
           <strong>Load failed (HTTP ${r.status})</strong>
           <p class="muted small" style="margin:.5rem 0 0">Server returned non-JSON. First 400 chars of response:</p>
           <pre style="background:var(--bg);padding:.75rem;border-radius:4px;font-size:.75rem;overflow:auto;max-height:200px;margin:.5rem 0 0;white-space:pre-wrap;">${escape(text.slice(0, 400))}</pre>
-          <button class="filter-btn" onclick="location.reload()" style="margin-top:.5rem;">Retry</button>
+          <button class="filter-btn" onclick="location.reload()" style="margin-top:.5rem;"><?= $lang === "zh" ? "重试" : "Retry" ?></button>
         </div>`;
         return;
       }
@@ -263,7 +263,7 @@
           <code>${safeUrl}</code>
         </div>
         ${i===0 ? '<span class="badge">MAIN</span>' : `<span class="order-num">${i+1}</span>`}
-        <button type="button" class="del-x" data-idx="${i}" title="Remove">×</button>
+        <button type="button" class="del-x" data-idx="${i}" title="<?= $lang === 'zh' ? '删除' : 'Remove' ?>">×</button>
       </div>`;
     }).join('');
     // 图片 onerror 时显示 .img-broken

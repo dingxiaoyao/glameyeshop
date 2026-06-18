@@ -5,7 +5,7 @@
   <label class="muted small">
     <input type="checkbox" id="show-bots" /> Include bots/crawlers
   </label>
-  <button id="refresh-btn" class="filter-btn" style="margin-left:auto;">🔄 Refresh</button>
+  <button id="refresh-btn" class="filter-btn" style="margin-left:auto;">🔄 <?= $lang === "zh" ? "刷新" : "Refresh" ?></button>
 </div>
 
 <div class="kpi-grid">
@@ -105,7 +105,7 @@
       // Top pages
       const tp = j.top_pages || [];
       document.getElementById('top-pages').innerHTML = tp.length
-        ? '<table class="admin-table"><thead><tr><th>Path</th><th style="text-align:right;">Views</th><th style="text-align:right;">Unique</th></tr></thead><tbody>'
+        ? '<table class="admin-table"><thead><tr><th><?= $lang === "zh" ? "页面" : "Path" ?></th><th style="text-align:right;">Views</th><th style="text-align:right;">Unique</th></tr></thead><tbody>'
           + tp.map(p => `<tr><td><code style="color:var(--gold);">${escape(p.path)}</code></td><td style="text-align:right;">${p.views}</td><td style="text-align:right;">${p.uniq}</td></tr>`).join('')
           + '</tbody></table>'
         : '<p class="muted">No data.</p>';
@@ -113,7 +113,7 @@
       // Top referrers
       const tr = j.top_referrers || [];
       document.getElementById('top-referrers').innerHTML = tr.length
-        ? '<table class="admin-table"><thead><tr><th>Source</th><th style="text-align:right;">Views</th></tr></thead><tbody>'
+        ? '<table class="admin-table"><thead><tr><th><?= $lang === "zh" ? "来源" : "Source" ?></th><th style="text-align:right;">Views</th></tr></thead><tbody>'
           + tr.map(r => `<tr><td>${escape(r.source)}</td><td style="text-align:right;">${r.views}</td></tr>`).join('')
           + '</tbody></table>'
         : '<p class="muted">No data.</p>';
@@ -121,7 +121,7 @@
       // Top IPs
       const ips = j.top_ips || [];
       document.getElementById('top-ips').innerHTML = ips.length
-        ? '<table class="admin-table"><thead><tr><th>IP</th><th>Views</th><th>Last Seen</th><th>Recent Paths</th></tr></thead><tbody>'
+        ? '<table class="admin-table"><thead><tr><th>IP</th><th><?= $lang === "zh" ? "浏览数" : "Views" ?></th><th><?= $lang === "zh" ? "最近访问" : "Last Seen" ?></th><th>Recent Paths</th></tr></thead><tbody>'
           + ips.map(r => `<tr>
               <td><code style="color:var(--gold);">${escape(r.ip)}</code></td>
               <td><strong>${r.views}</strong></td>

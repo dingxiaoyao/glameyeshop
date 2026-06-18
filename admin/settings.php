@@ -105,7 +105,7 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   </p>
   <div class="country-chip-wrap" id="country-chip-wrap">
     <span class="muted small" id="country-empty-hint" hidden>Click a preset or type a code →</span>
-    <input type="text" class="country-chip-input" id="country-input" placeholder="Type ISO code (US, CA, GB…) + Enter" maxlength="2" autocomplete="off" />
+    <input type="text" class="country-chip-input" id="country-input" placeholder="<?= $lang === "zh" ? "输入 ISO 国家代码(US, CA, GB…)+ 回车" : "Type ISO code (US, CA, GB…) + Enter" ?>" maxlength="2" autocomplete="off" />
   </div>
   <input type="hidden" data-key="enabled_countries" id="enabled-countries-hidden" />
 
@@ -150,7 +150,7 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   </table>
 
   <button type="button" id="add-zone-btn" class="button button-outline" style="font-size:.8rem;padding:.4rem 1rem;margin-top:.5rem;">
-    + Add zone or country
+    + <?= $lang === "zh" ? "添加运费区" : "Add zone" ?> or country
   </button>
 
   <input type="hidden" data-key="shipping_zones" id="shipping-zones-hidden" />
@@ -226,8 +226,8 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
           tr.innerHTML = `
             <td><span class="zone-key">${k}</span>${k === 'default' ? '<br><small class="muted" style="font-size:.7rem;">catches any country not listed</small>' : ''}</td>
             <td><input type="number" min="0" step="0.01" value="${Number(z.price || 0).toFixed(2)}" data-zone="${k}" data-field="price" /></td>
-            <td><input type="number" min="0" step="0.01" value="${Number(z.free_threshold || 0).toFixed(2)}" data-zone="${k}" data-field="free_threshold" placeholder="0 = no free shipping" /></td>
-            <td>${k === 'default' ? '' : `<button type="button" class="zone-remove-btn" data-zone="${k}" title="Remove zone">🗑️</button>`}</td>`;
+            <td><input type="number" min="0" step="0.01" value="${Number(z.free_threshold || 0).toFixed(2)}" data-zone="${k}" data-field="free_threshold" placeholder="<?= $lang === 'zh' ? '0 = 不免邮' : '0 = no free shipping' ?>" /></td>
+            <td>${k === 'default' ? '' : `<button type="button" class="zone-remove-btn" data-zone="${k}" title="<?= $lang === 'zh' ? '删除区域' : 'Remove zone' ?>">🗑️</button>`}</td>`;
           zonesTbody.appendChild(tr);
         });
         zonesHidden.value = JSON.stringify(zones);
@@ -285,7 +285,7 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 </div>
 
 <div class="admin-card">
-  <h3>Social Media URLs</h3>
+  <h3><?= $lang === "zh" ? "社交媒体链接" : "Social Media URLs" ?></h3>
   <div class="form-group" id="settings-form">
     <label><span class="label-text">TikTok</span><input type="url" data-key="social_tiktok" placeholder="https://www.tiktok.com/@glameye" /></label>
     <label><span class="label-text">Instagram</span><input type="url" data-key="social_instagram" placeholder="https://instagram.com/glameye" /></label>
@@ -296,7 +296,7 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 </div>
 
 <div class="admin-card">
-  <h3>Amazon Store</h3>
+  <h3><?= $lang === "zh" ? "Amazon 店铺" : "Amazon Store" ?></h3>
   <div class="form-group">
     <label>
       <span class="label-text">Amazon Store URL</span>
@@ -335,7 +335,7 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 <!-- ───── Hero ───── -->
 <div class="settings-section" data-section="hero">
 <div class="admin-card">
-  <h3>🎞️ Homepage Hero Slideshow</h3>
+  <h3>🎞️ <?= $lang === "zh" ? "首页 Hero 轮播" : "Homepage Hero Slideshow" ?></h3>
   <p class="muted small" style="margin-bottom:1rem;">
     <?= $lang === 'zh' ? '上传多张图（拖拽排序，第一张优先展示），首页将自动轮播。' : 'Upload multiple images (drag to reorder · first one shows first). They auto-rotate on the homepage.' ?>
   </p>
@@ -414,7 +414,7 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
       <small id="stripe-status-sub" style="opacity:.75;font-weight:400;font-size:.78rem;"></small>
     </div>
     <button type="button" id="stripe-ping-btn" class="button button-outline" style="padding:.45rem 1rem; font-size:.85rem;">
-      🔌 Test connection
+      🔌 <?= $lang === "zh" ? "测试连接" : "Test connection" ?>
     </button>
   </div>
 
@@ -427,7 +427,7 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 
   <!-- 当前步骤的提示卡(JS 动态显示哪一个) -->
   <div class="stripe-panel" id="stripe-panel-1" hidden>
-    <h4>🔑 Step 1 — Get your API keys from Stripe</h4>
+    <h4>🔑 <?= $lang === "zh" ? "第一步 — 在 Stripe 后台获取 API 密钥" : "Step 1 — Get your API keys from Stripe" ?></h4>
     <p style="margin:0 0 .5rem;font-size:.88rem;">Go to Stripe Dashboard, copy your <strong>Publishable key</strong> (pk_…) and <strong>Secret key</strong> (sk_…), paste them below.</p>
     <a href="https://dashboard.stripe.com/test/apikeys" target="_blank" rel="noopener" class="panel-cta">
       Open Stripe API keys page ↗
@@ -435,7 +435,7 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   </div>
 
   <div class="stripe-panel" id="stripe-panel-2" hidden>
-    <h4>🪝 Step 2 — Create a webhook endpoint</h4>
+    <h4>🪝 <?= $lang === "zh" ? "第二步 — 创建 webhook 端点" : "Step 2 — Create a webhook endpoint" ?></h4>
     <p style="margin:0 0 .5rem;font-size:.88rem;">1. Open the page below. 2. Paste this URL in <em>Endpoint URL</em>. 3. Select the 5 events. 4. Click Add endpoint. 5. Copy the <strong>Signing secret</strong> (whsec_…) and paste in the field below.</p>
     <a href="https://dashboard.stripe.com/test/webhooks/create" target="_blank" rel="noopener" class="panel-cta">
       Open Stripe webhook creation page ↗
@@ -444,7 +444,7 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
       <small style="font-weight:600;color:var(--cream);">Webhook URL:</small>
       <div class="url-copy-row">
         <code id="webhook-url"><?= htmlspecialchars($webhookUrl) ?></code>
-        <button type="button" class="copy-btn" id="copy-webhook-url">📋 Copy</button>
+        <button type="button" class="copy-btn" id="copy-webhook-url"><?= $lang === "zh" ? "📋 复制" : "📋 Copy" ?></button>
       </div>
     </div>
     <div style="margin-top:.5rem;">
@@ -454,12 +454,12 @@ checkout.session.async_payment_succeeded
 checkout.session.async_payment_failed
 checkout.session.expired
 charge.refunded</div>
-      <button type="button" class="copy-btn" id="copy-events" style="font-size:.7rem;">📋 Copy all events</button>
+      <button type="button" class="copy-btn" id="copy-events" style="font-size:.7rem;">📋 <?= $lang === "zh" ? "复制所有事件" : "Copy all events" ?></button>
     </div>
   </div>
 
   <div class="stripe-panel" id="stripe-panel-3" hidden style="border-left-color:var(--success,#2c9);">
-    <h4>✓ Step 3 — Verify everything works</h4>
+    <h4>✓ <?= $lang === "zh" ? "第三步 — 验证一切正常" : "Step 3 — Verify everything works" ?></h4>
     <p style="margin:0 0 .65rem;font-size:.88rem;">All keys are saved. Click <strong>Test connection</strong> above to confirm Stripe accepts them. Then run a test order with this card:</p>
     <div class="url-copy-row" style="margin:.3rem 0;">
       <code><strong>4242 4242 4242 4242</strong> · any future date · any CVC · any ZIP</code>
@@ -662,7 +662,7 @@ charge.refunded</div>
             statusBar.className = 'stripe-status-bar warn';
             statusIcon.textContent = '⚠';
             statusTitle.textContent = 'No Secret key yet';
-            statusSub.innerHTML = 'Paste your <code>sk_test_…</code> in the Secret Key field below first, then click <strong>💾 Save All Settings</strong> at the top of the page.';
+            statusSub.innerHTML = 'Paste your <code>sk_test_…</code> in the Secret Key field below first, then click <strong>💾 <?= $lang === "zh" ? "保存全部设置" : "Save All Settings" ?></strong> at the top of the page.';
             return;
           }
           if (skTyped && !skSaved) {
@@ -732,7 +732,7 @@ charge.refunded</div>
 </div>
 
 <div class="admin-card">
-  <h3>💰 Payment Gateway · PayPal</h3>
+  <h3>💰 <?= $lang === "zh" ? "支付通道 · PayPal" : "Payment Gateway · PayPal" ?></h3>
   <p class="muted small" style="margin-bottom:1rem;">
     <?= $lang === 'zh' ? '在 developer.paypal.com 创建 App 后填入。' : 'Create an app at developer.paypal.com and paste keys here.' ?>
   </p>
@@ -759,7 +759,7 @@ charge.refunded</div>
 <!-- ───── Sign-in ───── -->
 <div class="settings-section" data-section="signin">
 <div class="admin-card">
-  <h3>🔑 OAuth · Google Sign-In</h3>
+  <h3>🔑 <?= $lang === "zh" ? "OAuth · Google 登录" : "OAuth · Google Sign-In" ?></h3>
   <p class="muted small" style="margin-bottom:1rem;">
     <?= $lang === 'zh' ? '在 console.cloud.google.com 创建 OAuth 2.0 Client。回调 URL：' : 'Create OAuth 2.0 Client at console.cloud.google.com. Redirect URL: ' ?>
     <code>https://glameyeshop.com/api/oauth/google.php</code>
@@ -775,7 +775,7 @@ charge.refunded</div>
 </div>
 
 <div class="admin-card">
-  <h3>🎵 OAuth · TikTok Login</h3>
+  <h3>🎵 <?= $lang === "zh" ? "OAuth · TikTok 登录" : "OAuth · TikTok Login" ?></h3>
   <p class="muted small" style="margin-bottom:1rem;">
     <?= $lang === 'zh' ? '在 developers.tiktok.com 创建 App。回调 URL：' : 'Create app at developers.tiktok.com. Redirect URL: ' ?>
     <code>https://glameyeshop.com/api/oauth/tiktok.php</code>
@@ -853,7 +853,7 @@ charge.refunded</div>
     </label>
   </div>
   <div style="margin-top:1rem;">
-    <button id="test-email-btn" class="button button-outline button-sm">📤 Send test email to admin</button>
+    <button id="test-email-btn" class="button button-outline button-sm">📤 <?= $lang === "zh" ? "发送测试邮件给管理员" : "Send test email to admin" ?></button>
     <span id="test-email-fb" class="muted small" style="margin-left:.75rem;"></span>
   </div>
 </div>

@@ -23,7 +23,7 @@
           <small class="muted" style="display:block; margin-top:.35rem;">Paste the full TikTok video URL — we'll auto-extract creator + video ID.</small>
         </label>
         <label><span class="label-text">Title</span>
-          <input type="text" name="title" maxlength="255" placeholder="e.g. Drama Mink 22mm First Impression" />
+          <input type="text" name="title" maxlength="255" placeholder="<?= $lang === 'zh' ? '例:Drama Mink 22mm 初体验' : 'e.g. Drama Mink 22mm First Impression' ?>" />
         </label>
         <label><span class="label-text">Description</span>
           <textarea name="description" rows="2"></textarea>
@@ -41,7 +41,7 @@
         </label>
         <div class="form-row">
           <label><span class="label-text">Related Product ID (optional)</span>
-            <input type="number" name="related_product_id" placeholder="e.g. 5" />
+            <input type="number" name="related_product_id" placeholder="<?= $lang === 'zh' ? '例:5' : 'e.g. 5' ?>" />
           </label>
           <label><span class="label-text">Sort Order</span>
             <input type="number" name="sort_order" value="0" />
@@ -49,18 +49,18 @@
         </div>
         <div class="checkbox-row">
           <input type="checkbox" name="is_featured" id="v-feat" value="1" />
-          <label for="v-feat">Featured (show on homepage)</label>
+          <label for="v-feat"><?= $lang === "zh" ? "精选(展示在首页)" : "Featured (show on homepage)" ?></label>
         </div>
         <div class="checkbox-row">
           <input type="checkbox" name="is_active" id="v-act" value="1" checked />
-          <label for="v-act">Active (visible on /videos.html)</label>
+          <label for="v-act"><?= $lang === "zh" ? "上架(展示在 /videos.html)" : "Active (visible on /videos.html)" ?></label>
         </div>
         <p class="form-feedback" id="v-feedback"></p>
       </form>
     </div>
     <div class="modal-footer">
-      <button class="button button-ghost" id="cancel-btn">Cancel</button>
-      <button class="button button-primary" id="save-btn">Save</button>
+      <button class="button button-ghost" id="cancel-btn"><?= $lang === "zh" ? "取消" : "Cancel" ?></button>
+      <button class="button button-primary" id="save-btn"><?= $lang === "zh" ? "保存" : "Save" ?></button>
     </div>
   </div>
 </div>
@@ -77,7 +77,7 @@
 
   function render() {
     if (!allVideos.length) { container.innerHTML = '<p class="muted">No videos yet. Click + Add Video.</p>'; return; }
-    const head = `<thead><tr><th>#</th><th>Creator</th><th>Title</th><th>Featured</th><th>Status</th><th>Sort</th><th></th></tr></thead>`;
+    const head = `<thead><tr><th>#</th><th><?= $lang === "zh" ? "创作者" : "Creator" ?></th><th><?= $lang === "zh" ? "标题" : "Title" ?></th><th>Featured</th><th>Status</th><th><?= $lang === "zh" ? "排序" : "Sort" ?></th><th></th></tr></thead>`;
     const rows = allVideos.map(v => `
       <tr style="opacity:${v.is_active==1?1:0.5}">
         <td><strong style="color:var(--gold)">#${v.id}</strong></td>

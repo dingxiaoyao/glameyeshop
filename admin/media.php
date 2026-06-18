@@ -88,8 +88,8 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
           <div class="media-meta">
             <input class="media-url" value="${esc(f.url)}" readonly onclick="this.select()" />
             <div class="media-actions">
-              <button class="copy-btn" data-url="${esc(f.url)}">Copy</button>
-              <button class="del-btn" data-url="${esc(f.url)}">Delete</button>
+              <button class="copy-btn" data-url="${esc(f.url)}"><?= $lang === "zh" ? "复制" : "Copy" ?></button>
+              <button class="del-btn" data-url="${esc(f.url)}"><?= $lang === "zh" ? "删除" : "Delete" ?></button>
             </div>
             <p class="muted small" style="margin-top:.35rem;">${(f.size/1024).toFixed(0)} KB</p>
           </div>

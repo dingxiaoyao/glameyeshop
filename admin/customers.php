@@ -3,7 +3,7 @@
 
 <div class="admin-card" style="margin-bottom:1rem;">
   <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
-    <input type="search" id="cust-search" placeholder="🔍 Search email / name / phone…" style="flex:1;min-width:240px;padding:.5rem .85rem;" />
+    <input type="search" id="cust-search" placeholder="<?= $lang === "zh" ? "🔍 搜索邮箱 / 姓名 / 电话…" : "🔍 Search email / name / phone…" ?>" style="flex:1;min-width:240px;padding:.5rem .85rem;" />
     <span id="cust-summary" class="muted small"></span>
   </div>
 </div>
@@ -43,7 +43,7 @@
     if (!customers.length) { container.innerHTML = '<p class="muted">No customers match.</p>'; pagination.innerHTML = ''; return; }
     const head = `<thead><tr>
       <th>#</th><th>${T.email}</th><th>${T.name}</th><th>${T.phone}</th>
-      <th>OAuth</th><th>Test</th>
+      <th><?= $lang === "zh" ? "OAuth" : "OAuth" ?></th><th><?= $lang === "zh" ? "测试" : "Test" ?></th>
       <th>${T.orders_count}</th><th>${T.spent}</th><th>${T.subscribed}</th><th>${T.date}</th>
     </tr></thead>`;
     const rows = customers.map((c) => `
@@ -91,13 +91,13 @@
     const tp = p.total_pages || 1;
     if (tp > 1) {
       const pages = [];
-      pages.push(`<button class="filter-btn" data-p="${Math.max(1, p.page - 1)}" ${p.page <= 1 ? 'disabled' : ''}>← Prev</button>`);
+      pages.push(`<button class="filter-btn" data-p="${Math.max(1, p.page - 1)}" ${p.page <= 1 ? 'disabled' : ''}>← <?= $lang === "zh" ? "上一页" : "Prev" ?></button>`);
       const start = Math.max(1, p.page - 3);
       const end = Math.min(tp, p.page + 3);
       for (let i = start; i <= end; i++) {
         pages.push(`<button class="filter-btn${i === p.page ? ' active' : ''}" data-p="${i}">${i}</button>`);
       }
-      pages.push(`<button class="filter-btn" data-p="${Math.min(tp, p.page + 1)}" ${p.page >= tp ? 'disabled' : ''}>Next →</button>`);
+      pages.push(`<button class="filter-btn" data-p="${Math.min(tp, p.page + 1)}" ${p.page >= tp ? 'disabled' : ''}><?= $lang === "zh" ? "下一页" : "Next" ?> →</button>`);
       pagination.innerHTML = pages.join('');
       pagination.querySelectorAll('button[data-p]').forEach(b => b.addEventListener('click', () => {
         currentPage = parseInt(b.dataset.p, 10) || 1;
