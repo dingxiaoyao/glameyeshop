@@ -140,7 +140,7 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 }
 .brand-logo {
   height: 32px; width: auto;
-  filter: brightness(0) invert(0.93) sepia(0.4) hue-rotate(2deg) saturate(2.5);
+  /* logo 颜色直接来自 PNG 文件(深炭灰 #2a2a2a),不再 CSS filter 染金 */
 }
 
 .site-nav { display: flex; align-items: center; gap: 2rem; }
