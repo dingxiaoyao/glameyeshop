@@ -204,6 +204,7 @@
   // 加车走标准流程:bundle 本身是一行 product,price 已经是套装价,组件仅作展示
   async function loadBundles() {
     const container = document.getElementById('featured-bundles');
+    const section = document.getElementById('bundles-section');
     if (!container) return;
     try {
       const [bundlesRes, allRes] = await Promise.all([
@@ -214,10 +215,13 @@
       const allProducts = allRes.products || [];
       const bySku = Object.fromEntries(allProducts.map(p => [p.sku, p]));
 
+      // 没套装 → 整个 section 隐藏(标题/副标题/分割线全部不出现)
       if (!bundles.length) {
-        container.innerHTML = '<p class="muted text-center" style="grid-column:1/-1;">Curated bundles coming soon.</p>';
+        if (section) section.hidden = true;
         return;
       }
+      // 有套装 → 确保 section 可见(防上次空了被 hide)
+      if (section) section.hidden = false;
 
       container.innerHTML = bundles.map((b) => {
         let items = [];
@@ -253,7 +257,8 @@
           </a>`;
       }).join('');
     } catch (e) {
-      container.innerHTML = '<p class="muted text-center" style="grid-column:1/-1;">Curated bundles coming soon.</p>';
+      // 拉失败也直接 hide section,不要给用户看到 "coming soon" 这种迷惑文案
+      if (section) section.hidden = true;
     }
   }
 
