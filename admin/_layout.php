@@ -55,6 +55,7 @@ $activeNav  = $activeNav  ?? 'dashboard';
         <a href="index.php"     class="<?= $activeNav === 'dashboard' ? 'active' : '' ?>">📊 <?= htmlspecialchars(t('dashboard')) ?></a>
         <a href="orders.php"    class="<?= $activeNav === 'orders' ? 'active' : '' ?>">📦 <?= htmlspecialchars(t('orders')) ?></a>
         <a href="products.php"  class="<?= $activeNav === 'products' ? 'active' : '' ?>">💄 <?= htmlspecialchars(t('products')) ?></a>
+        <a href="dedup-products.php" class="<?= $activeNav === 'dedup-products' ? 'active' : '' ?>" style="font-size:.85em;padding-left:1.5em;opacity:.9;">🧹 <?= $lang === 'zh' ? '清重复' : 'Dedup' ?></a>
         <a href="customers.php" class="<?= $activeNav === 'customers' ? 'active' : '' ?>">👥 <?= htmlspecialchars(t('customers')) ?></a>
         <a href="reviews.php"   class="<?= $activeNav === 'reviews' ? 'active' : '' ?>">★ <?= $lang === 'zh' ? '评论' : 'Reviews' ?></a>
         <a href="ugc.php"       class="<?= $activeNav === 'ugc' ? 'active' : '' ?>">📸 <?= $lang === 'zh' ? '用户晒图' : 'UGC Wall' ?></a>

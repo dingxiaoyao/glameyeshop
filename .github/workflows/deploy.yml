@@ -120,8 +120,23 @@ jobs:
             export DB_HOST DB_NAME DB_USER DB_PASS
 
             # Schema (CREATE IF NOT EXISTS - 幂等) — 用独立用户跑,不再 root
+            # 防 bug:setup.sql 含 INSERT IGNORE INTO products,只对同 SKU 跳过,
+            # 用户在 admin 改了 SKU 后,下次部署会重新插入"原 SKU 模板"=> 同名重复。
+            # 解决:首次 seed 后产品表里有数据,awk 跳过所有 INSERT IGNORE INTO products 段。
             if [ -f database/setup.sql ]; then
-              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" < database/setup.sql 2>/dev/null || true
+              PROD_COUNT=$(mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" -se "SELECT COUNT(*) FROM products" 2>/dev/null || echo 0)
+              if [ "$PROD_COUNT" -gt "0" ]; then
+                echo "[deploy] products table has $PROD_COUNT row(s) — skipping INSERT IGNORE INTO products to prevent dup-on-SKU-rename"
+                # awk 跳过 'INSERT IGNORE INTO products' 到下一个以 ');' 结束的行(包含)
+                awk '
+                  /^INSERT IGNORE INTO products/ { skip=1; next }
+                  skip && /^\);/ { skip=0; next }
+                  !skip { print }
+                ' database/setup.sql | mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" 2>/dev/null || true
+              else
+                echo "[deploy] products table empty — running full setup.sql with seed INSERTs"
+                mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" < database/setup.sql 2>/dev/null || true
+              fi
             fi
 
             # 增量 ALTER（每条独立，列已存在时忽略）
