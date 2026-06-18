@@ -1,9 +1,11 @@
 <?php
 // public GET — 列出所有 active 的 before/after 对
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/before-after-schema.php';
 
 try {
     $db = getDb();
+    ensureBeforeAfterSchema($db);  // self-healing: 表不存在自动建 + 种子
     $stmt = $db->query(
         "SELECT id, before_image_url, before_label, after_image_url, after_label, alt_text
          FROM before_after_pairs

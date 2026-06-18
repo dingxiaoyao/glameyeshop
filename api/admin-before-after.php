@@ -1,6 +1,7 @@
 <?php
 // admin CRUD for before_after_pairs
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/before-after-schema.php';
 requireAdminAuth();
 
 set_exception_handler(function ($e) {
@@ -19,6 +20,7 @@ set_exception_handler(function ($e) {
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = intval($_GET['id'] ?? 0);
 $db     = getDb();
+ensureBeforeAfterSchema($db);  // self-healing: 表不存在自动建 + 种子
 
 if ($method === 'GET') {
     $stmt = $db->query("SELECT * FROM before_after_pairs ORDER BY sort_order ASC, id ASC");
