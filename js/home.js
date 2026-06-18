@@ -309,12 +309,45 @@
     }
   }
 
+  async function loadBeforeAfter() {
+    const section = document.getElementById('ba-section');
+    if (!section) return;
+    try {
+      const r = await fetch('api/before-after.php');
+      const j = await r.json();
+      const pairs = (j.pairs || []).filter(p => p.before_image_url && p.after_image_url);
+      if (!pairs.length) { section.hidden = true; return; }
+      section.hidden = false;
+      if (j.subtitle) document.getElementById('ba-subtitle').textContent = j.subtitle;
+      if (j.footer) {
+        // 把 @glameye 自动着色
+        document.getElementById('ba-footer').innerHTML = escape(j.footer)
+          .replace(/@(\w+)/g, '<strong style="color:var(--gold);">@$1</strong>');
+      }
+      document.getElementById('ba-grid').innerHTML = pairs.map(p => `
+        <div class="ba-pair">
+          <div class="ba-card ba-before">
+            <img src="${escape(p.before_image_url)}" alt="${escape(p.alt_text || 'Before')}" loading="lazy" decoding="async">
+            <span class="ba-label">${escape(p.before_label || 'Before')}</span>
+          </div>
+          <div class="ba-card ba-after">
+            <img src="${escape(p.after_image_url)}" alt="${escape(p.alt_text || 'After')}" loading="lazy" decoding="async">
+            <span class="ba-label ba-label-after">${escape(p.after_label || 'After')}</span>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      section.hidden = true;
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     loadFeatured();
     loadBundles();
     loadFeaturedReviews();
     loadUGC();
     loadFeaturedVideos();
+    loadBeforeAfter();
     loadSettings();
 
     // Add to cart delegation

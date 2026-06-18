@@ -174,49 +174,17 @@
     </section>
 
     <!-- ============== 5. Before / After ("Real Results") ============== -->
-    <!-- 占位:等真实素材,先用产品图近距 + 产品图远距 视觉差异充当 placeholder -->
-    <section class="section container ba-section">
+    <!-- 由 home.js loadBeforeAfter() 动态拉 /api/before-after.php 渲染 -->
+    <!-- admin 后台 /admin/before-after.php 可改图/文/启停 -->
+    <section class="section container ba-section" id="ba-section" hidden>
       <div class="section-header">
         <span class="eyebrow">Real Results</span>
         <h2>Before &amp; After</h2>
         <div class="divider-gold"></div>
-        <p>What 18mm of premium mink does to your eyes — no filter, no retouching.</p>
+        <p id="ba-subtitle">…</p>
       </div>
-      <div class="ba-grid">
-        <div class="ba-pair">
-          <div class="ba-card ba-before">
-            <picture>
-              <source type="image/webp" srcset="/images/lash-photos/style-09-feather-eye-640.webp 640w, /images/lash-photos/style-09-feather-eye-1024.webp 1024w" sizes="(max-width: 768px) 100vw, 50vw">
-              <img src="/images/lash-photos/style-09-feather-eye-640.jpg" alt="Natural eye, no lashes" loading="lazy" decoding="async">
-            </picture>
-            <span class="ba-label">Before</span>
-          </div>
-          <div class="ba-card ba-after">
-            <picture>
-              <source type="image/webp" srcset="/images/lash-photos/style-18-velvet-eye-640.webp 640w, /images/lash-photos/style-18-velvet-eye-1024.webp 1024w" sizes="(max-width: 768px) 100vw, 50vw">
-              <img src="/images/lash-photos/style-18-velvet-eye-640.jpg" alt="With Naked 18mm Mink" loading="lazy" decoding="async">
-            </picture>
-            <span class="ba-label ba-label-after">After · Naked 18mm</span>
-          </div>
-        </div>
-        <div class="ba-pair">
-          <div class="ba-card ba-before">
-            <picture>
-              <source type="image/webp" srcset="/images/lash-photos/style-14-frost-eye-640.webp 640w, /images/lash-photos/style-14-frost-eye-1024.webp 1024w" sizes="(max-width: 768px) 100vw, 50vw">
-              <img src="/images/lash-photos/style-14-frost-eye-640.jpg" alt="Daytime eye look" loading="lazy" decoding="async">
-            </picture>
-            <span class="ba-label">Daytime</span>
-          </div>
-          <div class="ba-card ba-after">
-            <picture>
-              <source type="image/webp" srcset="/images/lash-photos/style-18-velvet-split-640.webp 640w, /images/lash-photos/style-18-velvet-split-1024.webp 1024w" sizes="(max-width: 768px) 100vw, 50vw">
-              <img src="/images/lash-photos/style-18-velvet-split-640.jpg" alt="With Diamond 25mm Mink" loading="lazy" decoding="async">
-            </picture>
-            <span class="ba-label ba-label-after">Night Out · Diamond 25mm</span>
-          </div>
-        </div>
-      </div>
-      <p class="ba-disclaimer">More real-customer transformations coming — tag <strong style="color:var(--gold);">@glameye</strong> on Instagram to be featured.</p>
+      <div class="ba-grid" id="ba-grid"></div>
+      <p class="ba-disclaimer" id="ba-footer"></p>
     </section>
 
     <!-- ============== 6. Categories (Shop by Style) ============== -->

@@ -1318,3 +1318,32 @@ INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 -- ============================================================
 INSERT INTO site_settings (`key`, `value`) VALUES ('ga_measurement_id', 'G-0LESHNQ1LG')
 ON DUPLICATE KEY UPDATE `value` = 'G-0LESHNQ1LG';
+
+
+-- ============================================================
+-- Before & After 区块(admin 可管理)
+-- 首页 "Real Results" 对照图,运营在 admin 上传图 + 改文案
+-- ============================================================
+CREATE TABLE IF NOT EXISTS before_after_pairs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  before_image_url VARCHAR(500) NOT NULL,
+  before_label VARCHAR(100) NOT NULL DEFAULT 'Before',
+  after_image_url VARCHAR(500) NOT NULL,
+  after_label VARCHAR(100) NOT NULL DEFAULT 'After',
+  alt_text VARCHAR(200) DEFAULT '',
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_active_sort (is_active, sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 初始 2 对(对应原硬编码内容)— INSERT IGNORE 防重复
+INSERT IGNORE INTO before_after_pairs (id, before_image_url, before_label, after_image_url, after_label, alt_text, sort_order, is_active) VALUES
+  (1, '/images/lash-photos/style-09-feather-eye-640.jpg', 'Before', '/images/lash-photos/style-18-velvet-eye-640.jpg', 'After · Naked 18mm', 'Naked 18mm Mink before/after', 1, 1),
+  (2, '/images/lash-photos/style-14-frost-eye-640.jpg', 'Daytime', '/images/lash-photos/style-18-velvet-split-640.jpg', 'Night Out · Diamond 25mm', 'Diamond 25mm day-to-night', 2, 1);
+
+-- 副标题文案放在 site_settings,运营可改
+INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
+  ('ba_section_subtitle', 'What 18mm of premium mink does to your eyes — no filter, no retouching.'),
+  ('ba_section_footer', 'More real-customer transformations coming — tag @glameye on Instagram to be featured.');
