@@ -59,6 +59,17 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
 
 <div class="admin-card">
   <h3>🛒 <?= $lang === 'zh' ? '结算流程' : 'Checkout' ?></h3>
+  <label style="display:flex;align-items:center;gap:.65rem;cursor:pointer;padding:.5rem 0;border-bottom:1px solid var(--border-soft);">
+    <input type="checkbox" data-key="require_email_verification" data-bool="1" />
+    <span>
+      <strong><?= $lang === 'zh' ? '注册必须验证邮箱才能登录' : 'Require email verification before sign-in' ?></strong>
+      <small style="display:block;color:var(--text-muted);font-weight:400;margin-top:.15rem;">
+        <?= $lang === 'zh'
+            ? '客户注册后会收到验证邮件,必须点链接才能登录。已注册的老用户自动算已验证(避免锁出现有客户)。'
+            : 'New signups receive a verification email; must click the link before they can sign in. Existing users are auto-verified to avoid lockout.' ?>
+      </small>
+    </span>
+  </label>
   <label style="display:flex;align-items:center;gap:.65rem;cursor:pointer;padding:.5rem 0;">
     <input type="checkbox" data-key="require_login_for_checkout" data-bool="1" />
     <span>
@@ -827,6 +838,27 @@ charge.refunded</div>
       </label>
     </div>
 
+    <details style="margin-bottom:.75rem;padding:.6rem .85rem;background:var(--bg-soft);border-radius:6px;font-size:.85rem;">
+      <summary style="cursor:pointer;color:var(--gold);"><?= $lang === 'zh' ? '📘 Gmail Workspace SMTP 配置指引(info@glameyeshop.com)' : '📘 Gmail Workspace SMTP setup guide' ?></summary>
+      <div style="margin-top:.75rem;line-height:1.7;color:var(--text);">
+        <p><strong>1.</strong> 给 <code>info@glameyeshop.com</code> 启用 <strong>两步验证</strong>:
+          <a href="https://myaccount.google.com/security" target="_blank" rel="noopener" style="color:var(--gold)">myaccount.google.com/security</a></p>
+        <p><strong>2.</strong> 生成 <strong>App Password</strong>(应用专用密码):
+          <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener" style="color:var(--gold)">myaccount.google.com/apppasswords</a>
+          → 选 "Mail" + "Other (GlamEye)" → 复制 16 位密码(去掉空格)</p>
+        <p><strong>3.</strong> 在下面 4 个字段填:</p>
+        <ul style="padding-left:1.25rem;">
+          <li>SMTP host: <code>smtp.gmail.com</code></li>
+          <li>Port: <code>587</code></li>
+          <li>SMTP user: <code>info@glameyeshop.com</code></li>
+          <li>SMTP password: 那个 16 位 App Password(不是你登录 Gmail 用的主密码)</li>
+          <li>Encryption: <code>STARTTLS (port 587)</code></li>
+        </ul>
+        <p><strong>4.</strong> 上方 <strong>Email from address</strong> 填 <code>info@glameyeshop.com</code>,<strong>From name</strong> 填 <code>GlamEye</code>。</p>
+        <p><strong>5.</strong> 保存设置 → 点 📤 发送测试邮件 → 收到说明配置成功。</p>
+        <p class="muted" style="margin-top:.5rem;"><strong>⚠️ 重要:</strong> 必须用 App Password,Gmail 不允许用普通密码做 SMTP 认证(Less Secure Apps 已废弃)。如果用 Resend 更省事(无需 2FA / App Password,只填 API key),Resend 优先级高于 SMTP。</p>
+      </div>
+    </details>
     <p class="muted small">SMTP relay (fallback,如果 Resend 没配):</p>
     <div class="form-row">
       <label><span class="label-text">SMTP host</span>

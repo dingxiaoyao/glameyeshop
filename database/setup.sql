@@ -1347,3 +1347,19 @@ INSERT IGNORE INTO before_after_pairs (id, before_image_url, before_label, after
 INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
   ('ba_section_subtitle', 'What 18mm of premium mink does to your eyes — no filter, no retouching.'),
   ('ba_section_footer', 'More real-customer transformations coming — tag @glameye on Instagram to be featured.');
+
+
+-- ============================================================
+-- 强制邮箱验证开关 + 给老用户自动豁免
+-- ============================================================
+-- 默认开启(新用户必须验证才能登录)
+INSERT IGNORE INTO site_settings (`key`, `value`) VALUES ('require_email_verification', '1');
+
+-- 一次性迁移:给所有「比这个 SQL 文件先存在的用户」自动设为已验证,
+-- 避免上线邮箱验证开关后,现有客户突然登不进
+-- 用 sentinel 标记,只跑一次
+INSERT IGNORE INTO site_settings (`key`, `value`) VALUES ('email_verify_grandfather_done', '0');
+UPDATE users SET email_verified = 1
+WHERE email_verified = 0
+  AND (SELECT `value` FROM site_settings WHERE `key`='email_verify_grandfather_done' LIMIT 1) = '0';
+UPDATE site_settings SET `value`='1' WHERE `key`='email_verify_grandfather_done';

@@ -129,6 +129,28 @@
           fb.className = 'form-feedback success';
           const redirect = new URLSearchParams(location.search).get('redirect') || '/account.html';
           setTimeout(() => window.location.href = redirect, 600);
+        } else if (j.code === 'EMAIL_NOT_VERIFIED') {
+          // 未验证邮箱 — 显示重发链接
+          fb.innerHTML = '⚠ ' + (j.error || 'Email not verified yet.') +
+            '<br><a href="#" id="resend-verify-link" style="color:var(--gold);text-decoration:underline;">Resend verification email</a>';
+          fb.className = 'form-feedback error';
+          document.getElementById('resend-verify-link').addEventListener('click', async (ev) => {
+            ev.preventDefault();
+            ev.target.textContent = 'Sending…';
+            try {
+              const rr = await fetch('api/auth.php?action=resend-verify', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: j.email || data.email }),
+              });
+              const jj = await rr.json();
+              ev.target.textContent = jj.success ? '✓ Sent — check your inbox' : '✗ ' + (jj.error || 'Failed');
+              ev.target.style.color = jj.success ? 'var(--success,#2c9)' : 'var(--error)';
+            } catch (e) {
+              ev.target.textContent = '✗ Network error';
+              ev.target.style.color = 'var(--error)';
+            }
+          });
         } else {
           fb.textContent = j.error || 'Sign in failed';
           fb.className = 'form-feedback error';

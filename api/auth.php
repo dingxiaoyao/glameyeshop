@@ -139,7 +139,7 @@ function handleLogin(): void {
     rateLimitGuard($bucketIp,   50, 900, 'Too many login attempts from your network. Wait 15 minutes.');
 
     $db = getDb();
-    $stmt = $db->prepare('SELECT id, email, password_hash, first_name FROM users WHERE email = :email LIMIT 1');
+    $stmt = $db->prepare('SELECT id, email, password_hash, first_name, email_verified FROM users WHERE email = :email LIMIT 1');
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch();
 
@@ -149,6 +149,19 @@ function handleLogin(): void {
         rateLimitFail($bucketEmail);
         rateLimitFail($bucketIp);
         sendJson(['error' => 'Invalid email or password'], 401);
+    }
+
+    // 强制邮箱验证:密码正确但还没验证邮箱 → 拒绝 + 引导
+    // 受 site_settings.require_email_verification 开关控制(默认开 = '1')
+    $reqStmt = $db->prepare("SELECT `value` FROM site_settings WHERE `key` = 'require_email_verification' LIMIT 1");
+    $reqStmt->execute();
+    $requireVerify = (int)($reqStmt->fetchColumn() ?: '1');
+    if ($requireVerify === 1 && (int)$user['email_verified'] !== 1) {
+        sendJson([
+            'error' => 'Please verify your email before signing in. Check your inbox for the verification link.',
+            'code'  => 'EMAIL_NOT_VERIFIED',
+            'email' => $user['email'],
+        ], 403);
     }
 
     // 登录成功 — 清掉 email-bucket(同 IP-bucket 不清,防"成功一次刷掉跨账号撞库累积")
