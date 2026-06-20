@@ -113,7 +113,8 @@ function handleSignup(): void {
         $db->prepare(
             'UPDATE users SET email_verify_token = :t, email_verify_expires_at = :exp WHERE id = :id'
         )->execute([':t' => $verifyToken, ':exp' => $verifyExp, ':id' => $uid]);
-        $verifyUrl = siteBaseUrl() . '/api/auth.php?action=verify-email&token=' . urlencode($verifyToken);
+        // 指向 HTML 页面(verify-email.html 内部调 API + 显示友好结果),不直接给用户 raw JSON
+$verifyUrl = siteBaseUrl() . '/verify-email.html?token=' . urlencode($verifyToken);
         $emailSent = (bool)sendAuthEmail($email, $first, 'verify', $verifyUrl);
     } catch (Throwable $e) {
         error_log('[signup] verify email failed: ' . $e->getMessage());
@@ -384,7 +385,7 @@ function handleResendVerify(): void {
         'UPDATE users SET email_verify_token = :t, email_verify_expires_at = :exp WHERE id = :id'
     )->execute([':t' => $token, ':exp' => $expires, ':id' => $u['id']]);
 
-    $verifyUrl = siteBaseUrl() . '/api/auth.php?action=verify-email&token=' . urlencode($token);
+    $verifyUrl = siteBaseUrl() . '/verify-email.html?token=' . urlencode($token);
     sendAuthEmail($u['email'], $u['first_name'] ?? '', 'verify', $verifyUrl);
     rateLimitFail($bucket);
 
