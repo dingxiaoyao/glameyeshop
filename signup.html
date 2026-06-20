@@ -118,10 +118,31 @@
           body: JSON.stringify(data),
         });
         const j = await r.json();
+        if (j.success && j.requires_verification) {
+          // 强制邮箱验证模式 — 不自动登录,显示"去 inbox"卡片
+          const card = document.querySelector('.form-card');
+          if (card) {
+            const safeEmail = String(j.email || '').replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+            card.innerHTML = `
+              <div style="text-align:center;padding:1rem 0;">
+                <div style="font-size:3rem;margin-bottom:1rem;">📧</div>
+                <h2 style="font-family:var(--serif);font-size:1.6rem;margin-bottom:.75rem;color:var(--cream);">Check your inbox</h2>
+                <p style="color:var(--text);line-height:1.7;margin-bottom:1.5rem;">
+                  We've sent a verification link to <strong style="color:var(--gold);">${safeEmail}</strong>.<br>
+                  Click the link to activate your account, then come back to sign in.
+                </p>
+                ${j.email_sent ? '' : '<p style="color:var(--warn,#d49f3a);font-size:.9rem;margin-bottom:1rem;">⚠ The verification email failed to send automatically. Use "Resend verification email" on the sign-in page.</p>'}
+                <p class="muted small" style="margin-bottom:1.5rem;">Didn't receive it? Check your spam folder, or use "Resend verification email" on the login page.</p>
+                <a href="/login.html" class="button button-primary" style="display:inline-block;">Go to sign in →</a>
+              </div>
+            `;
+          }
+          return;
+        }
         if (j.success) {
+          // 没强制验证(toggle 关了):正常跳 account
           fb.textContent = '✨ Welcome! Redirecting…';
           fb.className = 'form-feedback success';
-          // 支持 ?redirect=… 跳回 checkout 等(同 login.html)
           const redirect = new URLSearchParams(location.search).get('redirect') || '/account.html';
           setTimeout(() => window.location.href = redirect, 600);
         } else {

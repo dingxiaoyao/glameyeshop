@@ -106,6 +106,7 @@ function handleSignup(): void {
     }
 
     // P1#9: 自动发送邮箱验证邮件
+    $emailSent = false;
     try {
         $verifyToken = bin2hex(random_bytes(24));
         $verifyExp   = date('Y-m-d H:i:s', time() + 86400 * 2);  // 48h
@@ -113,11 +114,32 @@ function handleSignup(): void {
             'UPDATE users SET email_verify_token = :t, email_verify_expires_at = :exp WHERE id = :id'
         )->execute([':t' => $verifyToken, ':exp' => $verifyExp, ':id' => $uid]);
         $verifyUrl = siteBaseUrl() . '/api/auth.php?action=verify-email&token=' . urlencode($verifyToken);
-        sendAuthEmail($email, $first, 'verify', $verifyUrl);
+        $emailSent = (bool)sendAuthEmail($email, $first, 'verify', $verifyUrl);
     } catch (Throwable $e) {
         error_log('[signup] verify email failed: ' . $e->getMessage());
     }
 
+    // 检查是否强制邮箱验证(默认开)
+    $reqStmt = $db->prepare("SELECT `value` FROM site_settings WHERE `key` = 'require_email_verification' LIMIT 1");
+    $reqStmt->execute();
+    $requireVerify = (int)($reqStmt->fetchColumn() ?: '1');
+
+    if ($requireVerify === 1) {
+        // 强制验证模式:**不自动登录**,引导用户去 inbox
+        // 否则注册 = 自动登录会绕过邮箱验证检查
+        sendJson([
+            'success' => true,
+            'requires_verification' => true,
+            'email' => $email,
+            'first_name' => $first,
+            'email_sent' => $emailSent,
+            'message' => $emailSent
+                ? "Account created. We've sent a verification link to {$email}. Please check your inbox (and spam folder) and click the link to activate your account before signing in."
+                : "Account created, but we couldn't send the verification email automatically. Please use the 'Resend verification email' link on the login page.",
+        ]);
+    }
+
+    // 关闭强制验证模式(不推荐生产用):保留原"注册即登录"行为
     startUserSession();
     $_SESSION['user_id'] = $uid;
     sendJson(['success' => true, 'user' => ['id' => $uid, 'email' => $email, 'first_name' => $first]]);
