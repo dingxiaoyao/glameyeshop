@@ -33,14 +33,20 @@
     </div>
   </header>
   <main class="container account-page">
-    <aside class="account-sidebar">
-      <h3>My Account</h3>
+        <aside class="account-sidebar">
+      <div class="account-avatar-block">
+        <div class="account-avatar" id="user-avatar">G</div>
+        <div class="account-avatar-info">
+          <strong id="user-display">…</strong>
+          <small class="muted" id="user-email">—</small>
+        </div>
+      </div>
       <nav class="account-nav">
-        <a href="account.html">Dashboard</a>
-        <a href="account-orders.html">Order History</a>
-        <a href="account-wishlist.html" class="active">Wishlist</a>
-        <a href="account-settings.html">Settings</a>
-        <a href="#" id="sidebar-logout">Sign Out</a>
+        <a href="account.html"><span class="account-nav-icon">📊</span> Dashboard</a>
+        <a href="account-orders.html"><span class="account-nav-icon">📦</span> Order History</a>
+        <a href="account-wishlist.html" class="active"><span class="account-nav-icon">❤</span> Wishlist</a>
+        <a href="account-settings.html"><span class="account-nav-icon">⚙</span> Settings</a>
+        <a href="#" id="sidebar-logout" class="account-nav-logout"><span class="account-nav-icon">↪</span> Sign Out</a>
       </nav>
     </aside>
     <section class="account-content">
@@ -102,7 +108,19 @@
         container.innerHTML = '<p style="color:var(--error)">Failed to load wishlist.</p>';
       }
     })();
-    document.getElementById('sidebar-logout').addEventListener('click', (e) => { e.preventDefault(); window.GlamEye.Auth.logout(); });
+    document.getElementById('sidebar-logout').addEventListener('click', (e) => { e.preventDefault();
+    // 注入 sidebar 用户信息(头像 + 名 + 邮箱)
+    (async () => {
+      try {
+        const u = await window.GlamEye.Auth.fetchMe();
+        if (!u) return;
+        const name = u.first_name || (u.email || '').split('@')[0] || 'G';
+        const d = document.getElementById('user-display'); if (d) d.textContent = name;
+        const em = document.getElementById('user-email'); if (em) em.textContent = u.email || '';
+        const av = document.getElementById('user-avatar'); if (av) av.textContent = (name[0] || 'G').toUpperCase();
+      } catch (e) {}
+    })();
+ window.GlamEye.Auth.logout(); });
   </script>
 </body>
 </html>

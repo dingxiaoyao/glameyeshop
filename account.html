@@ -40,38 +40,81 @@
 
   <main class="container account-page">
     <aside class="account-sidebar">
-      <h3>My Account</h3>
+      <div class="account-avatar-block">
+        <div class="account-avatar" id="user-avatar">G</div>
+        <div class="account-avatar-info">
+          <strong id="user-display">…</strong>
+          <small class="muted" id="user-email">—</small>
+        </div>
+      </div>
       <nav class="account-nav">
-        <a href="account.html" class="active">Dashboard</a>
-        <a href="account-orders.html">Order History</a>
-        <a href="account-wishlist.html">Wishlist</a>
-        <a href="account-settings.html">Settings</a>
-        <a href="#" id="sidebar-logout">Sign Out</a>
+        <a href="account.html" class="active"><span class="account-nav-icon">📊</span> Dashboard</a>
+        <a href="account-orders.html"><span class="account-nav-icon">📦</span> Order History</a>
+        <a href="account-wishlist.html"><span class="account-nav-icon">❤</span> Wishlist</a>
+        <a href="account-settings.html"><span class="account-nav-icon">⚙</span> Settings</a>
+        <a href="#" id="sidebar-logout" class="account-nav-logout"><span class="account-nav-icon">↪</span> Sign Out</a>
       </nav>
     </aside>
     <section class="account-content" id="dashboard">
-      <h1>Welcome back, <span id="user-name">…</span></h1>
-      <p class="muted">Manage your orders, wishlist, and account settings.</p>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0;">
-        <a href="account-orders.html" class="cat-card" style="aspect-ratio: auto; padding: 1.5rem; text-decoration:none;">
-          <div>
-            <h3 style="font-size:1.25rem;">📦 Orders</h3>
-            <p class="muted small">Track and manage your orders</p>
-          </div>
+
+      <!-- Hero — 渐变背景 + 欢迎语 + 装饰 -->
+      <div class="account-hero">
+        <div class="account-hero-text">
+          <span class="account-hero-eyebrow">Member</span>
+          <h1>Welcome back, <span id="user-name">…</span></h1>
+          <p>Track your orders, manage your wishlist, and update your profile — all in one place.</p>
+        </div>
+        <div class="account-hero-decoration" aria-hidden="true">✨</div>
+      </div>
+
+      <!-- Stats 3 卡 -->
+      <div class="account-stats">
+        <div class="account-stat-card">
+          <div class="account-stat-label">Total Orders</div>
+          <div class="account-stat-value" id="stat-orders">—</div>
+          <a href="account-orders.html" class="account-stat-link">View history →</a>
+        </div>
+        <div class="account-stat-card">
+          <div class="account-stat-label">Total Spent</div>
+          <div class="account-stat-value" id="stat-spent">—</div>
+          <div class="account-stat-link" id="stat-active">— active</div>
+        </div>
+        <div class="account-stat-card">
+          <div class="account-stat-label">Wishlist Items</div>
+          <div class="account-stat-value" id="stat-wishlist">—</div>
+          <a href="account-wishlist.html" class="account-stat-link">Manage →</a>
+        </div>
+      </div>
+
+      <!-- 快速操作卡片 -->
+      <h2 class="account-section-title">Quick actions</h2>
+      <div class="account-actions">
+        <a href="account-orders.html" class="account-action-card">
+          <div class="account-action-icon">📦</div>
+          <h3>Orders</h3>
+          <p>Track shipments and view past purchases</p>
         </a>
-        <a href="account-wishlist.html" class="cat-card" style="aspect-ratio: auto; padding: 1.5rem; text-decoration:none;">
-          <div>
-            <h3 style="font-size:1.25rem;">❤ Wishlist</h3>
-            <p class="muted small">Save items for later</p>
-          </div>
+        <a href="account-wishlist.html" class="account-action-card">
+          <div class="account-action-icon">❤</div>
+          <h3>Wishlist</h3>
+          <p>Items you've saved for later</p>
         </a>
-        <a href="account-settings.html" class="cat-card" style="aspect-ratio: auto; padding: 1.5rem; text-decoration:none;">
-          <div>
-            <h3 style="font-size:1.25rem;">⚙ Settings</h3>
-            <p class="muted small">Profile and password</p>
-          </div>
+        <a href="account-settings.html" class="account-action-card">
+          <div class="account-action-icon">⚙</div>
+          <h3>Settings</h3>
+          <p>Profile, password, address book</p>
         </a>
       </div>
+
+      <!-- 广告位 banner — admin 可管理 -->
+      <a class="account-banner" id="account-banner" href="#" hidden>
+        <div class="account-banner-image" id="ab-image"></div>
+        <div class="account-banner-body">
+          <div class="account-banner-title" id="ab-title"></div>
+          <div class="account-banner-subtitle" id="ab-sub"></div>
+          <span class="account-banner-cta" id="ab-cta"></span>
+        </div>
+      </a>
     </section>
   </main>
 
@@ -80,7 +123,41 @@
     (async () => {
       const u = await window.GlamEye.Auth.fetchMe();
       if (!u) { window.location.href = '/login.html'; return; }
-      document.getElementById('user-name').textContent = u.first_name || u.email;
+      const name = u.first_name || (u.email || '').split('@')[0];
+      document.getElementById('user-name').textContent = name;
+      document.getElementById('user-display').textContent = name;
+      document.getElementById('user-email').textContent = u.email || '';
+      const av = document.getElementById('user-avatar');
+      av.textContent = (name[0] || 'G').toUpperCase();
+
+      // 拉 stats + banner
+      try {
+        const r = await fetch('api/account-banner.php?t=' + Date.now(), { credentials: 'include' });
+        const j = await r.json();
+        // Stats
+        if (j.stats) {
+          document.getElementById('stat-orders').textContent = j.stats.orders_count;
+          document.getElementById('stat-spent').textContent = '$' + Number(j.stats.total_spent || 0).toFixed(2);
+          document.getElementById('stat-wishlist').textContent = j.stats.wishlist_count;
+          const active = j.stats.active_orders;
+          document.getElementById('stat-active').textContent = active > 0
+            ? `${active} active order${active > 1 ? 's' : ''}`
+            : 'All complete';
+        }
+        // Banner
+        if (j.banner && j.banner.image_url) {
+          const b = j.banner;
+          const ab = document.getElementById('account-banner');
+          ab.hidden = false;
+          ab.href = b.cta_url || '#';
+          document.getElementById('ab-image').style.backgroundImage = `url('${b.image_url.replace(/'/g, "\\'")}')`;
+          document.getElementById('ab-title').textContent = b.title || '';
+          document.getElementById('ab-sub').textContent = b.subtitle || '';
+          const cta = document.getElementById('ab-cta');
+          cta.textContent = b.cta_text || '';
+          cta.hidden = !b.cta_text;
+        }
+      } catch (e) { /* 降级:无 stats / 无 banner,UI 不挂 */ }
     })();
     document.getElementById('logout-link').addEventListener('click', (e) => { e.preventDefault(); window.GlamEye.Auth.logout(); });
     document.getElementById('sidebar-logout').addEventListener('click', (e) => { e.preventDefault(); window.GlamEye.Auth.logout(); });
