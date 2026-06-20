@@ -13,6 +13,7 @@ const PUBLIC_SETTING_KEYS = [
     'require_login_for_checkout',  // checkout 客户端守门用
     'enabled_countries', 'shipping_zones',  // 国际下单
     'ga_measurement_id', 'ga_anonymize_ip',  // Google Analytics 4(measurement_id 是公开的)
+    'google_ads_conversion_id', 'google_ads_conversion_label',  // Google Ads 转化(都是公开的)
 ];
 
 // Internal keys used to derive boolean "enabled" flags (not exposed)

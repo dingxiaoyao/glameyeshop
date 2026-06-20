@@ -1363,3 +1363,8 @@ UPDATE users SET email_verified = 1
 WHERE email_verified = 0
   AND (SELECT `value` FROM site_settings WHERE `key`='email_verify_grandfather_done' LIMIT 1) = '0';
 UPDATE site_settings SET `value`='1' WHERE `key`='email_verify_grandfather_done';
+
+-- Google Ads 转化追踪默认 row(空值,admin 在 settings 里填)
+INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
+  ('google_ads_conversion_id', ''),
+  ('google_ads_conversion_label', '');

@@ -57,6 +57,60 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   </label>
 </div>
 
+<!-- Google Ads 转化追踪 -->
+<div class="admin-card">
+  <h3>🎯 <?= $lang === 'zh' ? 'Google Ads 转化追踪' : 'Google Ads Conversion Tracking' ?></h3>
+  <p class="muted small" style="margin-bottom:.75rem;">
+    <?= $lang === 'zh'
+        ? '追踪广告带来的真实购买。客户在 order-success 页(支付成功后)自动触发 conversion 事件,带订单金额、币种、order_id 给 Google Ads,用于 Smart Bidding / ROAS 优化。<br><strong>跳过 test 订单</strong> — 测试账号付款不算转化。'
+        : 'Track real purchases from ad clicks. When a customer hits order-success page (after Stripe paid), we auto-fire conversion event with amount/currency/order_id to Google Ads — used for Smart Bidding / ROAS optimization.<br><strong>Test orders are skipped.</strong>' ?>
+  </p>
+
+  <details style="margin-bottom:.75rem;padding:.6rem .85rem;background:var(--bg-soft);border-radius:6px;font-size:.85rem;">
+    <summary style="cursor:pointer;color:var(--gold);"><?= $lang === 'zh' ? '📘 怎么获取 Conversion ID + Label' : '📘 How to get Conversion ID + Label' ?></summary>
+    <div style="margin-top:.75rem;line-height:1.7;color:var(--text);">
+      <p><strong>1.</strong> 注册 / 登录 <a href="https://ads.google.com" target="_blank" rel="noopener" style="color:var(--gold)">ads.google.com</a></p>
+      <p><strong>2.</strong> 顶部菜单 <strong>Tools → Conversions → + New conversion action</strong></p>
+      <p><strong>3.</strong> 选 <strong>Website</strong> → 输入 <code>glameyeshop.com</code> → Scan</p>
+      <p><strong>4.</strong> 选 <strong>Create conversions manually using code</strong></p>
+      <p><strong>5.</strong> 配置(关键设置):</p>
+      <ul style="padding-left:1.5rem;">
+        <li>Goal: <strong>Purchase</strong>(优化目标 = 实际成交)</li>
+        <li>Conversion name: <code>GlamEye Purchase</code></li>
+        <li>Value: <strong>Use different values for each conversion</strong>(用每单实际金额)</li>
+        <li>Count: <strong>Every</strong>(同一个 user 多次购买都算)</li>
+        <li>Click-through window: <strong>30 days</strong>(推荐)</li>
+        <li>View-through window: <strong>1 day</strong>(看了广告但未点击,1 天内购买也算)</li>
+        <li>Attribution model: <strong>Data-driven</strong>(Google 自动算)</li>
+      </ul>
+      <p><strong>6.</strong> 创建后 Google 会给你看 install code,类似:</p>
+      <pre style="background:var(--bg);padding:.6rem;border-radius:4px;font-size:.75rem;overflow:auto;">gtag('event', 'conversion', {
+  'send_to': 'AW-1234567890/abcdEFGH123',
+  'value': 1.0,
+  'currency': 'USD',
+  'transaction_id': ''
+});</pre>
+      <p>看 <code>'send_to': 'AW-XXXXXXXXX<strong>/abcDEF...</strong>'</code> 这一行 — <strong>斜杠前</strong>是 Conversion ID(<code>AW-1234567890</code>),<strong>斜杠后</strong>是 Conversion Label(<code>abcdEFGH123</code>)。分别填到下面 2 个字段。</p>
+      <p><strong>7.</strong> 保存。下次有真实购买就会自动上报。</p>
+      <p class="muted" style="margin-top:.5rem;"><strong>验证:</strong>下完一个真单后,去 Google Ads → Tools → Conversions → 看你的 GlamEye Purchase 状态会变成 <strong>Recording conversions</strong>(可能延迟 3-12 小时统计)。</p>
+    </div>
+  </details>
+
+  <div class="form-row">
+    <label><span class="label-text">Conversion ID (AW-…)</span>
+      <input type="text" data-key="google_ads_conversion_id" placeholder="AW-1234567890" pattern="AW-[0-9]+" style="font-family:monospace;" />
+    </label>
+    <label><span class="label-text">Conversion Label</span>
+      <input type="text" data-key="google_ads_conversion_label" placeholder="abcdEFGH123" style="font-family:monospace;" />
+    </label>
+  </div>
+  <p class="muted small" style="margin-top:.5rem;">
+    <?= $lang === 'zh'
+        ? '两个都填后,客户支付成功页自动报 conversion + GA4 purchase 事件。任一为空则跳过。'
+        : 'Both required. When set, conversion fires automatically on order-success after Stripe payment. Empty = disabled.' ?>
+  </p>
+</div>
+
 <div class="admin-card">
   <h3>🛒 <?= $lang === 'zh' ? '结算流程' : 'Checkout' ?></h3>
   <label style="display:flex;align-items:center;gap:.65rem;cursor:pointer;padding:.5rem 0;border-bottom:1px solid var(--border-soft);">

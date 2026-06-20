@@ -109,8 +109,59 @@
             const r2 = await fetch('api/order-status.php?' + qs);
             const j2 = await r2.json();
             if (j2.order) render(j2.order);
+            return j;
           }
         } catch (e) { /* 静默 — 用户刷新页面也会重试 */ }
+        return null;
+      }
+
+      // ============ Google Ads Conversion + GA4 Purchase ============
+      // 只对真实成交触发,test 订单跳过,且每个 order_id 只触发 1 次(防刷新重报)
+      async function fireConversion(o) {
+        if (params.get('test') === '1') return;  // test 订单不上报
+        if (!o || !['paid','processing','shipped','delivered'].includes(o.status)) return;
+        const firedKey = 'glameye_conv_fired_' + o.id;
+        if (localStorage.getItem(firedKey)) return;  // 已上报过
+
+        // 1) GA4 ecommerce purchase 事件(用现有 G-XXX 配置)
+        try {
+          if (typeof gtag === 'function') {
+            gtag('event', 'purchase', {
+              transaction_id: String(o.id),
+              value: Number(o.amount),
+              currency: o.currency || 'USD',
+              tax: Number(o.tax || 0),
+              shipping: Number(o.shipping || 0),
+              items: (o.items || []).map((it, i) => ({
+                item_id: it.sku || it.product_id || ('item-' + i),
+                item_name: it.product_name,
+                price: Number(it.unit_price || it.line_total / (it.quantity || 1)),
+                quantity: Number(it.quantity || 1),
+              })),
+            });
+          }
+        } catch (e) { /* GA 没配也不挂 */ }
+
+        // 2) Google Ads conversion(如果 admin 配了 ID + Label)
+        try {
+          const s = await fetch('api/settings.php').then(r => r.json()).catch(() => null);
+          const cid = s && s.google_ads_conversion_id;
+          const lbl = s && s.google_ads_conversion_label;
+          if (cid && lbl && typeof gtag === 'function') {
+            // 动态加载 AW config(如果还没加),然后 fire conversion
+            // 注:GA4 gtag.js 同一个 lib,只需多 config 一次
+            gtag('config', cid);
+            gtag('event', 'conversion', {
+              send_to: cid + '/' + lbl,
+              value: Number(o.amount),
+              currency: o.currency || 'USD',
+              transaction_id: String(o.id),
+            });
+            console.log('[GlamEye] Google Ads conversion fired', { value: o.amount, txn: o.id });
+          }
+        } catch (e) { /* Settings 拉不到,静默 */ }
+
+        localStorage.setItem(firedKey, Date.now().toString());
       }
 
       fetch('api/order-status.php?' + qs)
@@ -118,8 +169,17 @@
         .then((j) => {
           if (j.error) { target.innerHTML = `<p>Could not load order: ${j.error}</p>`; return; }
           const isPending = render(j.order);
+          fireConversion(j.order);  // 立刻 try 上报(pending 状态不报)
           // 如果还是 pending,1.5s 后调兜底同步(给 webhook 一点时间先到)
-          if (isPending) setTimeout(syncFromStripe, 1500);
+          if (isPending) setTimeout(() => {
+            syncFromStripe().then(() => {
+              // 同步完后再次拉最新状态 + 重试上报
+              fetch('api/order-status.php?' + qs)
+                .then(r => r.json())
+                .then(j2 => { if (j2.order) fireConversion(j2.order); })
+                .catch(() => {});
+            });
+          }, 1500);
         })
         .catch((e) => { target.innerHTML = `<p>Failed to load: ${e.message}</p>`; });
     })();
