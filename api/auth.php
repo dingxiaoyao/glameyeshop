@@ -343,7 +343,7 @@ function handleVerifyEmail(): void {
 
     $db = getDb();
     $stmt = $db->prepare(
-        'SELECT id, email, email_verified, email_verify_expires_at
+        'SELECT id, email, first_name, email_verified, email_verify_expires_at
          FROM users WHERE email_verify_token = :t LIMIT 1'
     );
     $stmt->execute([':t' => $token]);
@@ -351,7 +351,17 @@ function handleVerifyEmail(): void {
     if (!$user) sendJson(['error' => 'Verification link is invalid or already used'], 400);
 
     if (intval($user['email_verified']) === 1) {
-        sendJson(['success' => true, 'already' => true, 'message' => 'Email was already verified.']);
+        // 已验证过 — 也顺手建 session(用户点旧邮件链接进来,直接登进)
+        startUserSession();
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = (int)$user['id'];
+        sendJson([
+            'success' => true,
+            'already' => true,
+            'signed_in' => true,
+            'message' => 'Email was already verified. Signing you in…',
+            'user' => ['id' => (int)$user['id'], 'email' => $user['email'], 'first_name' => $user['first_name']],
+        ]);
     }
     if ($user['email_verify_expires_at'] && strtotime($user['email_verify_expires_at']) < time()) {
         sendJson(['error' => 'Verification link has expired. Please request a new one.', 'expired' => true], 400);
@@ -362,7 +372,17 @@ function handleVerifyEmail(): void {
          WHERE id = :id'
     )->execute([':id' => $user['id']]);
 
-    sendJson(['success' => true, 'message' => 'Email verified! You can close this tab.']);
+    // 验证成功 → 自动建立 session(用户体验:不必再手动登录)
+    startUserSession();
+    session_regenerate_id(true);
+    $_SESSION['user_id'] = (int)$user['id'];
+
+    sendJson([
+        'success' => true,
+        'signed_in' => true,
+        'message' => 'Email verified! Signing you in…',
+        'user' => ['id' => (int)$user['id'], 'email' => $user['email'], 'first_name' => $user['first_name']],
+    ]);
 }
 
 /**

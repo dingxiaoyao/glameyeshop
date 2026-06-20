@@ -60,14 +60,40 @@
         return;
       }
 
-      fetch('/api/auth.php?action=verify-email&token=' + encodeURIComponent(token))
+      // credentials:'include' 让 session cookie 一起设置上(后端建 session)
+      fetch('/api/auth.php?action=verify-email&token=' + encodeURIComponent(token), {
+        credentials: 'include',
+      })
         .then(r => r.json())
         .then(j => {
           if (j.success) {
             emoji.textContent = '✓';
             title.textContent = j.already ? 'Already verified' : 'Email verified!';
-            msg.textContent = j.message || 'Thanks — your account is fully set up.';
-            actions.hidden = false;
+            // 自动登录情况下:文案 + 自动跳转
+            if (j.signed_in) {
+              const name = (j.user && j.user.first_name) ? j.user.first_name : '';
+              msg.innerHTML = (name ? 'Welcome, <strong style="color:var(--gold)">' + name.replace(/[<>&]/g, '') + '</strong>! ' : '')
+                + 'You\'re signed in. Redirecting to your account in <span id="cd">3</span>s…';
+              actions.hidden = false;
+              // 倒计时 + 跳转 — 用户也可以立刻点 "Continue →" 按钮跳
+              const redirect = new URLSearchParams(location.search).get('redirect') || '/account.html';
+              let cd = 3;
+              const cdEl = document.getElementById('cd');
+              const tick = setInterval(() => {
+                cd--;
+                if (cdEl) cdEl.textContent = cd;
+                if (cd <= 0) { clearInterval(tick); window.location.href = redirect; }
+              }, 1000);
+              // 顺手改"Continue"按钮文案为 "Go now"
+              const btn = actions.querySelector('a.button');
+              if (btn) {
+                btn.textContent = 'Go to my account now →';
+                btn.href = redirect;
+              }
+            } else {
+              msg.textContent = j.message || 'Thanks — your account is fully set up.';
+              actions.hidden = false;
+            }
           } else {
             emoji.textContent = '✗';
             title.textContent = 'Verification failed';
