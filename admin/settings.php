@@ -44,6 +44,15 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   <label><span class="label-text">Measurement ID (G-…)</span>
     <input type="text" data-key="ga_measurement_id" placeholder="G-XXXXXXXXXX" pattern="G-[A-Z0-9]+" style="font-family:monospace;" />
   </label>
+  <label style="margin-top:.75rem;">
+    <span class="label-text">GA4 API Secret <small style="color:var(--warn)">— 用于服务器端 fire 测试事件,绕开浏览器拦截</small></span>
+    <input type="password" data-key="ga4_api_secret" autocomplete="new-password" placeholder="留空表示不修改" style="font-family:monospace;" />
+  </label>
+  <p class="muted small" style="margin-top:.35rem;line-height:1.6;">
+    <?= $lang === 'zh'
+        ? '获取方式:<a href="https://analytics.google.com" target="_blank" style="color:var(--gold)">GA4 后台</a> → 管理 → 数据流 → 选 glameyeshop.com → Measurement Protocol API secrets → 创建 → 复制 secret 值。<br>用途:admin/ads-test.php 的「服务器端触发」按钮用这个 secret 直接打 GA4 API,完全绕过浏览器和广告拦截。'
+        : 'Get it: GA4 → Admin → Data streams → glameyeshop.com → Measurement Protocol API secrets → Create → copy secret. Used by admin/ads-test.php server-side trigger to bypass browser ad-blockers.' ?>
+  </p>
   <label style="display:flex;align-items:center;gap:.65rem;cursor:pointer;padding:.5rem 0;margin-top:.5rem;">
     <input type="checkbox" data-key="ga_anonymize_ip" data-bool="1" />
     <span>

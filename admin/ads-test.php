@@ -103,9 +103,19 @@ $lbl   = $cfg['google_ads_conversion_label'] ?? '';
     </label>
   </div>
 
-  <button id="fire-btn" class="button button-primary" style="background:var(--success,#2c9);border-color:var(--success,#2c9);font-size:1rem;padding:.75rem 1.5rem;">
-    🚀 <?= $lang === 'zh' ? 'Fire 一次假转化事件' : 'Fire one test conversion now' ?>
-  </button>
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+    <button id="fire-btn" class="button button-primary" style="background:var(--success,#2c9);border-color:var(--success,#2c9);font-size:1rem;padding:.75rem 1.5rem;">
+      🚀 <?= $lang === 'zh' ? '浏览器触发(gtag.js)' : 'Browser fire (gtag.js)' ?>
+    </button>
+    <button id="fire-server-btn" class="button button-primary" style="background:var(--gold);border-color:var(--gold);font-size:1rem;padding:.75rem 1.5rem;">
+      ⚡ <?= $lang === 'zh' ? '服务器端触发(推荐 — 绕广告拦截)' : 'Server-side fire (recommended — bypass ad-blockers)' ?>
+    </button>
+  </div>
+  <p class="muted small" style="margin-top:.5rem;line-height:1.7;">
+    <strong>⚡ 服务器端</strong>:用 GA4 Measurement Protocol 直接 POST 到 google-analytics.com,
+    不依赖浏览器,广告拦截 / Tag Assistant 不工作 / GDPR cookie 拒绝 都不影响。
+    <strong>需要先在站点设置填 GA4 API Secret</strong>。
+  </p>
 
   <div id="fire-result" style="margin-top:1.5rem;display:none;background:var(--bg);padding:1rem;border-radius:6px;border:1px solid var(--border-soft);">
     <h4 style="margin:0 0 .5rem;color:var(--success,#2c9)">✓ <?= $lang === 'zh' ? '事件已发送' : 'Events fired' ?></h4>
@@ -164,6 +174,51 @@ document.getElementById('fire-btn').addEventListener('click', () => {
 
   // 自动改下次的 test id 避免重复
   document.getElementById('tst-id').value = 'TEST_' + Date.now();
+});
+
+// 服务器端触发(Measurement Protocol)
+document.getElementById('fire-server-btn').addEventListener('click', async () => {
+  const id    = document.getElementById('tst-id').value;
+  const value = parseFloat(document.getElementById('tst-value').value) || 99;
+  const sku   = document.getElementById('tst-sku').value || 'TEST-SKU';
+  const btn = document.getElementById('fire-server-btn');
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Sending…'; btn.disabled = true;
+
+  let r, txt = '', j = null;
+  try {
+    r = await fetch('../api/admin-ads-trigger.php', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transaction_id: id, value, sku }),
+    });
+    txt = await r.text();
+    j = JSON.parse(txt);
+  } catch (e) {
+    document.getElementById('fire-log').textContent = '✗ Network error: ' + e.message;
+    document.getElementById('fire-result').style.display = 'block';
+    btn.textContent = orig; btn.disabled = false;
+    return;
+  }
+
+  let out = '[SERVER] POST /api/admin-ads-trigger.php\n';
+  if (j.error) {
+    out += '\n✗ ' + j.error;
+    if (j.hint) out += '\n💡 ' + j.hint;
+  } else {
+    out += '\n✓ HTTP ' + j.http_code + '(GA4 接受 = 204 是正常的)\n';
+    out += '✓ Measurement ID: ' + j.ga_id + '\n';
+    out += '✓ Client ID: ' + j.client_id + '\n';
+    out += '✓ Transaction: ' + j.transaction_id + ' · $' + j.value + ' · ' + j.sku + '\n';
+    out += '\n[GA4 验证]\n';
+    out += JSON.stringify(j.debug, null, 2) + '\n';
+    out += '\n[下一步]\n';
+    out += Object.entries(j.next_steps).map(([k, v]) => '• ' + k + ': ' + v).join('\n');
+  }
+  document.getElementById('fire-log').textContent = out;
+  document.getElementById('fire-result').style.display = 'block';
+  document.getElementById('tst-id').value = 'TEST_' + Date.now();
+  btn.textContent = orig; btn.disabled = false;
 });
 </script>
 

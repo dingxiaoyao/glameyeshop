@@ -1368,3 +1368,6 @@ UPDATE site_settings SET `value`='1' WHERE `key`='email_verify_grandfather_done'
 INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
   ('google_ads_conversion_id', ''),
   ('google_ads_conversion_label', '');
+
+-- GA4 Measurement Protocol API Secret(用于 admin/ads-test.php 服务器端触发)
+INSERT IGNORE INTO site_settings (`key`, `value`) VALUES ('ga4_api_secret', '');
