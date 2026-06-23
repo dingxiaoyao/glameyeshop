@@ -1314,10 +1314,10 @@ INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 
 -- ============================================================
 -- 配置 GA Measurement ID(deploy.yml 部署时读这个 ID 注入 HTML)
--- 改 ID:改下方的 'G-0LESHNQ1LG' + push;或者 admin/settings 直接改 + push 空 commit
+-- 改 ID:改下方的 'G-1NVFCWQ0KL' + push;或者 admin/settings 直接改 + push 空 commit
 -- ============================================================
-INSERT INTO site_settings (`key`, `value`) VALUES ('ga_measurement_id', 'G-0LESHNQ1LG')
-ON DUPLICATE KEY UPDATE `value` = 'G-0LESHNQ1LG';
+INSERT INTO site_settings (`key`, `value`) VALUES ('ga_measurement_id', 'G-1NVFCWQ0KL')
+ON DUPLICATE KEY UPDATE `value` = 'G-1NVFCWQ0KL';
 
 
 -- ============================================================
