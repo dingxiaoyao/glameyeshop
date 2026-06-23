@@ -61,6 +61,7 @@ $activeNav  = $activeNav  ?? 'dashboard';
         <a href="ugc.php"       class="<?= $activeNav === 'ugc' ? 'active' : '' ?>">📸 <?= $lang === 'zh' ? '用户晒图' : 'UGC Wall' ?></a>
         <a href="before-after.php" class="<?= $activeNav === 'before-after' ? 'active' : '' ?>">🔁 <?= $lang === 'zh' ? '对比图' : 'Before/After' ?></a>
         <a href="account-banner.php" class="<?= $activeNav === 'account-banner' ? 'active' : '' ?>">🖼 <?= $lang === 'zh' ? '账户广告' : 'Account Banner' ?></a>
+        <a href="ads-test.php" class="<?= $activeNav === 'ads-test' ? 'active' : '' ?>">🧪 <?= $lang === 'zh' ? 'Google Ads 测试' : 'Google Ads Test' ?></a>
         <a href="reset-data.php" class="<?= $activeNav === 'reset-data' ? 'active' : '' ?>" style="color:var(--error);">⚠ <?= $lang === 'zh' ? '清空客户数据' : 'Reset Data' ?></a>
         <a href="leads.php"     class="<?= $activeNav === 'leads' ? 'active' : '' ?>">✉️ <?= htmlspecialchars(t('leads')) ?></a>
         <a href="support.php"   class="<?= $activeNav === 'support' ? 'active' : '' ?>" id="nav-support">💬 <?= $lang === 'zh' ? '客户咨询' : 'Support' ?></a>
