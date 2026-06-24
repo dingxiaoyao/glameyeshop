@@ -2058,6 +2058,8 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   -webkit-tap-highlight-color: transparent;
 }
 .oauth-btn svg { flex-shrink: 0; }
+/* 相邻 OAuth 按钮之间的纵向间距(兼容容器 display:block 时 gap 失效)*/
+.oauth-btn + .oauth-btn { margin-top: .85rem; }
 
 /* Google 官方品牌按钮(白底 + 1px 灰边 + 深灰文字) */
 .oauth-btn-google {
