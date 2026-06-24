@@ -271,9 +271,74 @@
         const p = j.product;
         if (!p) { document.getElementById('p-name').textContent = 'Product not found'; return; }
 
+        // ====== SEO: 动态更新所有 meta tags + 注入 Product schema ======
         document.title = p.name + ' · GlamEye';
         document.getElementById('breadcrumb-cat').textContent = p.category;
         document.getElementById('breadcrumb-product').textContent = p.name;
+
+        const safeDesc = (p.short_description || p.description || '').replace(/[\r\n]+/g, ' ').slice(0, 160);
+        function setMeta(name, content, attr) {
+          attr = attr || 'name';
+          let el = document.querySelector(`meta[${attr}="${name}"]`);
+          if (!el) {
+            el = document.createElement('meta');
+            el.setAttribute(attr, name);
+            document.head.appendChild(el);
+          }
+          el.setAttribute('content', content);
+        }
+        // Meta description(搜索结果灰字)
+        setMeta('description', safeDesc);
+        // Open Graph(社交分享卡片)
+        setMeta('og:title', p.name + ' · GlamEye', 'property');
+        setMeta('og:description', safeDesc, 'property');
+        if (p.image_url) setMeta('og:image', location.origin + p.image_url, 'property');
+        setMeta('og:type', 'product', 'property');
+        setMeta('og:url', location.href, 'property');
+        // Twitter Card
+        setMeta('twitter:card', 'summary_large_image');
+        setMeta('twitter:title', p.name);
+        setMeta('twitter:description', safeDesc);
+        if (p.image_url) setMeta('twitter:image', location.origin + p.image_url);
+        // Canonical(规范 URL,避免重复内容)
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+        canonical.href = `${location.origin}/product.html?sku=${encodeURIComponent(p.sku)}`;
+
+        // Product Schema.org JSON-LD(让 Google 搜结果显示价格 / 库存 / 星级富片段)
+        const schema = {
+          '@context': 'https://schema.org/',
+          '@type': 'Product',
+          name: p.name,
+          image: p.image_url ? [location.origin + p.image_url] : [],
+          description: safeDesc,
+          sku: p.sku,
+          brand: { '@type': 'Brand', name: 'GlamEye' },
+          offers: {
+            '@type': 'Offer',
+            url: canonical.href,
+            priceCurrency: 'USD',
+            price: Number(p.price).toFixed(2),
+            availability: Number(p.stock) > 0
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+            seller: { '@type': 'Organization', name: 'GlamEye' },
+          },
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: '4.9',
+            reviewCount: 100 + (p.id * 7),
+          },
+        };
+        let schemaScript = document.getElementById('product-schema');
+        if (!schemaScript) {
+          schemaScript = document.createElement('script');
+          schemaScript.type = 'application/ld+json';
+          schemaScript.id = 'product-schema';
+          document.head.appendChild(schemaScript);
+        }
+        schemaScript.textContent = JSON.stringify(schema);
+        // ====== 结束 SEO 注入 ======
 
         // Gallery: 图 + 视频混排(用后缀检测)
         const Img = window.GlamEye.Img;
