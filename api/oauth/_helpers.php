@@ -121,13 +121,21 @@ function linkOrCreateOAuthUser(string $provider, string $providerId, ?string $em
 }
 
 function httpPost(string $url, array $data, array $headers = []): array {
+    // 用关联数组做 header 唯一化(按 header 名小写去重),避免调用方重复传 Content-Type
+    // 导致 TikTok 网关合并值为 "type, type" 引发 invalid_request。
+    $merged = ['content-type' => 'Content-Type: application/x-www-form-urlencoded'];
+    foreach ($headers as $h) {
+        if (!is_string($h) || strpos($h, ':') === false) continue;
+        $name = strtolower(trim(strstr($h, ':', true)));
+        $merged[$name] = $h;  // 调用方传的覆盖默认
+    }
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
         CURLOPT_POSTFIELDS => http_build_query($data),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => 15,
-        CURLOPT_HTTPHEADER => array_merge(['Content-Type: application/x-www-form-urlencoded'], $headers),
+        CURLOPT_HTTPHEADER => array_values($merged),
     ]);
     $body = curl_exec($ch);
     $err  = curl_error($ch);

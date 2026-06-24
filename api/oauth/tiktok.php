@@ -33,13 +33,16 @@ if (!oauthVerifyState((string)($_GET['state'] ?? ''))) {
 $code = (string)$_GET['code'];
 
 // Exchange code for tokens
+// 注意:httpPost 默认就加了 Content-Type: application/x-www-form-urlencoded,
+// 不要在这里重复传 — 否则 TikTok 网关会把两个同名 header 合并为
+// "application/x-www-form-urlencoded, application/x-www-form-urlencoded" 然后报 invalid_request。
 $tok = httpPost('https://open.tiktokapis.com/v2/oauth/token/', [
     'client_key'    => $clientKey,
     'client_secret' => $clientSecret,
     'code'          => $code,
     'grant_type'    => 'authorization_code',
     'redirect_uri'  => $redirectUri,
-], ['Content-Type: application/x-www-form-urlencoded', 'Cache-Control: no-cache']);
+], ['Cache-Control: no-cache']);
 
 if (empty($tok['access_token']) || empty($tok['open_id'])) {
     error_log('[TikTok OAuth] token exchange failed: ' . json_encode($tok));
