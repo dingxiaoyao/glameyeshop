@@ -43,7 +43,18 @@ $tok = httpPost('https://open.tiktokapis.com/v2/oauth/token/', [
 
 if (empty($tok['access_token']) || empty($tok['open_id'])) {
     error_log('[TikTok OAuth] token exchange failed: ' . json_encode($tok));
-    oauthError('Could not exchange TikTok token');
+    // 把 TikTok 的真实错误带回去给用户看,便于诊断 client_key/secret/redirect 错配
+    $err = $tok['error_description']
+        ?? $tok['error']
+        ?? ($tok['data']['description'] ?? null)
+        ?? ($tok['_raw'] ?? null)
+        ?? ($tok['_curl_error'] ?? 'unknown');
+    if (is_array($err)) $err = json_encode($err);
+    $code = $tok['error'] ?? ($tok['data']['error_code'] ?? '');
+    $msg  = 'TikTok token exchange failed';
+    if ($code) $msg .= ' [' . $code . ']';
+    $msg .= ': ' . substr((string)$err, 0, 240);
+    oauthError($msg);
 }
 
 // Fetch user info (basic)
