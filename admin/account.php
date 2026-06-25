@@ -94,12 +94,12 @@ $csrf = adminCsrfToken();
       <input type="password" name="current_password" required autocomplete="current-password" style="width:100%;padding:.5rem;background:var(--bg);border:1px solid var(--border-soft);color:var(--text);border-radius:4px" />
     </label>
     <label>
-      <span class="muted small">New password (12+ chars · mixed case · digit · symbol)</span>
-      <input type="password" name="new_password" required minlength="12" autocomplete="new-password" style="width:100%;padding:.5rem;background:var(--bg);border:1px solid var(--border-soft);color:var(--text);border-radius:4px" />
+      <span class="muted small">New password (8+ chars · mixed case · digit · symbol)</span>
+      <input type="password" name="new_password" required minlength="8" autocomplete="new-password" style="width:100%;padding:.5rem;background:var(--bg);border:1px solid var(--border-soft);color:var(--text);border-radius:4px" />
     </label>
     <label>
       <span class="muted small">Confirm new password</span>
-      <input type="password" name="new_confirm" required minlength="12" autocomplete="new-password" style="width:100%;padding:.5rem;background:var(--bg);border:1px solid var(--border-soft);color:var(--text);border-radius:4px" />
+      <input type="password" name="new_confirm" required minlength="8" autocomplete="new-password" style="width:100%;padding:.5rem;background:var(--bg);border:1px solid var(--border-soft);color:var(--text);border-radius:4px" />
     </label>
     <button type="submit" class="button button-primary" style="justify-self:start">Update password</button>
   </form>

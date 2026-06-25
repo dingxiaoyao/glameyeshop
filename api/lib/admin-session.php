@@ -248,7 +248,7 @@ function adminCreate(string $email, string $password, string $displayName = 'Adm
 }
 
 function adminPasswordStrengthError(string $p): ?string {
-    if (strlen($p) < 12) return 'Password must be at least 12 characters';
+    if (strlen($p) < 8) return 'Password must be at least 8 characters';
     if (!preg_match('/[A-Z]/', $p)) return 'Password must contain an uppercase letter';
     if (!preg_match('/[a-z]/', $p)) return 'Password must contain a lowercase letter';
     if (!preg_match('/\d/', $p))    return 'Password must contain a digit';

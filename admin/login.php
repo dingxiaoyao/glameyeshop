@@ -241,13 +241,13 @@ $csrf = adminCsrfToken();
           <input type="email" name="email" required autocomplete="off" value="<?= $emailPrefill ?>" autofocus />
         </label>
         <label>
-          <span class="lbl">Password (12+ chars, mixed case, digit, symbol)</span>
-          <input type="password" name="password" required minlength="12" autocomplete="new-password" id="pw" />
+          <span class="lbl">Password (8+ chars, mixed case, digit, symbol)</span>
+          <input type="password" name="password" required minlength="8" autocomplete="new-password" id="pw" />
           <div class="pw-meter" id="pwmeter">Strength: —</div>
         </label>
         <label>
           <span class="lbl">Confirm password</span>
-          <input type="password" name="password_confirm" required minlength="12" autocomplete="new-password" />
+          <input type="password" name="password_confirm" required minlength="8" autocomplete="new-password" />
         </label>
         <button type="submit">Create admin account & sign in</button>
       <?php elseif ($askTotp): ?>
@@ -288,7 +288,7 @@ $csrf = adminCsrfToken();
       pw.addEventListener('input', () => {
         const v = pw.value;
         let s = 0;
-        if (v.length >= 12) s++;
+        if (v.length >= 8) s++;
         if (/[A-Z]/.test(v)) s++;
         if (/[a-z]/.test(v)) s++;
         if (/\d/.test(v)) s++;
