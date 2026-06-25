@@ -23,6 +23,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           ON DUPLICATE KEY UPDATE `value`=:v2")
                ->execute([':v' => trim($_POST['gmc_merchant_id']), ':v2' => trim($_POST['gmc_merchant_id'])]);
         }
+        if (isset($_POST['feed_shipping_countries'])) {
+            // 清洗:逗号分隔、全大写、只留两字母 ISO,去空
+            $raw = (string)$_POST['feed_shipping_countries'];
+            $parts = array_filter(array_map(function ($s) {
+                $s = strtoupper(trim($s));
+                return preg_match('/^[A-Z]{2}$/', $s) ? $s : null;
+            }, explode(',', $raw)));
+            $clean = implode(',', array_values(array_unique($parts)));
+            if ($clean === '') $clean = 'US';  // 兜底,不允许全空
+            $db->prepare("INSERT INTO site_settings (`key`,`value`) VALUES ('feed_shipping_countries', :v)
+                          ON DUPLICATE KEY UPDATE `value`=:v2")
+               ->execute([':v' => $clean, ':v2' => $clean]);
+        }
         $flash = '✓ 已保存';
     } catch (Throwable $e) {
         $flash = $e->getMessage();
@@ -33,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $db = getDb();
 $brand = $db->query("SELECT `value` FROM site_settings WHERE `key`='brand_name' LIMIT 1")->fetchColumn() ?: 'GlamEye';
 $gmcId = $db->query("SELECT `value` FROM site_settings WHERE `key`='gmc_merchant_id' LIMIT 1")->fetchColumn() ?: '';
+$feedCountries = $db->query("SELECT `value` FROM site_settings WHERE `key`='feed_shipping_countries' LIMIT 1")->fetchColumn() ?: 'US';
 $base  = $db->query("SELECT `value` FROM site_settings WHERE `key`='site_base_url' LIMIT 1")->fetchColumn() ?: 'https://glameyeshop.com';
 $base  = rtrim($base, '/');
 
@@ -151,6 +165,17 @@ $zh = ($lang === 'zh');
     <label>
       <span class="muted small"><?= $zh ? 'GMC 商户 ID(可选,登录 Merchant Center 后右上角能看到)' : 'GMC Merchant ID (optional)' ?></span>
       <input type="text" name="gmc_merchant_id" maxlength="40" value="<?= htmlspecialchars($gmcId) ?>" placeholder="<?= $zh ? '例:1234567890' : 'e.g. 1234567890' ?>" style="width:100%;padding:.5rem;background:var(--bg);border:1px solid var(--border-soft);color:var(--text);border-radius:4px" />
+    </label>
+    <label>
+      <span class="muted small"><?= $zh
+        ? 'Feed 输出运费的国家(ISO 两字母,逗号分隔。必须和 GMC 账号的 target country 完全一致,否则报 "no shipping eligibility")'
+        : 'Countries to emit in feed shipping (ISO 2-letter, comma-separated. Must match your GMC account target country exactly)' ?></span>
+      <input type="text" name="feed_shipping_countries" maxlength="200" value="<?= htmlspecialchars($feedCountries) ?>" placeholder="<?= $zh ? '例:US 或 US,CA,GB' : 'e.g. US or US,CA,GB' ?>" style="width:100%;padding:.5rem;background:var(--bg);border:1px solid var(--border-soft);color:var(--text);border-radius:4px;font-family:monospace" />
+      <span class="muted small" style="display:block;margin-top:.3rem">
+        <?= $zh
+          ? '⚠️ 只勾你在 GMC 后台「国家/地区」里真正开通的国家。新账号默认只有 US,加新国家前先去 GMC「国家/地区」开通 + 配运费,再回来加这里。'
+          : '⚠️ Only list countries actually enabled in your GMC account "Countries" tab. New accounts only have US.' ?>
+      </span>
     </label>
     <button type="submit" class="button button-primary" style="justify-self:start"><?= $zh ? '保存' : 'Save' ?></button>
   </form>

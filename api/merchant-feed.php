@@ -55,6 +55,19 @@ try {
         $zones = json_decode($z ?: '{}', true) ?: [];
     } catch (Throwable $e) {}
 
+    // 允许出现在 feed 里的国家 ISO 码集合 — 必须与 GMC 账号的 target country 完全匹配,
+    // 否则会报 "no shipping eligibility for country XX"。默认仅 US。
+    // 用户随后在 admin 设置里勾选其他国家逐个开通。
+    $allowedCountries = ['US'];
+    try {
+        $fc = $db->query("SELECT `value` FROM site_settings WHERE `key`='feed_shipping_countries' LIMIT 1")->fetchColumn();
+        if ($fc) {
+            $arr = array_filter(array_map('trim', explode(',', strtoupper($fc))));
+            if ($arr) $allowedCountries = $arr;
+        }
+    } catch (Throwable $e) {}
+    $allowedCountriesSet = array_flip($allowedCountries);
+
     // 拉所有上架产品(非 bundle — bundle 是组合,GMC 通常不收)
     $stmt = $db->query("
         SELECT id, sku, name, short_description, description, category, style,
@@ -176,7 +189,8 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
       <g:age_group>adult</g:age_group>
       <g:gender>female</g:gender>
 <?php
-    // shipping by zone
+    // shipping by zone — 仅输出 GMC target country 内的国家,避免 "no shipping eligibility for country XX"
+    $emittedCountries = [];  // 防止同一国家在多 zone 重复出现
     foreach ($zones as $zoneCode => $zoneCfg) {
         if ($zoneCode === 'default') continue;
         if (!isset($zoneCfg['price'])) continue;
@@ -185,13 +199,32 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         elseif ($zoneCode === 'ASIA') $countries = ['JP','KR','SG','HK','TW','TH','MY'];
         elseif (preg_match('/^[A-Z]{2}$/', $zoneCode)) $countries = [$zoneCode];
         $shipPrice = number_format((float)$zoneCfg['price'], 2, '.', '');
-        foreach ($countries as $c): ?>
+        foreach ($countries as $c):
+            // 关键过滤:不在 GMC allowlist 里的国家直接跳过
+            if (!isset($allowedCountriesSet[$c])) continue;
+            if (isset($emittedCountries[$c])) continue;
+            $emittedCountries[$c] = true;
+        ?>
       <g:shipping>
         <g:country><?= $c ?></g:country>
         <g:service>Standard</g:service>
         <g:price><?= $shipPrice ?> USD</g:price>
       </g:shipping>
 <?php   endforeach;
+    }
+    // 兜底:如果 zones 里完全没匹配上 allowlist,至少给每个 allowlist 国家发一条 default 运费
+    // (用 default zone 价格 / 没有就 0)
+    foreach ($allowedCountries as $c) {
+        if (isset($emittedCountries[$c])) continue;
+        $fallbackPrice = isset($zones['default']['price']) ? (float)$zones['default']['price'] : 0.0;
+        $fp = number_format($fallbackPrice, 2, '.', '');
+        ?>
+      <g:shipping>
+        <g:country><?= htmlspecialchars($c) ?></g:country>
+        <g:service>Standard</g:service>
+        <g:price><?= $fp ?> USD</g:price>
+      </g:shipping>
+<?php
     }
 ?>
     </item>
