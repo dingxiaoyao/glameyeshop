@@ -194,11 +194,68 @@ function requireAdminCsrf(): void {
 // ============================================================
 // admin_users 增 / 查 / 校验密码
 // ============================================================
+
+/**
+ * 自愈:首次调用如表不存在就当场建。避免 deploy 静默失败时 admin 永远进不去后台。
+ * 只跑一次,后续短路。
+ */
+function ensureAdminTables(): bool {
+    static $ensured = false;
+    if ($ensured) return true;
+    try {
+        $db = getDb();
+        $db->exec("CREATE TABLE IF NOT EXISTS admin_users (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(190) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            display_name VARCHAR(100) NOT NULL DEFAULT 'Admin',
+            totp_secret VARCHAR(64) DEFAULT NULL,
+            totp_enabled TINYINT(1) NOT NULL DEFAULT 0,
+            totp_backup_codes_hash TEXT DEFAULT NULL,
+            failed_attempts INT UNSIGNED NOT NULL DEFAULT 0,
+            locked_until DATETIME DEFAULT NULL,
+            last_login_at DATETIME DEFAULT NULL,
+            last_login_ip VARCHAR(64) DEFAULT NULL,
+            password_changed_at DATETIME DEFAULT NULL,
+            is_active TINYINT(1) NOT NULL DEFAULT 1,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_active (is_active),
+            INDEX idx_email_active (email, is_active)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $db->exec("CREATE TABLE IF NOT EXISTS admin_login_attempts (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            email VARCHAR(190) DEFAULT NULL,
+            ip VARCHAR(64) DEFAULT NULL,
+            user_agent VARCHAR(255) DEFAULT NULL,
+            success TINYINT(1) NOT NULL DEFAULT 0,
+            reason VARCHAR(80) DEFAULT NULL,
+            INDEX idx_email_time (email, attempted_at),
+            INDEX idx_ip_time (ip, attempted_at),
+            INDEX idx_time (attempted_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $ensured = true;
+        return true;
+    } catch (Throwable $e) {
+        error_log('[admin-session] ensureAdminTables failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
 function adminUserCount(): int {
     try {
         $db = getDb();
         return (int)$db->query('SELECT COUNT(*) FROM admin_users WHERE is_active=1')->fetchColumn();
-    } catch (Throwable $e) { return 0; }
+    } catch (Throwable $e) {
+        // 表可能不存在 — 自愈后重试一次
+        if (ensureAdminTables()) {
+            try {
+                return (int)getDb()->query('SELECT COUNT(*) FROM admin_users WHERE is_active=1')->fetchColumn();
+            } catch (Throwable $e2) { /* fall through */ }
+        }
+        return 0;
+    }
 }
 
 function adminUserByEmail(string $email): ?array {
@@ -207,7 +264,16 @@ function adminUserByEmail(string $email): ?array {
         $stmt = $db->prepare('SELECT * FROM admin_users WHERE email=:e LIMIT 1');
         $stmt->execute([':e' => strtolower(trim($email))]);
         return $stmt->fetch() ?: null;
-    } catch (Throwable $e) { return null; }
+    } catch (Throwable $e) {
+        if (ensureAdminTables()) {
+            try {
+                $stmt = getDb()->prepare('SELECT * FROM admin_users WHERE email=:e LIMIT 1');
+                $stmt->execute([':e' => strtolower(trim($email))]);
+                return $stmt->fetch() ?: null;
+            } catch (Throwable $e2) { /* fall through */ }
+        }
+        return null;
+    }
 }
 
 function adminPasswordHash(string $plain): string {
@@ -228,10 +294,12 @@ function adminCreate(string $email, string $password, string $displayName = 'Adm
     }
     $strength = adminPasswordStrengthError($password);
     if ($strength) return ['ok' => false, 'error' => $strength];
+    // 提前确保表存在 — 哪怕 deploy 静默失败也救得回来
+    ensureAdminTables();
     if (adminUserByEmail($email)) {
         return ['ok' => false, 'error' => 'Email already exists'];
     }
-    try {
+    $attempt = function () use ($email, $password, $displayName) {
         $db = getDb();
         $stmt = $db->prepare('INSERT INTO admin_users (email, password_hash, display_name, password_changed_at) VALUES (:e, :h, :n, NOW())');
         $stmt->execute([
@@ -239,11 +307,20 @@ function adminCreate(string $email, string $password, string $displayName = 'Adm
             ':h' => adminPasswordHash($password),
             ':n' => $displayName ?: 'Admin',
         ]);
-        $id = (int)$db->lastInsertId();
-        return ['ok' => true, 'id' => $id];
+        return (int)$db->lastInsertId();
+    };
+    try {
+        return ['ok' => true, 'id' => $attempt()];
     } catch (Throwable $e) {
-        error_log('[admin-session] create failed: ' . $e->getMessage());
-        return ['ok' => false, 'error' => 'DB error'];
+        // 表不存在 → 自愈一次再重试
+        if (ensureAdminTables()) {
+            try { return ['ok' => true, 'id' => $attempt()]; }
+            catch (Throwable $e2) { $e = $e2; }
+        }
+        error_log('[admin-session] create failed: ' . $e->getMessage() . ' | ' . $e->getFile() . ':' . $e->getLine());
+        // 首次 setup 把真实 DB 错透传 — 帮排查环境问题(如 DB 用户无 CREATE 权限)
+        // 但不带 stack trace,只 message 前 200 字
+        return ['ok' => false, 'error' => 'DB error: ' . substr($e->getMessage(), 0, 200)];
     }
 }
 

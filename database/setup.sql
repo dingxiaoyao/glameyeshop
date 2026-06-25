@@ -1383,7 +1383,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
   display_name VARCHAR(100) NOT NULL DEFAULT 'Admin',
   totp_secret VARCHAR(64) DEFAULT NULL,                -- Base32 编码
   totp_enabled TINYINT(1) NOT NULL DEFAULT 0,
-  totp_backup_codes_hash JSON DEFAULT NULL,            -- 一次性恢复码 hash 列表
+  totp_backup_codes_hash TEXT DEFAULT NULL,            -- 一次性恢复码 hash 列表(JSON 字符串)
   failed_attempts INT UNSIGNED NOT NULL DEFAULT 0,
   locked_until DATETIME DEFAULT NULL,
   last_login_at DATETIME DEFAULT NULL,
