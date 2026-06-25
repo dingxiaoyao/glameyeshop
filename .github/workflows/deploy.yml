@@ -255,6 +255,12 @@ jobs:
             # 删除老 sitemap.xml(若存在)— nginx try_files 会用静态文件覆盖 rewrite
             rm -f "$DEPLOY_PATH/sitemap.xml" 2>/dev/null || true
 
+            # Google Merchant Center: /merchant-feed.xml → /api/merchant-feed.php(从 DB 动态生成)
+            if ! grep -q 'rewrite ^/merchant-feed.xml' /etc/nginx/sites-enabled/glameye 2>/dev/null; then
+              sed -i '/server_name.*\b173\.199\b.*;/a\    rewrite ^/merchant-feed\\.xml$ /api/merchant-feed.php last;' /etc/nginx/sites-enabled/glameye 2>/dev/null || true
+              nginx -t && systemctl reload nginx 2>/dev/null || true
+            fi
+
             # P2 安全头(nginx):include 静态片段,reload nginx
             SEC_HEADERS=/etc/nginx/snippets/glameye-security-headers.conf
             mkdir -p /etc/nginx/snippets

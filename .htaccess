@@ -97,4 +97,10 @@
 # ============================================================
 DirectoryIndex index.html index.php
 
+# Google Merchant Center product feed — pretty URL
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^merchant-feed\.xml$ /api/merchant-feed.php [L]
+</IfModule>
+
 ErrorDocument 404 /404.html
