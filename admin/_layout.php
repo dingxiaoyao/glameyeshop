@@ -3,7 +3,14 @@
 require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../api/i18n.php';
 require_once __DIR__ . '/../api/lib/upload-hints.php';
-requireAdminAuth();
+require_once __DIR__ . '/../api/lib/admin-session.php';
+$currentAdmin = requireAdminAuth();  // 现在返回 admin 数组(session 或 basic-auth fallback)
+
+// 安全 headers — 与 login.php 一致
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: no-referrer');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()');
 
 // 杜绝浏览器/CDN 缓存 admin 页面输出 — admin 总是要看最新数据
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -41,9 +48,10 @@ $activeNav  = $activeNav  ?? 'dashboard';
           <a href="?lang=en" class="<?= $lang === 'en' ? 'active' : '' ?>">EN</a>
           <a href="?lang=zh" class="<?= $lang === 'zh' ? 'active' : '' ?>">中</a>
         </span>
-        <span style="color:var(--text-muted); font-size:.85rem;">
-          👤 <?= htmlspecialchars($_SERVER['PHP_AUTH_USER'] ?? 'admin') ?>
-        </span>
+        <a href="account.php" style="color:var(--text-muted); font-size:.85rem; text-decoration:none;" title="<?= $lang === 'zh' ? '账户设置' : 'Account settings' ?>">
+          👤 <?= htmlspecialchars($currentAdmin['email'] ?? 'admin') ?>
+        </a>
+        <a href="logout.php" class="muted small" style="color:var(--error);" title="<?= $lang === 'zh' ? '退出登录' : 'Sign out' ?>">⏻ <?= $lang === 'zh' ? '退出' : 'Sign out' ?></a>
         <a href="../" class="muted small">← <?= htmlspecialchars(t('back_to_site')) ?></a>
       </div>
     </div>

@@ -76,21 +76,21 @@ function readInput(): array {
     return $_POST;
 }
 
-function requireAdminAuth(): void {
-    $expectedUser = getenv('ADMIN_USER');
-    $expectedPass = getenv('ADMIN_PASS');
-    if (!$expectedUser || !$expectedPass) {
-        http_response_code(503);
-        header('Content-Type: text/plain; charset=utf-8');
-        echo 'Admin credentials not configured.';
-        exit;
-    }
-    $u = $_SERVER['PHP_AUTH_USER'] ?? '';
-    $p = $_SERVER['PHP_AUTH_PW'] ?? '';
-
-    // P0#2 (审计 P1#22): 防 BasicAuth 字典攻击 — 同 IP 20 次失败/15min 锁
-    // 注意:rate-limit lib 依赖 DB,放在 hash_equals 之前 require 避免循环依赖
+/**
+ * 新版 requireAdminAuth — 优先认 admin session(独立 cookie),
+ * 兜底认 Basic Auth(供旧脚本 + curl 自动化用)。
+ *
+ * 注意:HTML 请求若未登录 → 302 跳 /admin/login.php;API 请求 → 401 JSON。
+ */
+function requireAdminAuth(): array {
+    require_once __DIR__ . '/lib/admin-session.php';
     require_once __DIR__ . '/lib/rate-limit.php';
+
+    // 1) 优先:DB-backed admin session
+    $a = currentAdmin();
+    if ($a) return $a;
+
+    // 2) 兜底:Basic Auth(若客户端送了)— 主要给老 curl 脚本 + 兼容期
     $ip = rateLimitClientIp();
     $bucket = "admin-basic-auth:$ip";
     if (rateLimitFailCount($bucket, 900) >= 20) {
@@ -100,17 +100,29 @@ function requireAdminAuth(): void {
         echo 'Too many failed admin login attempts. Wait 15 minutes.';
         exit;
     }
-
-    if (!hash_equals($expectedUser, $u) || !hash_equals($expectedPass, $p)) {
+    $b = adminBasicAuthFallback();
+    if ($b) {
+        rateLimitClear($bucket);
+        return $b;
+    }
+    // 若客户端送了 Basic Auth 但失败 — 记一次失败
+    if (!empty($_SERVER['PHP_AUTH_USER']) || !empty($_SERVER['PHP_AUTH_PW'])) {
         rateLimitFail($bucket);
-        header('WWW-Authenticate: Basic realm="GlamEye Admin"');
+        adminLogAttempt($_SERVER['PHP_AUTH_USER'] ?? null, false, 'basic_auth_fail');
+    }
+
+    // 3) 无任何凭据 — 区分 HTML / API 给出合适响应
+    if (_isAdminApiRequest()) {
         http_response_code(401);
-        header('Content-Type: text/plain; charset=utf-8');
-        echo 'Authentication required.';
+        header('Content-Type: application/json; charset=utf-8');
+        // 兼容 curl 自动化:同时 challenge Basic Auth(无 admin_users 时为空 realm)
+        header('WWW-Authenticate: Basic realm="GlamEye Admin API"');
+        echo json_encode(['error' => 'Admin authentication required', 'code' => 'ADMIN_LOGIN_REQUIRED']);
         exit;
     }
-    // 成功 — 清掉历史失败
-    rateLimitClear($bucket);
+    $back = $_SERVER['REQUEST_URI'] ?? '/admin/';
+    header('Location: /admin/login.php?redirect=' . urlencode($back), true, 302);
+    exit;
 }
 
 // ============================================================

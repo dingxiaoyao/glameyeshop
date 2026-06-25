@@ -184,13 +184,19 @@
           social_pinterest: { icon: '📌', label: 'Pinterest' },
           social_facebook:  { icon: 'f',  label: 'Facebook' },
         };
+        // 严格校验社交链接协议,防 admin 误填 javascript:/data:
+        const safeUrl = (u) => {
+          try { const parsed = new URL(u); return /^https?:$/.test(parsed.protocol) ? parsed.href : ''; }
+          catch (e) { return ''; }
+        };
         const html = Object.entries(icons)
-          .filter(([k]) => settings[k])
-          .map(([k, v]) => `<a href="${settings[k]}" target="_blank" rel="noopener" aria-label="${v.label}" class="social-icon">${v.icon}</a>`)
+          .filter(([k]) => settings[k] && safeUrl(settings[k]))
+          .map(([k, v]) => `<a href="${escape(safeUrl(settings[k]))}" target="_blank" rel="noopener noreferrer" aria-label="${escape(v.label)}" class="social-icon">${v.icon}</a>`)
           .join('');
-        // Amazon
-        if (settings.amazon_status === 'live' && settings.amazon_store_url) {
-          social.innerHTML = html + `<a href="${settings.amazon_store_url}" target="_blank" rel="noopener" class="social-icon" aria-label="Amazon">🛒</a>`;
+        // Amazon — 复用上面定义的 safeUrl 校验协议
+        const amazonUrl = safeUrl(settings.amazon_store_url);
+        if (settings.amazon_status === 'live' && amazonUrl) {
+          social.innerHTML = html + `<a href="${escape(amazonUrl)}" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Amazon">🛒</a>`;
         } else if (settings.amazon_status === 'coming_soon') {
           social.innerHTML = html + `<span class="social-icon disabled" title="Amazon Coming Soon">🛒</span>`;
         } else {

@@ -12,15 +12,16 @@ require_once __DIR__ . '/lib/image-processor.php';
 // 全局兜底 — 文件上传场景常见的 fatal(GD 缺失、目录不可写、move 失败...)
 // 不希望直接 500 HTML 让前端解不出 JSON
 set_exception_handler(function ($e) {
-    error_log(sprintf('[admin-upload] %s | %s | %s:%d',
-        get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()));
+    // 完整堆栈 + 文件路径 + 异常类型只进服务端日志,不回显给客户端(避免泄露 /var/www/... 路径 + DB 详情)
+    error_log(sprintf('[admin-upload] %s | %s | %s:%d | %s',
+        get_class($e), $e->getMessage(), $e->getFile(), $e->getLine(), $e->getTraceAsString()));
     if (!headers_sent()) {
         http_response_code(500);
         header('Content-Type: application/json; charset=utf-8');
     }
     echo json_encode([
-        'error' => sprintf('%s: %s', get_class($e), $e->getMessage()),
-        'hint'  => 'See PHP error log for full stack trace.',
+        'error' => 'Upload processing failed. Please try again or contact support.',
+        'hint'  => 'See server logs for details.',
     ], JSON_UNESCAPED_UNICODE);
 });
 

@@ -1371,3 +1371,41 @@ INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 
 -- GA4 Measurement Protocol API Secret(用于 admin/ads-test.php 服务器端触发)
 INSERT IGNORE INTO site_settings (`key`, `value`) VALUES ('ga4_api_secret', '');
+
+-- ============================================================
+-- admin_users — 独立后台账号体系(Argon2 + 限频 + 可选 TOTP 2FA)
+-- 与 users 表完全分离,避免普通用户提权或共用 cookie
+-- ============================================================
+CREATE TABLE IF NOT EXISTS admin_users (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(190) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,                 -- Argon2id / bcrypt
+  display_name VARCHAR(100) NOT NULL DEFAULT 'Admin',
+  totp_secret VARCHAR(64) DEFAULT NULL,                -- Base32 编码
+  totp_enabled TINYINT(1) NOT NULL DEFAULT 0,
+  totp_backup_codes_hash JSON DEFAULT NULL,            -- 一次性恢复码 hash 列表
+  failed_attempts INT UNSIGNED NOT NULL DEFAULT 0,
+  locked_until DATETIME DEFAULT NULL,
+  last_login_at DATETIME DEFAULT NULL,
+  last_login_ip VARCHAR(64) DEFAULT NULL,
+  password_changed_at DATETIME DEFAULT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_active (is_active),
+  INDEX idx_email_active (email, is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- admin 登录尝试日志 — 失败时记 IP/email/UA,用于审计 + 限频补充
+CREATE TABLE IF NOT EXISTS admin_login_attempts (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  email VARCHAR(190) DEFAULT NULL,
+  ip VARCHAR(64) DEFAULT NULL,
+  user_agent VARCHAR(255) DEFAULT NULL,
+  success TINYINT(1) NOT NULL DEFAULT 0,
+  reason VARCHAR(80) DEFAULT NULL,                     -- bad_password / locked / totp_fail / ok ...
+  INDEX idx_email_time (email, attempted_at),
+  INDEX idx_ip_time (ip, attempted_at),
+  INDEX idx_time (attempted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
