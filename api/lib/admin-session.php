@@ -243,6 +243,29 @@ function ensureAdminTables(): bool {
     }
 }
 
+/**
+ * 是否已经完成首次 admin bootstrap?
+ * 一旦设过第一个 admin,site_settings.admin_bootstrap_done = '1' 永久写入,
+ * 即使后续所有 admin_users 被删/停用,setup 流程也不会再次开放,
+ * 必须 SSH 进服务器手工恢复 — 杜绝"删光重新注册"提权漏洞。
+ */
+function adminBootstrapDone(): bool {
+    try {
+        $db = getDb();
+        $v = $db->query("SELECT `value` FROM site_settings WHERE `key`='admin_bootstrap_done' LIMIT 1")->fetchColumn();
+        return $v === '1';
+    } catch (Throwable $e) { return false; }
+}
+
+function adminMarkBootstrapDone(): void {
+    try {
+        $db = getDb();
+        // INSERT 或 UPDATE(MySQL 8 + MariaDB 都支持 ON DUPLICATE KEY)
+        $db->exec("INSERT INTO site_settings (`key`,`value`) VALUES ('admin_bootstrap_done','1')
+                   ON DUPLICATE KEY UPDATE `value`='1'");
+    } catch (Throwable $e) { error_log('[admin-session] mark bootstrap failed: ' . $e->getMessage()); }
+}
+
 function adminUserCount(): int {
     try {
         $db = getDb();

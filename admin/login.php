@@ -15,7 +15,10 @@ if ($current) {
 }
 
 $count = adminUserCount();
-$isSetup = ($count === 0);                       // 第一次访问 — 引导设置
+// 首次 setup 只允许在:① 表里没有任何 active admin,且 ② sentinel 没被设过
+// 一旦 bootstrap_done = '1',即使被人删光 admin_users 也不会重开 setup,
+// 强制 SSH 进服务器手工恢复 — 杜绝"删 admin → 重新注册"提权
+$isSetup = ($count === 0 && !adminBootstrapDone());
 $redirectBack = $_GET['redirect'] ?? 'index.php';
 $err = '';
 $notice = '';
@@ -48,6 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$r['ok']) {
                 $err = $r['error'];
             } else {
+                // ✅ 立刻标记 bootstrap_done — 即使后续被人删光也不会重开 setup
+                adminMarkBootstrapDone();
                 $admin = adminUserByEmail($email);
                 adminLogin($admin);
                 adminLogAttempt($email, true, 'first_setup');
