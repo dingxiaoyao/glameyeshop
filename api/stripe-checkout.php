@@ -175,7 +175,7 @@ try {
         echo '<h1>Could not start payment</h1>';
         echo '<p>Stripe rejected the checkout request: <code>' . htmlspecialchars($errMsg) . '</code></p>';
         echo '<p>Order #' . $orderId . ' was saved. You can return to <a href="/checkout.html?order_id=' . $orderId . '">your cart</a> and try again.</p>';
-        echo '<p style="color:#999;font-size:.85rem;">If this keeps happening, please email us at <a href="mailto:support@glameyeshop.com">support@glameyeshop.com</a> with order #' . $orderId . '.</p>';
+        echo '<p style="color:#999;font-size:.85rem;">If this keeps happening, please email us at <a href="mailto:info@glameyeshop.com">info@glameyeshop.com</a> with order #' . $orderId . '.</p>';
         echo '</body></html>';
         exit;
     }

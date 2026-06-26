@@ -58,7 +58,7 @@
             <input type="text" name="hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;pointer-events:none">
             <button type="submit" class="support-submit">Send message</button>
             <p class="support-feedback"></p>
-            <p class="support-fineprint">We'll reply by email — please add support@glameyeshop.com to your contacts so it doesn't go to spam.</p>
+            <p class="support-fineprint">We'll reply by email — please add info@glameyeshop.com to your contacts so it doesn't go to spam.</p>
           </form>
         </div>
       </section>

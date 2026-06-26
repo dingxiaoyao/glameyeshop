@@ -81,7 +81,7 @@ class EmailTemplates
   <a href="' . $statusUrl . '" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-weight:500;font-size:14px;letter-spacing:1px;">View Order Status &rarr;</a>
 </p>
 <p style="font-size:13px;color:#7a7468;margin:24px 0 0;">Shipping to: ' . $addr . '</p>
-<p style="font-size:13px;color:#7a7468;margin:6px 0 0;">Questions? Reply to this email or contact <a href="mailto:support@glameyeshop.com" style="color:#9a8062;">support@glameyeshop.com</a></p>';
+<p style="font-size:13px;color:#7a7468;margin:6px 0 0;">Questions? Reply to this email or contact <a href="mailto:info@glameyeshop.com" style="color:#9a8062;">info@glameyeshop.com</a></p>';
 
         return [
             'subject' => 'Order #' . intval($order['id']) . ' confirmed — GlamEye',

@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         header('Content-Type: text/html; charset=utf-8');
         echo '<!DOCTYPE html><html><body style="font-family:system-ui;padding:3rem;text-align:center;">';
         echo '<h1>Invalid unsubscribe link</h1>';
-        echo '<p>This link is missing or malformed. Please email <a href="mailto:support@glameyeshop.com">support@glameyeshop.com</a> and we will unsubscribe you manually.</p>';
+        echo '<p>This link is missing or malformed. Please email <a href="mailto:info@glameyeshop.com">info@glameyeshop.com</a> and we will unsubscribe you manually.</p>';
         echo '</body></html>';
         exit;
     }

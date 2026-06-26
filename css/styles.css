@@ -1572,24 +1572,32 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   .hero-actions .button { flex: 1 1 auto; padding: .85rem 1rem; font-size: .72rem; letter-spacing: 1.8px; }
   .hero-dots { bottom: 1rem; }
 
-  /* Product grid — 2 列卡片更紧凑 */
-  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
-  .product-image { aspect-ratio: 3/4; }
-  .product-info { padding: .85rem .75rem 1rem; gap: .25rem; }
-  .product-info h3 { font-size: 1rem; line-height: 1.25; }
-  .product-info > p { display: none; }
-  .product-cat { font-size: .58rem; letter-spacing: 2px; }
-  .product-rating { font-size: .7rem; margin: .2rem 0; gap: .3rem; }
-  .product-rating .reviews { font-size: .7rem; }
-  .product-price-row { gap: .4rem; padding-top: .5rem; }
-  .price { font-size: 1.05rem; }
-  .price-old { font-size: .8rem; }
-  .product-card .button {
-    margin-top: .65rem; padding: .65rem .5rem;
-    font-size: .65rem; letter-spacing: 1.2px;
+  /* Product grid — 2 列卡片更紧凑(双 class specificity 确保盖过 .shop-page .product-grid) */
+  .product-grid,
+  .shop-page .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .7rem;
   }
-  .product-badge { padding: .2rem .55rem; font-size: .55rem; letter-spacing: 1.5px; top: .55rem; right: .55rem; }
-  .wishlist-btn { width: 30px; height: 30px; font-size: .85rem; top: .55rem; left: .55rem; }
+  .product-image { aspect-ratio: 3/4; }
+  .product-info { padding: .75rem .65rem .9rem; gap: .2rem; }
+  .product-info h3 { font-size: .98rem; line-height: 1.25; letter-spacing: .3px; }
+  .product-info > p { display: none; }
+  .product-cat { font-size: .56rem; letter-spacing: 2px; }
+  .product-rating { font-size: .68rem; margin: .15rem 0; gap: .3rem; }
+  .product-rating .reviews { font-size: .68rem; }
+  /* PDP-style polished mobile cards */
+  .product-card { border-radius: 8px; }
+  .product-price-row { padding-top: .5rem; }
+  .product-card .button {
+    margin-top: .5rem; padding: .7rem .4rem;
+    font-size: .62rem; letter-spacing: 1.2px;
+  }
+  .price { font-size: 1.02rem; }
+  .price-old { font-size: .78rem; }
+  /* wishlist 心形按钮缩小,不挡商品 */
+  .wishlist-btn { width: 28px; height: 28px; font-size: .8rem; top: .45rem; left: .45rem; }
+  .product-badge { padding: .18rem .5rem; font-size: .52rem; letter-spacing: 1.5px; top: .45rem; right: .45rem; }
+  .product-price-row { gap: .4rem; padding-top: .5rem; }
 
   /* Category cards — 2 列 */
   .cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }

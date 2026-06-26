@@ -885,7 +885,7 @@ charge.refunded</div>
       </label>
     </div>
     <label><span class="label-text">From email <small class="muted">— 自己域名 + DKIM 不会进垃圾箱</small></span>
-      <input type="email" data-key="email_from_address" placeholder="support@glameyeshop.com" />
+      <input type="email" data-key="email_from_address" placeholder="info@glameyeshop.com" />
     </label>
 
     <hr style="border:0; border-top:1px solid var(--border-soft); margin:.5rem 0;">
