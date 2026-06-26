@@ -292,13 +292,25 @@
   }
 
   // P2: UGC 墙 — 客户晒图,管理员审核后展示
+  // admin 后台 UGC 页有「首页 #GlamEyeCommunity 区块」开关,关掉后整段 section 隐藏
   async function loadUGC() {
     const container = document.getElementById('ugc-grid');
+    const section = document.getElementById('ugc-section');
     if (!container) return;
     try {
-      const r = await fetch('api/ugc.php?limit=12');
-      const j = await r.json();
-      const items = j.items || [];
+      // 并行拉:public settings(看开关)+ UGC 数据
+      const [settingsRes, ugcRes] = await Promise.all([
+        fetch('api/settings.php').then(r => r.json()).catch(() => ({})),
+        fetch('api/ugc.php?limit=12').then(r => r.json()).catch(() => ({})),
+      ]);
+      // 默认显示 — 只有显式 '0' 才隐藏(向后兼容老站点未配置 key 的情况)
+      if (settingsRes.homepage_show_ugc === '0') {
+        if (section) section.hidden = true;
+        return;
+      }
+      if (section) section.hidden = false;
+
+      const items = ugcRes.items || [];
       if (!items.length) {
         container.innerHTML = `<p class="muted text-center" style="grid-column:1/-1; padding: 2rem 0;">
           Be the first to be featured — tag <strong style="color:var(--gold);">@glameye</strong> on Instagram!

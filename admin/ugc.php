@@ -37,6 +37,35 @@
   .ugc-actions button:hover { border-color: var(--gold); color: var(--gold); }
   .ugc-actions button.primary { background: var(--gold); color: #fff; border-color: var(--gold); }
   .ugc-actions button.danger:hover { border-color: var(--error); color: var(--error); }
+
+  /* Section visibility toggle */
+  .ugc-visibility-card {
+    background: var(--bg-card); border: 1px solid var(--border-soft);
+    border-left: 3px solid var(--gold);
+    border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  }
+  .ugc-visibility-card .label-block { flex: 1 1 auto; min-width: 220px; }
+  .ugc-visibility-card .label-block strong { display: block; font-size: .92rem; }
+  .ugc-visibility-card .label-block small { color: var(--text-muted); font-size: .78rem; line-height: 1.5; display: block; margin-top: .15rem; }
+  .ugc-visibility-status { font-size: .72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: .25rem .65rem; border-radius: 999px; }
+  .ugc-visibility-status.on  { background: rgba(74,154,94,.12); color: var(--success); }
+  .ugc-visibility-status.off { background: rgba(201,69,69,.12); color: var(--error); }
+  /* iOS-style switch */
+  .switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: #ccc; border-radius: 28px; transition: .25s;
+  }
+  .switch .slider::before {
+    content: ""; position: absolute; height: 22px; width: 22px;
+    left: 3px; bottom: 3px; background: #fff;
+    border-radius: 50%; transition: .25s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .slider { background: var(--gold); }
+  .switch input:checked + .slider::before { transform: translateX(22px); }
 </style>
 
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem; flex-wrap: wrap; gap: .75rem;">
@@ -44,6 +73,74 @@
   <button class="button button-primary" id="ugc-add-btn">+ <?= $lang === "zh" ? "添加 UGC" : "Add Submission" ?></button>
 </div>
 <p class="muted small" style="margin-bottom: 1.5rem;">Customer photos that show on the homepage. Upload them on behalf of customers (e.g. from Instagram tags), or approve user-submitted ones here.</p>
+
+<!-- ===== 首页显隐开关 ===== -->
+<div class="ugc-visibility-card">
+  <div class="label-block">
+    <strong><?= $lang === 'zh' ? '首页 #GlamEyeCommunity 区块' : 'Homepage #GlamEyeCommunity section' ?>
+      <span class="ugc-visibility-status on" id="ugc-vis-status"><?= $lang === 'zh' ? '显示中' : 'Visible' ?></span>
+    </strong>
+    <small><?= $lang === 'zh'
+      ? '关掉后,首页"Real Customers · Real Lashes / #GlamEyeCommunity / Posted by you. Curated by us."整段不再显示,UGC 数据保留(随时再开)。'
+      : 'When off, the homepage "Real Customers · Real Lashes / #GlamEyeCommunity" section is hidden. UGC data is preserved.' ?></small>
+  </div>
+  <label class="switch" title="<?= $lang === 'zh' ? '点击切换' : 'Click to toggle' ?>">
+    <input type="checkbox" id="ugc-visibility-toggle" />
+    <span class="slider"></span>
+  </label>
+</div>
+
+<script>
+(async function () {
+  const toggle = document.getElementById('ugc-visibility-toggle');
+  const status = document.getElementById('ugc-vis-status');
+  const I18N = {
+    zh: { on: '显示中', off: '已隐藏', err: '保存失败,请重试' },
+    en: { on: 'Visible', off: 'Hidden', err: 'Save failed, please retry' }
+  };
+  const lang = <?= json_encode($lang === 'zh' ? 'zh' : 'en') ?>;
+  const t = I18N[lang];
+
+  function paint(checked) {
+    status.textContent = checked ? t.on : t.off;
+    status.classList.toggle('on', checked);
+    status.classList.toggle('off', !checked);
+  }
+
+  // 初始载入
+  try {
+    const r = await fetch('../api/admin-settings.php', { credentials: 'include' });
+    const j = await r.json();
+    const map = {};
+    (j.settings || []).forEach(s => { map[s.key] = s.value; });
+    // 默认 '1'(显示),只有显式存 '0' 才隐藏
+    const cur = map.homepage_show_ugc;
+    const checked = cur !== '0';
+    toggle.checked = checked;
+    paint(checked);
+  } catch (e) {
+    paint(true);
+  }
+
+  toggle.addEventListener('change', async () => {
+    const checked = toggle.checked;
+    paint(checked);
+    try {
+      const r = await fetch('../api/admin-settings.php', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'homepage_show_ugc', value: checked ? '1' : '0' })
+      });
+      const j = await r.json();
+      if (!j.success) throw new Error(j.error || 'fail');
+    } catch (e) {
+      toggle.checked = !checked;
+      paint(!checked);
+      alert(t.err);
+    }
+  });
+})();
+</script>
 
 <div class="admin-card">
   <div class="ugc-toolbar" id="ugc-tabs">
