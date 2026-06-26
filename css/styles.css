@@ -3,6 +3,25 @@
    ============================================================ */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* === iOS Safari 触屏全局适配 ===
+   - touch-action: manipulation 去掉 300ms 双击缩放延迟,所有可交互元素单击即响应
+   - -webkit-tap-highlight-color 用品牌金色淡背景代替默认丑陋的灰色高亮
+   - user-select: none 在按钮上避免长按选中文字弹放大镜
+   覆盖所有 link / button / 自定义可点 card,等价于"任何 cursor:pointer 的东西手机上都立即响应"。 */
+a, button, [role="button"], .button, .cat-card, .bundle-card, .guide-card,
+.filter-chip, .qty-btn, .icon-button, .nav-toggle, .wishlist-btn, .add-btn,
+.product-card a, .pdp-thumb, [data-href], summary, label[for], input[type="submit"],
+input[type="button"], input[type="reset"], select {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(212, 169, 85, .15);
+}
+
+button, [role="button"], .button, .filter-chip, .qty-btn, .icon-button,
+.nav-toggle, .pdp-thumb {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 :root {
   color-scheme: light;
   /* 全局禁用浏览器默认蓝色 */
@@ -349,7 +368,17 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   overflow: hidden;
   background: var(--bg);
 }
-.product-image > a { display: block; height: 100%; position: relative; }
+/* iOS Safari 修:用 absolute inset:0 而不是 height:100%,因为 aspect-ratio
+   父容器的高度在老版本 Safari 上不被认作"已知"高度,百分比高度子元素会塌成 0,
+   导致整张产品图点不动。absolute 不依赖父高度解析,确定铺满。
+   touch-action: manipulation 干掉 iOS 300ms 双击延迟,单击立即跳转。 */
+.product-image > a {
+  display: block;
+  position: absolute; inset: 0;
+  z-index: 3;
+  -webkit-tap-highlight-color: rgba(212,169,85,.15);
+  touch-action: manipulation;
+}
 .product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; }
 .product-card:hover .product-image img { transform: scale(1.06); }
 
@@ -358,14 +387,16 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 .product-image-hover {
   position: absolute; inset: 0; display: block;
   transition: opacity .4s ease;
+  pointer-events: none;   /* 让点击直接打到 <a> 上,不经过 span */
 }
 .product-image-main { opacity: 1; z-index: 1; }
 .product-image-hover { opacity: 0; z-index: 2; }
 .product-image.has-hover:hover .product-image-main { opacity: 0; }
 .product-image.has-hover:hover .product-image-hover { opacity: 1; }
-/* 触屏设备不要 hover 状态卡住,改成首次 tap 切到 hover 图、再 tap 跳详情页 */
+/* 触屏设备不要 hover 状态卡住 — 直接隐藏 hover 图,首次 tap 即跳详情页 */
 @media (hover: none) {
   .product-image-hover { display: none; }
+  .product-card:hover .product-image img { transform: none; }
 }
 
 .product-badge {
@@ -375,6 +406,8 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
   font-size: .65rem; font-weight: 800; letter-spacing: 2.5px;
   text-transform: uppercase; border-radius: var(--radius-sm);
   font-family: var(--sans);
+  z-index: 4;            /* 在 <a> 上方,但 badge 自己 pointer-events: none 不挡点 */
+  pointer-events: none;
 }
 .product-badge.sale { background: var(--error); color: var(--cream); }
 .product-badge.new  { background: var(--gold-light); }
@@ -382,6 +415,9 @@ h4 { font-size: 1.1rem; font-weight: 600; font-family: var(--sans); letter-spaci
 .wishlist-btn {
   position: absolute; top: 1rem; left: 1rem;
   width: 38px; height: 38px; border-radius: 50%;
+  z-index: 5;  /* 高于 <a> 的 z-index:3,确保心形按钮能点 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(212,169,85,.2);
   background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(6px);
   border: 1px solid rgba(0, 0, 0, 0.06);
   color: var(--text-muted); cursor: pointer; font-size: 1rem;
