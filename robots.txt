@@ -1,12 +1,18 @@
 User-agent: *
 Allow: /
+
+# 私有后端 — 挡爬取即可（不需要索引）
 Disallow: /admin/
 Disallow: /api/
 Disallow: /database/
-Disallow: /checkout.html
-Disallow: /cart.html
-Disallow: /order-success.html
-Disallow: /account*
+Disallow: /uploads/
+
+# 注意:cart/checkout/order-success/account/login/signup/forgot-password/
+# reset-password/verify-email/unsubscribe 这些页不放 Disallow —
+# 让 Googlebot 能爬到,读到页面自带的
+# <meta name="robots" content="noindex,nofollow" /> 才能真从索引里删。
+# robots.txt Disallow 只挡爬取，不挡索引：Google 通过外链发现的 URL
+# 依然会被塞进索引，SERP 上出现"无描述"的丑陋条目。
 
 # 社交媒体爬虫允许抓 OG
 User-agent: facebookexternalhit
