@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS products (
     is_new TINYINT(1) NOT NULL DEFAULT 0,
     is_bundle TINYINT(1) NOT NULL DEFAULT 0,             -- P2: 套装 SKU 标记
     bundle_items TEXT DEFAULT NULL,                       -- P2: JSON [{sku,qty}, ...]
+    tiktok_shop_url VARCHAR(500) DEFAULT NULL,            -- 该 SKU 在 TikTok Shop 的深链;为空则用全局 tiktok_shop_home_url 兜底
     sort_order INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -233,6 +234,11 @@ BEGIN
                  WHERE table_schema = DATABASE() AND table_name = 'products' AND column_name = 'bundle_items') THEN
     ALTER TABLE products ADD COLUMN bundle_items TEXT DEFAULT NULL;
   END IF;
+  -- TikTok Shop 深链:每个 SKU 一条,让 Google 索引 → 用户在网站上一键跳 TikTok Shop
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = DATABASE() AND table_name = 'products' AND column_name = 'tiktok_shop_url') THEN
+    ALTER TABLE products ADD COLUMN tiktok_shop_url VARCHAR(500) DEFAULT NULL;
+  END IF;
 END //
 DELIMITER ;
 CALL add_bundle_cols();
@@ -305,6 +311,8 @@ INSERT IGNORE INTO site_settings (`key`, `value`) VALUES
 ('social_facebook',    'https://facebook.com/glameye'),
 ('amazon_store_url',   ''),
 ('amazon_status',      'coming_soon'),
+-- TikTok Shop 主页 URL — 单个产品未配 tiktok_shop_url 时的兜底链接
+('tiktok_shop_home_url', ''),
 ('hero_image_url',     '/images/about/cluster-application-1600.jpg'),
 -- 多图轮播（JSON array）。如果非空，覆盖 hero_image_url。前端 5s 切换
 ('hero_image_urls',    '["/images/about/cluster-application-1600.jpg","/images/about/tools-trio-1600.jpg","/images/products/GE-CK-FEATHER/gallery-3-1600.jpg"]'),

@@ -15,6 +15,7 @@ const PUBLIC_SETTING_KEYS = [
     'ga_measurement_id', 'ga_anonymize_ip',  // Google Analytics 4(measurement_id 是公开的)
     'google_ads_conversion_id', 'google_ads_conversion_label',  // Google Ads 转化(都是公开的)
     'homepage_show_ugc',       // 首页 #GlamEyeCommunity UGC 墙开关 — 默认 '1' 显示,'0' 隐藏
+    'tiktok_shop_home_url',    // TikTok Shop 主页 URL — SKU 未配深链时的兜底
 ];
 
 // Internal keys used to derive boolean "enabled" flags (not exposed)

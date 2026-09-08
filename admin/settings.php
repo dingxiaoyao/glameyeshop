@@ -387,6 +387,28 @@ require_once __DIR__ . '/../api/lib/upload-hints.php';
   </div>
 </div>
 
+<div class="admin-card" style="border-left:3px solid #fe2c55;">
+  <h3>🎵 <?= $lang === "zh" ? "TikTok Shop 引流" : "TikTok Shop Traffic Funnel" ?></h3>
+  <p class="muted small" style="margin:-.5rem 0 1rem;line-height:1.6;">
+    <?= $lang === "zh"
+        ? '每个产品可在<a href="products.php" style="color:var(--gold);">产品编辑页</a>单独配 TikTok Shop 深链。这里配的是<strong>兜底主页 URL</strong>:没配深链的 SKU 会跳到这个主页;所有产品页面也会出现"Also on TikTok Shop"入口。'
+        : 'Per-SKU deep links are configured on the <a href="products.php" style="color:var(--gold);">Products page</a>. The URL below is the <strong>fallback</strong>: SKUs without a deep link route here, and every product page shows an "Also on TikTok Shop" button.' ?>
+  </p>
+  <div class="form-group">
+    <label>
+      <span class="label-text">TikTok Shop <?= $lang === "zh" ? "主页 URL(兜底)" : "Homepage URL (fallback)" ?></span>
+      <input type="url" data-key="tiktok_shop_home_url"
+             placeholder="https://www.tiktok.com/@glameye/shop"
+             style="font-family:monospace;font-size:.85rem;" />
+      <small class="muted" style="display:block;margin-top:.3rem;">
+        <?= $lang === "zh"
+            ? '留空的话,没配深链的产品不显示"Also on TikTok Shop"按钮。'
+            : 'If blank, SKUs without a deep link will NOT show the "Also on TikTok Shop" button.' ?>
+      </small>
+    </label>
+  </div>
+</div>
+
 </div><!-- /branding -->
 
 <!-- ───── SEO / Privacy ───── -->

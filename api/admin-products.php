@@ -31,6 +31,13 @@ try {
         $isActive  = !empty($in['is_active']) ? 1 : 0;
         $sortOrder = intval($in['sort_order'] ?? 0);
         $isBundle  = !empty($in['is_bundle']) ? 1 : 0;
+        // TikTok Shop 深链 — 只允许 http(s) URL,空值存 NULL
+        $ttUrl = trim((string)($in['tiktok_shop_url'] ?? ''));
+        if ($ttUrl !== '' && !preg_match('#^https?://#i', $ttUrl)) {
+            sendJson(['error' => 'TikTok Shop URL must start with http(s)://'], 422);
+        }
+        if (mb_strlen($ttUrl) > 500) sendJson(['error' => 'TikTok Shop URL too long (>500)'], 422);
+        $ttUrl = $ttUrl === '' ? null : $ttUrl;
         // bundle_items 接受 JSON 字符串 或 数组 [{sku, qty}, ...]
         $biRaw = $in['bundle_items'] ?? '';
         if (is_array($biRaw)) {
@@ -75,7 +82,8 @@ try {
                                      description=:desc, price=:price, compare_at_price=:cmp,
                                      image_url=:img, gallery_urls=:gallery,
                                      stock=:stock, is_active=:active, sort_order=:sort,
-                                     is_bundle=:isb, bundle_items=:bi
+                                     is_bundle=:isb, bundle_items=:bi,
+                                     tiktok_shop_url=:tturl
                  WHERE id=:id'
             );
             $stmt->execute([
@@ -85,7 +93,8 @@ try {
                 ':img' => $imageUrl, ':gallery' => $galleryJson,
                 ':stock' => $stock,
                 ':active' => $isActive, ':sort' => $sortOrder,
-                ':isb' => $isBundle, ':bi' => $biJson, ':id' => $id,
+                ':isb' => $isBundle, ':bi' => $biJson,
+                ':tturl' => $ttUrl, ':id' => $id,
             ]);
             sendJson(['success' => true, 'id' => $id]);
         } else {
@@ -93,9 +102,10 @@ try {
             $stmt = $db->prepare(
                 'INSERT INTO products (sku, category, name, short_description, description,
                                        price, compare_at_price, image_url, gallery_urls,
-                                       stock, is_active, sort_order, is_bundle, bundle_items)
+                                       stock, is_active, sort_order, is_bundle, bundle_items,
+                                       tiktok_shop_url)
                  VALUES (:sku, :cat, :name, :short, :desc, :price, :cmp, :img, :gallery,
-                         :stock, :active, :sort, :isb, :bi)'
+                         :stock, :active, :sort, :isb, :bi, :tturl)'
             );
             try {
                 $stmt->execute([
@@ -106,6 +116,7 @@ try {
                     ':stock' => $stock,
                     ':active' => $isActive, ':sort' => $sortOrder,
                     ':isb' => $isBundle, ':bi' => $biJson,
+                    ':tturl' => $ttUrl,
                 ]);
             } catch (PDOException $e) {
                 if (str_contains($e->getMessage(), 'Duplicate')) sendJson(['error' => 'SKU already exists'], 409);

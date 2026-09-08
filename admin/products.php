@@ -90,6 +90,16 @@
             <input type="number" name="sort_order" value="0" />
           </label>
         </div>
+        <label>
+          <span class="label-text">🎵 TikTok Shop URL
+            <small class="muted" style="font-weight:400;font-size:.72rem;">
+              (<?= $lang === 'zh' ? '该 SKU 在 TikTok Shop 的直链;留空则前台按钮跳全局 TikTok Shop 主页' : 'Deep link for this SKU on TikTok Shop; leave blank to fall back to the global TikTok Shop URL' ?>)
+            </small>
+          </span>
+          <input type="url" name="tiktok_shop_url" maxlength="500"
+                 placeholder="https://www.tiktok.com/shop/pdp/xxxxx"
+                 style="font-family:monospace;font-size:.85rem;" />
+        </label>
         <div class="checkbox-row">
           <input type="checkbox" name="is_active" id="p-active" value="1" checked />
           <label for="p-active"><?= htmlspecialchars(t('active')) ?> (<?= $lang === 'zh' ? '上架' : 'visible on shop' ?>)</label>
@@ -394,6 +404,7 @@
       form.stock.value = p.stock;
       form.sort_order.value = p.sort_order;
       form.is_active.checked = p.is_active == 1;
+      form.tiktok_shop_url.value = p.tiktok_shop_url || '';
       // bundle 字段(可视化 picker)
       const isBundleEl = document.getElementById('p-is-bundle');
       const biSet = document.getElementById('p-bundle-fieldset');
